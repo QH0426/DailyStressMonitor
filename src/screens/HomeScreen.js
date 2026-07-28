@@ -174,8 +174,8 @@ export default function HomeScreen({ navigation }) {
             </Text>
 
             <Text style={styles.emptyText}>
-              Complete your first daily check-in to see your
-              latest stress result here.
+              Complete your first daily check-in to see your latest
+              stress result here.
             </Text>
           </View>
         )}
@@ -200,6 +200,15 @@ export default function HomeScreen({ navigation }) {
       >
         <Text style={styles.secondaryButtonText}>
           View Stress History
+        </Text>
+      </Pressable>
+
+      <Pressable
+        style={styles.progressButton}
+        onPress={() => navigation.navigate('Progress')}
+      >
+        <Text style={styles.progressButtonText}>
+          View Stress Progress
         </Text>
       </Pressable>
 
@@ -383,10 +392,25 @@ const styles = StyleSheet.create({
     borderWidth: 2,
     borderColor: '#2563EB',
     borderRadius: 12,
+    marginBottom: 14,
   },
 
   secondaryButtonText: {
     color: '#2563EB',
+    fontSize: 17,
+    fontWeight: 'bold',
+  },
+
+  progressButton: {
+    minHeight: 54,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#0F766E',
+    borderRadius: 12,
+  },
+
+  progressButtonText: {
+    color: '#FFFFFF',
     fontSize: 17,
     fontWeight: 'bold',
   },
