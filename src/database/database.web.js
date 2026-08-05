@@ -19,7 +19,12 @@ export async function initialiseDatabase() {
   }
 }
 
-export async function saveStressEntry(score, answers) {
+export async function saveStressEntry(
+  score,
+  answers,
+  mood = null,
+  note = ''
+) {
   const existingEntries = await getStressEntries();
 
   const newEntry = {
@@ -33,6 +38,8 @@ export async function saveStressEntry(score, answers) {
     workload: answers.workload,
     energy: answers.energy,
     lifestyle: answers.lifestyle,
+    mood,
+    note: note.trim(),
   };
 
   localStorage.setItem(

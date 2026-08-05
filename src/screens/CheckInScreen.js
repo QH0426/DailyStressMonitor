@@ -8,6 +8,7 @@ import {
   ScrollView,
   StyleSheet,
   Text,
+  TextInput,
   View,
 } from 'react-native';
 
@@ -19,9 +20,40 @@ import {
 import { calculateStressScore } from '../services/stressCalculation';
 import questionnaireData from '../services/questionnaireData';
 
+const moodOptions = [
+  {
+    value: 'very-good',
+    label: 'Very good',
+    emoji: '😄',
+  },
+  {
+    value: 'good',
+    label: 'Good',
+    emoji: '🙂',
+  },
+  {
+    value: 'neutral',
+    label: 'Neutral',
+    emoji: '😐',
+  },
+  {
+    value: 'low',
+    label: 'Low',
+    emoji: '🙁',
+  },
+  {
+    value: 'very-low',
+    label: 'Very low',
+    emoji: '😟',
+  },
+];
+
 export default function CheckInScreen({ navigation }) {
+  const [checkInStage, setCheckInStage] = useState('context');
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [answers, setAnswers] = useState({});
+  const [selectedMood, setSelectedMood] = useState('');
+  const [dailyNote, setDailyNote] = useState('');
   const [isSaving, setIsSaving] = useState(false);
   const [isCheckingToday, setIsCheckingToday] = useState(true);
   const [todayEntry, setTodayEntry] = useState(null);
@@ -51,13 +83,6 @@ export default function CheckInScreen({ navigation }) {
     checkTodayEntry();
   }, []);
 
-  function selectAnswer(value) {
-    setAnswers((previousAnswers) => ({
-      ...previousAnswers,
-      [currentQuestion.id]: value,
-    }));
-  }
-
   function showMessage(title, message) {
     if (Platform.OS === 'web') {
       window.alert(`${title}\n\n${message}`);
@@ -75,6 +100,25 @@ export default function CheckInScreen({ navigation }) {
       hour: '2-digit',
       minute: '2-digit',
     });
+  }
+
+  function continueToQuestionnaire() {
+    if (!selectedMood) {
+      showMessage(
+        'Mood required',
+        'Please select the mood that best describes how you feel today.'
+      );
+      return;
+    }
+
+    setCheckInStage('questions');
+  }
+
+  function selectAnswer(value) {
+    setAnswers((previousAnswers) => ({
+      ...previousAnswers,
+      [currentQuestion.id]: value,
+    }));
   }
 
   async function goToNextQuestion() {
@@ -110,11 +154,18 @@ export default function CheckInScreen({ navigation }) {
 
         const score = calculateStressScore(answers);
 
-        await saveStressEntry(score, answers);
+        await saveStressEntry(
+          score,
+          answers,
+          selectedMood,
+          dailyNote
+        );
 
         navigation.replace('Result', {
           score,
           answers,
+          mood: selectedMood,
+          note: dailyNote.trim(),
         });
       } catch (error) {
         console.error('Unable to save check-in:', error);
@@ -136,7 +187,12 @@ export default function CheckInScreen({ navigation }) {
   }
 
   function goToPreviousQuestion() {
-    if (!isFirstQuestion && !isSaving) {
+    if (isFirstQuestion) {
+      setCheckInStage('context');
+      return;
+    }
+
+    if (!isSaving) {
       setCurrentQuestionIndex(
         (previousIndex) => previousIndex - 1
       );
@@ -177,8 +233,7 @@ export default function CheckInScreen({ navigation }) {
           </Text>
 
           <Text style={styles.completedText}>
-            You already have one main daily check-in saved for
-            today.
+            You already have one main daily check-in saved for today.
           </Text>
 
           <View style={styles.savedResultCard}>
@@ -190,22 +245,26 @@ export default function CheckInScreen({ navigation }) {
               {todayEntry.score}%
             </Text>
 
+            {todayEntry.mood ? (
+              <Text style={styles.savedContextText}>
+                Mood: {todayEntry.mood.replace('-', ' ')}
+              </Text>
+            ) : null}
+
             <Text style={styles.savedResultDate}>
               Saved {formatTodayEntryDate(todayEntry.date)}
             </Text>
           </View>
 
           <Text style={styles.completedExplanation}>
-            Limiting the application to one main result per day
-            keeps the history and progress graph consistent.
+            Limiting the application to one main result per day keeps
+            the history and progress graph consistent.
           </Text>
         </View>
 
         <Pressable
           style={styles.primaryFullButton}
           onPress={() => navigation.navigate('History')}
-          accessibilityRole="button"
-          accessibilityLabel="View today’s saved check-in in stress history"
         >
           <Text style={styles.primaryButtonText}>
             View Stress History
@@ -215,10 +274,8 @@ export default function CheckInScreen({ navigation }) {
         <Pressable
           style={styles.secondaryFullButton}
           onPress={() => navigation.navigate('Progress')}
-          accessibilityRole="button"
-          accessibilityLabel="View stress progress and statistics"
         >
-          <Text style={styles.secondaryButtonText}>
+          <Text style={styles.secondaryFullButtonText}>
             View Stress Progress
           </Text>
         </Pressable>
@@ -226,11 +283,124 @@ export default function CheckInScreen({ navigation }) {
         <Pressable
           style={styles.homeButton}
           onPress={() => navigation.navigate('Home')}
-          accessibilityRole="button"
-          accessibilityLabel="Return to the home dashboard"
         >
           <Text style={styles.homeButtonText}>
             Return Home
+          </Text>
+        </Pressable>
+      </ScrollView>
+    );
+  }
+
+  if (checkInStage === 'context') {
+    return (
+      <ScrollView
+        style={styles.screen}
+        contentContainerStyle={styles.container}
+        keyboardShouldPersistTaps="handled"
+      >
+        <Text style={styles.title}>Daily Check-in</Text>
+
+        <Text style={styles.description}>
+          Begin by recording your current mood and an optional note
+          about your day.
+        </Text>
+
+        <View style={styles.contextCard}>
+          <Text style={styles.contextTitle}>
+            How would you describe your mood today?
+          </Text>
+
+          <Text style={styles.contextHelp}>
+            Mood provides additional context and does not change the
+            calculated stress score.
+          </Text>
+
+          {moodOptions.map((mood) => {
+            const isSelected = selectedMood === mood.value;
+
+            return (
+              <Pressable
+                key={mood.value}
+                style={[
+                  styles.moodOption,
+                  isSelected && styles.selectedMoodOption,
+                ]}
+                onPress={() => setSelectedMood(mood.value)}
+                accessibilityRole="button"
+                accessibilityState={{
+                  selected: isSelected,
+                }}
+                accessibilityLabel={`${mood.label} mood`}
+              >
+                <Text style={styles.moodEmoji}>
+                  {mood.emoji}
+                </Text>
+
+                <Text
+                  style={[
+                    styles.moodLabel,
+                    isSelected && styles.selectedMoodText,
+                  ]}
+                >
+                  {mood.label}
+                </Text>
+
+                <Text
+                  style={[
+                    styles.moodSelection,
+                    isSelected && styles.selectedMoodText,
+                  ]}
+                >
+                  {isSelected ? 'Selected' : ''}
+                </Text>
+              </Pressable>
+            );
+          })}
+        </View>
+
+        <View style={styles.noteCard}>
+          <Text style={styles.contextTitle}>
+            Optional daily note
+          </Text>
+
+          <Text style={styles.contextHelp}>
+            Record anything that may have influenced your mood or
+            stress today.
+          </Text>
+
+          <TextInput
+            style={styles.noteInput}
+            value={dailyNote}
+            onChangeText={setDailyNote}
+            placeholder="For example: Busy day at work, poor sleep or an important event."
+            placeholderTextColor="#94A3B8"
+            multiline
+            maxLength={300}
+            textAlignVertical="top"
+            accessibilityLabel="Optional daily note"
+          />
+
+          <Text style={styles.characterCount}>
+            {dailyNote.length}/300 characters
+          </Text>
+        </View>
+
+        <Pressable
+          style={styles.continueButton}
+          onPress={continueToQuestionnaire}
+        >
+          <Text style={styles.primaryButtonText}>
+            Continue to Questions
+          </Text>
+        </Pressable>
+
+        <Pressable
+          style={styles.homeButton}
+          onPress={() => navigation.navigate('Home')}
+        >
+          <Text style={styles.homeButtonText}>
+            Cancel and Return Home
           </Text>
         </Pressable>
       </ScrollView>
@@ -278,14 +448,10 @@ export default function CheckInScreen({ navigation }) {
               key={option.value}
               style={[
                 styles.option,
-                isSelected &&
-                  styles.selectedOption,
-                isSaving &&
-                  styles.disabledOption,
+                isSelected && styles.selectedOption,
+                isSaving && styles.disabledOption,
               ]}
-              onPress={() =>
-                selectAnswer(option.value)
-              }
+              onPress={() => selectAnswer(option.value)}
               disabled={isSaving}
               accessibilityRole="button"
               accessibilityState={{
@@ -301,8 +467,7 @@ export default function CheckInScreen({ navigation }) {
               <Text
                 style={[
                   styles.optionText,
-                  isSelected &&
-                    styles.selectedOptionText,
+                  isSelected && styles.selectedOptionText,
                 ]}
               >
                 {option.label}
@@ -311,8 +476,7 @@ export default function CheckInScreen({ navigation }) {
               <Text
                 style={[
                   styles.optionValue,
-                  isSelected &&
-                    styles.selectedOptionText,
+                  isSelected && styles.selectedOptionText,
                 ]}
               >
                 {option.value}
@@ -324,21 +488,11 @@ export default function CheckInScreen({ navigation }) {
 
       <View style={styles.buttonRow}>
         <Pressable
-          style={[
-            styles.secondaryButton,
-            (isFirstQuestion || isSaving) &&
-              styles.disabledButton,
-          ]}
+          style={styles.secondaryButton}
           onPress={goToPreviousQuestion}
-          disabled={isFirstQuestion || isSaving}
+          disabled={isSaving}
         >
-          <Text
-            style={[
-              styles.secondaryButtonText,
-              (isFirstQuestion || isSaving) &&
-                styles.disabledButtonText,
-            ]}
-          >
+          <Text style={styles.secondaryButtonText}>
             Previous
           </Text>
         </Pressable>
@@ -403,10 +557,6 @@ const styles = StyleSheet.create({
     padding: 28,
     alignItems: 'center',
     marginBottom: 22,
-    shadowColor: '#000000',
-    shadowOpacity: 0.08,
-    shadowRadius: 8,
-    elevation: 3,
   },
 
   completedIcon: {
@@ -462,6 +612,13 @@ const styles = StyleSheet.create({
     marginBottom: 6,
   },
 
+  savedContextText: {
+    fontSize: 14,
+    color: '#334155',
+    textTransform: 'capitalize',
+    marginBottom: 6,
+  },
+
   savedResultDate: {
     fontSize: 13,
     color: '#475569',
@@ -473,6 +630,99 @@ const styles = StyleSheet.create({
     color: '#64748B',
     lineHeight: 21,
     textAlign: 'center',
+  },
+
+  contextCard: {
+    backgroundColor: '#FFFFFF',
+    padding: 20,
+    borderRadius: 16,
+    marginBottom: 18,
+  },
+
+  noteCard: {
+    backgroundColor: '#FFFFFF',
+    padding: 20,
+    borderRadius: 16,
+    marginBottom: 18,
+  },
+
+  contextTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#1F2937',
+    marginBottom: 8,
+  },
+
+  contextHelp: {
+    fontSize: 14,
+    color: '#64748B',
+    lineHeight: 21,
+    marginBottom: 16,
+  },
+
+  moodOption: {
+    minHeight: 58,
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#F8FAFC',
+    borderWidth: 2,
+    borderColor: '#E2E8F0',
+    borderRadius: 12,
+    paddingHorizontal: 16,
+    marginBottom: 10,
+  },
+
+  selectedMoodOption: {
+    backgroundColor: '#E8F0FF',
+    borderColor: '#2563EB',
+  },
+
+  moodEmoji: {
+    fontSize: 25,
+    marginRight: 12,
+  },
+
+  moodLabel: {
+    flex: 1,
+    fontSize: 16,
+    color: '#334155',
+  },
+
+  moodSelection: {
+    fontSize: 13,
+    color: '#64748B',
+  },
+
+  selectedMoodText: {
+    color: '#2563EB',
+    fontWeight: 'bold',
+  },
+
+  noteInput: {
+    minHeight: 120,
+    backgroundColor: '#F8FAFC',
+    borderWidth: 2,
+    borderColor: '#E2E8F0',
+    borderRadius: 12,
+    padding: 14,
+    fontSize: 16,
+    color: '#1F2937',
+  },
+
+  characterCount: {
+    fontSize: 12,
+    color: '#64748B',
+    textAlign: 'right',
+    marginTop: 6,
+  },
+
+  continueButton: {
+    minHeight: 54,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#2563EB',
+    borderRadius: 12,
+    marginBottom: 12,
   },
 
   primaryFullButton: {
@@ -493,6 +743,12 @@ const styles = StyleSheet.create({
     borderColor: '#0F766E',
     borderRadius: 12,
     marginBottom: 12,
+  },
+
+  secondaryFullButtonText: {
+    color: '#0F766E',
+    fontSize: 17,
+    fontWeight: 'bold',
   },
 
   homeButton: {
@@ -549,10 +805,6 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFFFFF',
     padding: 20,
     borderRadius: 16,
-    shadowColor: '#000000',
-    shadowOpacity: 0.08,
-    shadowRadius: 8,
-    elevation: 3,
   },
 
   question: {
@@ -627,15 +879,6 @@ const styles = StyleSheet.create({
     color: '#2563EB',
     fontSize: 16,
     fontWeight: 'bold',
-  },
-
-  disabledButton: {
-    borderColor: '#CBD5E1',
-    backgroundColor: '#F1F5F9',
-  },
-
-  disabledButtonText: {
-    color: '#94A3B8',
   },
 
   primaryButton: {

@@ -21,6 +21,28 @@ function isSameLocalDay(firstDateValue, secondDateValue) {
   );
 }
 
+async function addMissingColumns(db) {
+  const columns = await db.getAllAsync(
+    'PRAGMA table_info(stress_entries)'
+  );
+
+  const columnNames = columns.map((column) => column.name);
+
+  if (!columnNames.includes('mood')) {
+    await db.execAsync(`
+      ALTER TABLE stress_entries
+      ADD COLUMN mood TEXT
+    `);
+  }
+
+  if (!columnNames.includes('note')) {
+    await db.execAsync(`
+      ALTER TABLE stress_entries
+      ADD COLUMN note TEXT
+    `);
+  }
+}
+
 export async function initialiseDatabase() {
   const db = await getDatabase();
 
@@ -35,12 +57,21 @@ export async function initialiseDatabase() {
       sleep INTEGER NOT NULL,
       workload INTEGER NOT NULL,
       energy INTEGER NOT NULL,
-      lifestyle INTEGER NOT NULL
+      lifestyle INTEGER NOT NULL,
+      mood TEXT,
+      note TEXT
     );
   `);
+
+  await addMissingColumns(db);
 }
 
-export async function saveStressEntry(score, answers) {
+export async function saveStressEntry(
+  score,
+  answers,
+  mood = null,
+  note = ''
+) {
   const db = await getDatabase();
   const date = new Date().toISOString();
 
@@ -55,9 +86,11 @@ export async function saveStressEntry(score, answers) {
         sleep,
         workload,
         energy,
-        lifestyle
+        lifestyle,
+        mood,
+        note
       )
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `,
     date,
     score,
@@ -67,7 +100,9 @@ export async function saveStressEntry(score, answers) {
     answers.sleep,
     answers.workload,
     answers.energy,
-    answers.lifestyle
+    answers.lifestyle,
+    mood,
+    note.trim()
   );
 
   return result.lastInsertRowId;
