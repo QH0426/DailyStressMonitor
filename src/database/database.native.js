@@ -10,6 +10,17 @@ async function getDatabase() {
   return database;
 }
 
+function isSameLocalDay(firstDateValue, secondDateValue) {
+  const firstDate = new Date(firstDateValue);
+  const secondDate = new Date(secondDateValue);
+
+  return (
+    firstDate.getFullYear() === secondDate.getFullYear() &&
+    firstDate.getMonth() === secondDate.getMonth() &&
+    firstDate.getDate() === secondDate.getDate()
+  );
+}
+
 export async function initialiseDatabase() {
   const db = await getDatabase();
 
@@ -70,6 +81,23 @@ export async function getStressEntries() {
     FROM stress_entries
     ORDER BY date DESC
   `);
+}
+
+export async function getTodayStressEntry() {
+  const entries = await getStressEntries();
+  const now = new Date();
+
+  return (
+    entries.find((entry) =>
+      isSameLocalDay(entry.date, now)
+    ) || null
+  );
+}
+
+export async function hasCompletedCheckInToday() {
+  const todayEntry = await getTodayStressEntry();
+
+  return Boolean(todayEntry);
 }
 
 export async function deleteStressEntry(entryId) {

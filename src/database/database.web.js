@@ -1,5 +1,16 @@
 const STORAGE_KEY = 'stress_entries';
 
+function isSameLocalDay(firstDateValue, secondDateValue) {
+  const firstDate = new Date(firstDateValue);
+  const secondDate = new Date(secondDateValue);
+
+  return (
+    firstDate.getFullYear() === secondDate.getFullYear() &&
+    firstDate.getMonth() === secondDate.getMonth() &&
+    firstDate.getDate() === secondDate.getDate()
+  );
+}
+
 export async function initialiseDatabase() {
   const existingEntries = localStorage.getItem(STORAGE_KEY);
 
@@ -45,6 +56,23 @@ export async function getStressEntries() {
     console.error('Unable to read stored web entries:', error);
     return [];
   }
+}
+
+export async function getTodayStressEntry() {
+  const entries = await getStressEntries();
+  const now = new Date();
+
+  return (
+    entries.find((entry) =>
+      isSameLocalDay(entry.date, now)
+    ) || null
+  );
+}
+
+export async function hasCompletedCheckInToday() {
+  const todayEntry = await getTodayStressEntry();
+
+  return Boolean(todayEntry);
 }
 
 export async function deleteStressEntry(entryId) {
