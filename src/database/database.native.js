@@ -27,8 +27,6 @@ export async function initialiseDatabase() {
       lifestyle INTEGER NOT NULL
     );
   `);
-
-  console.log('SQLite database initialised successfully.');
 }
 
 export async function saveStressEntry(score, answers) {
@@ -61,19 +59,35 @@ export async function saveStressEntry(score, answers) {
     answers.lifestyle
   );
 
-  console.log('Native stress entry saved with ID:', result.lastInsertRowId);
-
   return result.lastInsertRowId;
 }
 
 export async function getStressEntries() {
   const db = await getDatabase();
 
-  const entries = await db.getAllAsync(`
+  return db.getAllAsync(`
     SELECT *
     FROM stress_entries
     ORDER BY date DESC
   `);
+}
 
-  return entries;
+export async function deleteStressEntry(entryId) {
+  const db = await getDatabase();
+
+  await db.runAsync(
+    `
+      DELETE FROM stress_entries
+      WHERE id = ?
+    `,
+    entryId
+  );
+}
+
+export async function clearStressEntries() {
+  const db = await getDatabase();
+
+  await db.runAsync(`
+    DELETE FROM stress_entries
+  `);
 }

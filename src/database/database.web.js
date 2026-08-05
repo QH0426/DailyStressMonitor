@@ -6,8 +6,6 @@ export async function initialiseDatabase() {
   if (!existingEntries) {
     localStorage.setItem(STORAGE_KEY, JSON.stringify([]));
   }
-
-  console.log('Web local storage initialised successfully.');
 }
 
 export async function saveStressEntry(score, answers) {
@@ -26,11 +24,10 @@ export async function saveStressEntry(score, answers) {
     lifestyle: answers.lifestyle,
   };
 
-  const updatedEntries = [newEntry, ...existingEntries];
-
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(updatedEntries));
-
-  console.log('Web stress entry saved:', newEntry);
+  localStorage.setItem(
+    STORAGE_KEY,
+    JSON.stringify([newEntry, ...existingEntries])
+  );
 
   return newEntry.id;
 }
@@ -48,4 +45,21 @@ export async function getStressEntries() {
     console.error('Unable to read stored web entries:', error);
     return [];
   }
+}
+
+export async function deleteStressEntry(entryId) {
+  const existingEntries = await getStressEntries();
+
+  const updatedEntries = existingEntries.filter(
+    (entry) => String(entry.id) !== String(entryId)
+  );
+
+  localStorage.setItem(
+    STORAGE_KEY,
+    JSON.stringify(updatedEntries)
+  );
+}
+
+export async function clearStressEntries() {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify([]));
 }

@@ -3,6 +3,7 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import CheckInScreen from '../screens/CheckInScreen';
 import HistoryScreen from '../screens/HistoryScreen';
 import HomeScreen from '../screens/HomeScreen';
+import InformationScreen from '../screens/InformationScreen';
 import ProgressScreen from '../screens/ProgressScreen';
 import ResultScreen from '../screens/ResultScreen';
 
@@ -59,6 +60,14 @@ export default function AppNavigator() {
         component={ProgressScreen}
         options={{
           title: 'Stress Progress',
+        }}
+      />
+
+      <Stack.Screen
+        name="Information"
+        component={InformationScreen}
+        options={{
+          title: 'Information & Privacy',
         }}
       />
     </Stack.Navigator>

@@ -188,6 +188,8 @@ export default function HomeScreen({ navigation }) {
       <Pressable
         style={styles.primaryButton}
         onPress={() => navigation.navigate('CheckIn')}
+        accessibilityRole="button"
+        accessibilityLabel="Start today's daily stress check-in"
       >
         <Text style={styles.primaryButtonText}>
           Start Today’s Check-in
@@ -197,6 +199,8 @@ export default function HomeScreen({ navigation }) {
       <Pressable
         style={styles.secondaryButton}
         onPress={() => navigation.navigate('History')}
+        accessibilityRole="button"
+        accessibilityLabel="View saved stress history"
       >
         <Text style={styles.secondaryButtonText}>
           View Stress History
@@ -206,9 +210,22 @@ export default function HomeScreen({ navigation }) {
       <Pressable
         style={styles.progressButton}
         onPress={() => navigation.navigate('Progress')}
+        accessibilityRole="button"
+        accessibilityLabel="View stress progress graph and statistics"
       >
         <Text style={styles.progressButtonText}>
           View Stress Progress
+        </Text>
+      </Pressable>
+
+      <Pressable
+        style={styles.informationButton}
+        onPress={() => navigation.navigate('Information')}
+        accessibilityRole="button"
+        accessibilityLabel="Open information and privacy details"
+      >
+        <Text style={styles.informationButtonText}>
+          Information & Privacy
         </Text>
       </Pressable>
 
@@ -407,9 +424,24 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: '#0F766E',
     borderRadius: 12,
+    marginBottom: 14,
   },
 
   progressButtonText: {
+    color: '#FFFFFF',
+    fontSize: 17,
+    fontWeight: 'bold',
+  },
+
+  informationButton: {
+    minHeight: 54,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#475569',
+    borderRadius: 12,
+  },
+
+  informationButtonText: {
     color: '#FFFFFF',
     fontSize: 17,
     fontWeight: 'bold',

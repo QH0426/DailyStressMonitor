@@ -2,6 +2,8 @@ import { useCallback, useState } from 'react';
 
 import {
   ActivityIndicator,
+  Alert,
+  Platform,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -11,12 +13,18 @@ import {
 
 import { useFocusEffect } from '@react-navigation/native';
 
-import { getStressEntries } from '../database/database';
+import {
+  clearStressEntries,
+  deleteStressEntry,
+  getStressEntries,
+} from '../database/database';
+
 import { getStressCategory } from '../services/stressCalculation';
 
 export default function HistoryScreen({ navigation }) {
   const [entries, setEntries] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isDeleting, setIsDeleting] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
 
   const loadEntries = useCallback(async () => {
@@ -25,7 +33,6 @@ export default function HistoryScreen({ navigation }) {
       setErrorMessage('');
 
       const storedEntries = await getStressEntries();
-
       setEntries(storedEntries);
     } catch (error) {
       console.error('Unable to load stress history:', error);
@@ -56,6 +63,109 @@ export default function HistoryScreen({ navigation }) {
     });
   }
 
+  function confirmAction(title, message, confirmText, onConfirm) {
+    if (Platform.OS === 'web') {
+      const confirmed = window.confirm(`${title}\n\n${message}`);
+
+      if (confirmed) {
+        onConfirm();
+      }
+
+      return;
+    }
+
+    Alert.alert(
+      title,
+      message,
+      [
+        {
+          text: 'Cancel',
+          style: 'cancel',
+        },
+        {
+          text: confirmText,
+          style: 'destructive',
+          onPress: onConfirm,
+        },
+      ]
+    );
+  }
+
+  function showMessage(title, message) {
+    if (Platform.OS === 'web') {
+      window.alert(`${title}\n\n${message}`);
+      return;
+    }
+
+    Alert.alert(title, message);
+  }
+
+  function requestDeleteEntry(entry) {
+    confirmAction(
+      'Delete this check-in?',
+      `The ${entry.score}% result from ${formatDate(
+        entry.date
+      )} will be permanently removed.`,
+      'Delete',
+      () => handleDeleteEntry(entry.id)
+    );
+  }
+
+  async function handleDeleteEntry(entryId) {
+    try {
+      setIsDeleting(true);
+
+      await deleteStressEntry(entryId);
+      await loadEntries();
+
+      showMessage(
+        'Check-in deleted',
+        'The selected check-in has been removed from your history.'
+      );
+    } catch (error) {
+      console.error('Unable to delete stress entry:', error);
+
+      showMessage(
+        'Deletion failed',
+        'The selected check-in could not be deleted. Please try again.'
+      );
+    } finally {
+      setIsDeleting(false);
+    }
+  }
+
+  function requestClearHistory() {
+    confirmAction(
+      'Delete all stress history?',
+      'Every saved check-in will be permanently removed. This action cannot be undone.',
+      'Delete All',
+      handleClearHistory
+    );
+  }
+
+  async function handleClearHistory() {
+    try {
+      setIsDeleting(true);
+
+      await clearStressEntries();
+      await loadEntries();
+
+      showMessage(
+        'History cleared',
+        'All saved stress check-ins have been removed.'
+      );
+    } catch (error) {
+      console.error('Unable to clear stress history:', error);
+
+      showMessage(
+        'Deletion failed',
+        'Your stress history could not be cleared. Please try again.'
+      );
+    } finally {
+      setIsDeleting(false);
+    }
+  }
+
   if (isLoading) {
     return (
       <View style={styles.centreContainer}>
@@ -76,18 +186,22 @@ export default function HistoryScreen({ navigation }) {
       <Text style={styles.title}>Stress History</Text>
 
       <Text style={styles.description}>
-        Review your previous daily check-ins and estimated stress scores.
+        Review and manage your previous daily check-ins.
       </Text>
 
       {errorMessage ? (
         <View style={styles.errorCard}>
-          <Text style={styles.errorText}>{errorMessage}</Text>
+          <Text style={styles.errorText}>
+            {errorMessage}
+          </Text>
 
           <Pressable
             style={styles.retryButton}
             onPress={loadEntries}
           >
-            <Text style={styles.retryButtonText}>Try Again</Text>
+            <Text style={styles.retryButtonText}>
+              Try Again
+            </Text>
           </Pressable>
         </View>
       ) : null}
@@ -101,7 +215,7 @@ export default function HistoryScreen({ navigation }) {
           </Text>
 
           <Text style={styles.emptyText}>
-            Complete your first daily check-in to see your results here.
+            Complete a daily check-in to see your results here.
           </Text>
 
           <Pressable
@@ -130,7 +244,12 @@ export default function HistoryScreen({ navigation }) {
                     {formatDate(entry.date)}
                   </Text>
 
-                  <Text style={styles.categoryText}>
+                  <Text
+                    style={[
+                      styles.categoryText,
+                      { color: category.colour },
+                    ]}
+                  >
                     {category.label} stress
                   </Text>
                 </View>
@@ -160,63 +279,126 @@ export default function HistoryScreen({ navigation }) {
 
               <View style={styles.answersGrid}>
                 <View style={styles.answerItem}>
-                  <Text style={styles.answerLabel}>Stress</Text>
+                  <Text style={styles.answerLabel}>
+                    Stress
+                  </Text>
                   <Text style={styles.answerValue}>
                     {entry.stress}/5
                   </Text>
                 </View>
 
                 <View style={styles.answerItem}>
-                  <Text style={styles.answerLabel}>Anxiety</Text>
+                  <Text style={styles.answerLabel}>
+                    Anxiety
+                  </Text>
                   <Text style={styles.answerValue}>
                     {entry.anxiety}/5
                   </Text>
                 </View>
 
                 <View style={styles.answerItem}>
-                  <Text style={styles.answerLabel}>Panic</Text>
+                  <Text style={styles.answerLabel}>
+                    Panic
+                  </Text>
                   <Text style={styles.answerValue}>
                     {entry.panic}/5
                   </Text>
                 </View>
 
                 <View style={styles.answerItem}>
-                  <Text style={styles.answerLabel}>Sleep</Text>
+                  <Text style={styles.answerLabel}>
+                    Sleep
+                  </Text>
                   <Text style={styles.answerValue}>
                     {entry.sleep}/5
                   </Text>
                 </View>
 
                 <View style={styles.answerItem}>
-                  <Text style={styles.answerLabel}>Workload</Text>
+                  <Text style={styles.answerLabel}>
+                    Workload
+                  </Text>
                   <Text style={styles.answerValue}>
                     {entry.workload}/5
                   </Text>
                 </View>
 
                 <View style={styles.answerItem}>
-                  <Text style={styles.answerLabel}>Energy</Text>
+                  <Text style={styles.answerLabel}>
+                    Energy
+                  </Text>
                   <Text style={styles.answerValue}>
                     {entry.energy}/5
                   </Text>
                 </View>
 
                 <View style={styles.answerItem}>
-                  <Text style={styles.answerLabel}>Lifestyle</Text>
+                  <Text style={styles.answerLabel}>
+                    Lifestyle
+                  </Text>
                   <Text style={styles.answerValue}>
                     {entry.lifestyle}/5
                   </Text>
                 </View>
               </View>
+
+              <Pressable
+                style={[
+                  styles.deleteEntryButton,
+                  isDeleting && styles.disabledButton,
+                ]}
+                onPress={() => requestDeleteEntry(entry)}
+                disabled={isDeleting}
+                accessibilityRole="button"
+                accessibilityLabel={`Delete check-in from ${formatDate(
+                  entry.date
+                )}`}
+              >
+                <Text style={styles.deleteEntryButtonText}>
+                  Delete This Check-in
+                </Text>
+              </Pressable>
             </View>
           );
         })}
+
+      {!errorMessage && entries.length > 0 ? (
+        <View style={styles.dangerCard}>
+          <Text style={styles.dangerTitle}>
+            Data controls
+          </Text>
+
+          <Text style={styles.dangerText}>
+            Clearing your history permanently removes every saved
+            check-in from this device or browser.
+          </Text>
+
+          <Pressable
+            style={[
+              styles.clearHistoryButton,
+              isDeleting && styles.disabledButton,
+            ]}
+            onPress={requestClearHistory}
+            disabled={isDeleting}
+            accessibilityRole="button"
+            accessibilityLabel="Delete all saved stress history"
+          >
+            <Text style={styles.clearHistoryButtonText}>
+              {isDeleting
+                ? 'Please wait...'
+                : 'Delete All History'}
+            </Text>
+          </Pressable>
+        </View>
+      ) : null}
 
       <Pressable
         style={styles.homeButton}
         onPress={() => navigation.navigate('Home')}
       >
-        <Text style={styles.homeButtonText}>Return Home</Text>
+        <Text style={styles.homeButtonText}>
+          Return Home
+        </Text>
       </Pressable>
     </ScrollView>
   );
@@ -293,7 +475,7 @@ const styles = StyleSheet.create({
 
   categoryText: {
     fontSize: 15,
-    color: '#64748B',
+    fontWeight: '600',
   },
 
   scoreCircle: {
@@ -341,15 +523,70 @@ const styles = StyleSheet.create({
     color: '#334155',
   },
 
+  deleteEntryButton: {
+    minHeight: 48,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#FFF7ED',
+    borderWidth: 1,
+    borderColor: '#FB923C',
+    borderRadius: 11,
+    marginTop: 8,
+  },
+
+  deleteEntryButtonText: {
+    color: '#C2410C',
+    fontSize: 15,
+    fontWeight: 'bold',
+  },
+
+  dangerCard: {
+    backgroundColor: '#FEF2F2',
+    borderWidth: 1,
+    borderColor: '#FCA5A5',
+    borderRadius: 16,
+    padding: 20,
+    marginBottom: 18,
+  },
+
+  dangerTitle: {
+    color: '#991B1B',
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginBottom: 8,
+  },
+
+  dangerText: {
+    color: '#7F1D1D',
+    fontSize: 14,
+    lineHeight: 21,
+    marginBottom: 16,
+  },
+
+  clearHistoryButton: {
+    minHeight: 50,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#DC2626',
+    borderRadius: 11,
+  },
+
+  clearHistoryButtonText: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+
+  disabledButton: {
+    opacity: 0.55,
+  },
+
   emptyCard: {
     backgroundColor: '#FFFFFF',
     borderRadius: 16,
     padding: 28,
     alignItems: 'center',
-    shadowColor: '#000000',
-    shadowOpacity: 0.08,
-    shadowRadius: 8,
-    elevation: 3,
+    marginBottom: 20,
   },
 
   emptyIcon: {
@@ -424,7 +661,6 @@ const styles = StyleSheet.create({
     borderWidth: 2,
     borderColor: '#2563EB',
     borderRadius: 12,
-    marginTop: 8,
   },
 
   homeButtonText: {
