@@ -14,6 +14,29 @@ import { useFocusEffect } from '@react-navigation/native';
 import { getStressEntries } from '../database/database';
 import { getStressCategory } from '../services/stressCalculation';
 
+const moodDetails = {
+  'very-good': {
+    label: 'Very good',
+    emoji: '😄',
+  },
+  good: {
+    label: 'Good',
+    emoji: '🙂',
+  },
+  neutral: {
+    label: 'Neutral',
+    emoji: '😐',
+  },
+  low: {
+    label: 'Low',
+    emoji: '🙁',
+  },
+  'very-low': {
+    label: 'Very low',
+    emoji: '😟',
+  },
+};
+
 export default function HomeScreen({ navigation }) {
   const [latestEntry, setLatestEntry] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -73,6 +96,10 @@ export default function HomeScreen({ navigation }) {
     ? getStressCategory(latestEntry.score)
     : null;
 
+  const mood = latestEntry?.mood
+    ? moodDetails[latestEntry.mood]
+    : null;
+
   return (
     <ScrollView
       style={styles.screen}
@@ -87,13 +114,13 @@ export default function HomeScreen({ navigation }) {
       </Text>
 
       <Text style={styles.description}>
-        Monitor your daily stress using self-reported anxiety,
-        panic and lifestyle indicators.
+        Monitor your daily stress, mood and wellbeing using short
+        self-reported check-ins.
       </Text>
 
       <View style={styles.statusCard}>
         <Text style={styles.cardTitle}>
-          Latest stress result
+          Latest check-in
         </Text>
 
         {isLoading ? (
@@ -110,7 +137,7 @@ export default function HomeScreen({ navigation }) {
         ) : latestEntry ? (
           <>
             <View style={styles.resultRow}>
-              <View>
+              <View style={styles.scoreContainer}>
                 <Text
                   style={[
                     styles.score,
@@ -155,6 +182,39 @@ export default function HomeScreen({ navigation }) {
               </View>
             </View>
 
+            {mood ? (
+              <View style={styles.moodCard}>
+                <Text style={styles.moodEmoji}>
+                  {mood.emoji}
+                </Text>
+
+                <View style={styles.moodTextContainer}>
+                  <Text style={styles.contextLabel}>
+                    Latest mood
+                  </Text>
+
+                  <Text style={styles.moodValue}>
+                    {mood.label}
+                  </Text>
+                </View>
+              </View>
+            ) : null}
+
+            {latestEntry.note ? (
+              <View style={styles.noteCard}>
+                <Text style={styles.contextLabel}>
+                  Latest daily note
+                </Text>
+
+                <Text
+                  style={styles.noteText}
+                  numberOfLines={3}
+                >
+                  “{latestEntry.note}”
+                </Text>
+              </View>
+            ) : null}
+
             <View style={styles.divider} />
 
             <Text style={styles.lastCheckInLabel}>
@@ -175,7 +235,7 @@ export default function HomeScreen({ navigation }) {
 
             <Text style={styles.emptyText}>
               Complete your first daily check-in to see your latest
-              stress result here.
+              stress result, mood and note here.
             </Text>
           </View>
         )}
@@ -236,8 +296,8 @@ export default function HomeScreen({ navigation }) {
 
         <Text style={styles.infoText}>
           Your score is an estimate based on your self-reported
-          responses. It is intended to support personal monitoring
-          and does not provide a medical diagnosis.
+          responses. Mood and notes provide additional context but do
+          not change the calculated stress score.
         </Text>
       </View>
     </ScrollView>
@@ -312,6 +372,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
 
+  scoreContainer: {
+    flex: 1,
+    paddingRight: 12,
+  },
+
   score: {
     fontSize: 48,
     fontWeight: 'bold',
@@ -335,6 +400,54 @@ const styles = StyleSheet.create({
   circleText: {
     fontSize: 20,
     fontWeight: 'bold',
+  },
+
+  moodCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#F0FDF4',
+    borderWidth: 1,
+    borderColor: '#86EFAC',
+    borderRadius: 12,
+    padding: 14,
+    marginTop: 20,
+  },
+
+  moodEmoji: {
+    fontSize: 34,
+    marginRight: 12,
+  },
+
+  moodTextContainer: {
+    flex: 1,
+  },
+
+  contextLabel: {
+    fontSize: 13,
+    color: '#64748B',
+    marginBottom: 4,
+  },
+
+  moodValue: {
+    fontSize: 17,
+    fontWeight: 'bold',
+    color: '#166534',
+  },
+
+  noteCard: {
+    backgroundColor: '#FFFBEB',
+    borderWidth: 1,
+    borderColor: '#FCD34D',
+    borderRadius: 12,
+    padding: 14,
+    marginTop: 12,
+  },
+
+  noteText: {
+    fontSize: 15,
+    color: '#78350F',
+    lineHeight: 22,
+    fontStyle: 'italic',
   },
 
   divider: {
