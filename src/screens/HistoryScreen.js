@@ -4,7 +4,6 @@ import {
   ActivityIndicator,
   Alert,
   Platform,
-  Pressable,
   ScrollView,
   StyleSheet,
   Text,
@@ -14,12 +13,71 @@ import {
 import { useFocusEffect } from '@react-navigation/native';
 
 import {
+  CalendarDays,
+  CheckCircle2,
+  ClipboardCheck,
+  Frown,
+  History,
+  Home,
+  Meh,
+  NotebookText,
+  ShieldCheck,
+  Smile,
+  Trash2,
+} from 'lucide-react-native';
+
+import AppButton from '../components/AppButton';
+import SectionHeader from '../components/SectionHeader';
+import WarmCard from '../components/WarmCard';
+
+import {
   clearStressEntries,
   deleteStressEntry,
   getStressEntries,
 } from '../database/database';
 
 import { getStressCategory } from '../services/stressCalculation';
+
+import Colors from '../theme/colors';
+import Spacing from '../theme/spacing';
+import Typography from '../theme/typography';
+
+const moodDetails = {
+  'very-good': {
+    label: 'Very good',
+    Icon: Smile,
+    colour: '#5F8F68',
+    background: '#EAF4EC',
+  },
+
+  good: {
+    label: 'Good',
+    Icon: Smile,
+    colour: Colors.primaryDark,
+    background: '#EAF5F2',
+  },
+
+  neutral: {
+    label: 'Neutral',
+    Icon: Meh,
+    colour: '#9A7740',
+    background: '#FBF4E6',
+  },
+
+  low: {
+    label: 'Low',
+    Icon: Frown,
+    colour: '#B56D57',
+    background: '#FBEDE8',
+  },
+
+  'very-low': {
+    label: 'Very low',
+    Icon: Frown,
+    colour: '#A9574A',
+    background: '#F9E7E3',
+  },
+};
 
 export default function HistoryScreen({ navigation }) {
   const [entries, setEntries] = useState([]);
@@ -35,10 +93,10 @@ export default function HistoryScreen({ navigation }) {
       const storedEntries = await getStressEntries();
       setEntries(storedEntries);
     } catch (error) {
-      console.error('Unable to load stress history:', error);
+      console.error('Unable to load wellbeing journey:', error);
 
       setErrorMessage(
-        'Your stress history could not be loaded. Please try again.'
+        'Your saved reflections could not be loaded. Please try again.'
       );
     } finally {
       setIsLoading(false);
@@ -52,9 +110,7 @@ export default function HistoryScreen({ navigation }) {
   );
 
   function formatDate(dateValue) {
-    const date = new Date(dateValue);
-
-    return date.toLocaleString('en-GB', {
+    return new Date(dateValue).toLocaleString('en-GB', {
       day: '2-digit',
       month: 'long',
       year: 'numeric',
@@ -74,21 +130,17 @@ export default function HistoryScreen({ navigation }) {
       return;
     }
 
-    Alert.alert(
-      title,
-      message,
-      [
-        {
-          text: 'Cancel',
-          style: 'cancel',
-        },
-        {
-          text: confirmText,
-          style: 'destructive',
-          onPress: onConfirm,
-        },
-      ]
-    );
+    Alert.alert(title, message, [
+      {
+        text: 'Cancel',
+        style: 'cancel',
+      },
+      {
+        text: confirmText,
+        style: 'destructive',
+        onPress: onConfirm,
+      },
+    ]);
   }
 
   function showMessage(title, message) {
@@ -102,11 +154,11 @@ export default function HistoryScreen({ navigation }) {
 
   function requestDeleteEntry(entry) {
     confirmAction(
-      'Delete this check-in?',
-      `The ${entry.score}% result from ${formatDate(
+      'Remove this reflection?',
+      `The ${entry.score}% reflection from ${formatDate(
         entry.date
       )} will be permanently removed.`,
-      'Delete',
+      'Remove',
       () => handleDeleteEntry(entry.id)
     );
   }
@@ -119,15 +171,15 @@ export default function HistoryScreen({ navigation }) {
       await loadEntries();
 
       showMessage(
-        'Check-in deleted',
-        'The selected check-in has been removed from your history.'
+        'Reflection removed',
+        'The selected reflection has been removed from your journey.'
       );
     } catch (error) {
-      console.error('Unable to delete stress entry:', error);
+      console.error('Unable to delete reflection:', error);
 
       showMessage(
-        'Deletion failed',
-        'The selected check-in could not be deleted. Please try again.'
+        'Unable to remove reflection',
+        'The selected reflection could not be removed. Please try again.'
       );
     } finally {
       setIsDeleting(false);
@@ -136,9 +188,9 @@ export default function HistoryScreen({ navigation }) {
 
   function requestClearHistory() {
     confirmAction(
-      'Delete all stress history?',
-      'Every saved check-in will be permanently removed. This action cannot be undone.',
-      'Delete All',
+      'Remove your full journey?',
+      'Every saved reflection will be permanently removed. This action cannot be undone.',
+      'Remove All',
       handleClearHistory
     );
   }
@@ -151,15 +203,15 @@ export default function HistoryScreen({ navigation }) {
       await loadEntries();
 
       showMessage(
-        'History cleared',
-        'All saved stress check-ins have been removed.'
+        'Journey cleared',
+        'All saved reflections have been removed.'
       );
     } catch (error) {
-      console.error('Unable to clear stress history:', error);
+      console.error('Unable to clear journey:', error);
 
       showMessage(
-        'Deletion failed',
-        'Your stress history could not be cleared. Please try again.'
+        'Unable to clear journey',
+        'Your saved reflections could not be removed. Please try again.'
       );
     } finally {
       setIsDeleting(false);
@@ -168,11 +220,22 @@ export default function HistoryScreen({ navigation }) {
 
   if (isLoading) {
     return (
-      <View style={styles.centreContainer}>
-        <ActivityIndicator size="large" color="#2563EB" />
+      <View style={styles.loadingContainer}>
+        <View style={styles.loadingIcon}>
+          <History
+            size={32}
+            color={Colors.primaryDark}
+            strokeWidth={1.9}
+          />
+        </View>
+
+        <ActivityIndicator
+          size="large"
+          color={Colors.primary}
+        />
 
         <Text style={styles.loadingText}>
-          Loading your stress history...
+          Preparing your wellbeing journey...
         </Text>
       </View>
     );
@@ -182,76 +245,91 @@ export default function HistoryScreen({ navigation }) {
     <ScrollView
       style={styles.screen}
       contentContainerStyle={styles.container}
+      showsVerticalScrollIndicator={false}
     >
-      <Text style={styles.title}>Stress History</Text>
-
-      <Text style={styles.description}>
-        Review and manage your previous daily check-ins.
-      </Text>
+      <SectionHeader
+        title="Your Wellbeing Journey"
+        description="Every reflection can help you understand how your wellbeing changes over time."
+        icon={History}
+      />
 
       {errorMessage ? (
-        <View style={styles.errorCard}>
+        <WarmCard
+          backgroundColor="#FBECE9"
+          borderColor="#E7B8AE"
+        >
+          <Text style={styles.errorTitle}>
+            We could not load your reflections
+          </Text>
+
           <Text style={styles.errorText}>
             {errorMessage}
           </Text>
 
-          <Pressable
-            style={styles.retryButton}
+          <AppButton
+            title="Try Again"
             onPress={loadEntries}
-          >
-            <Text style={styles.retryButtonText}>
-              Try Again
-            </Text>
-          </Pressable>
-        </View>
+          />
+        </WarmCard>
       ) : null}
 
       {!errorMessage && entries.length === 0 ? (
-        <View style={styles.emptyCard}>
-          <Text style={styles.emptyIcon}>📋</Text>
+        <WarmCard style={styles.emptyCard}>
+          <View style={styles.emptyIcon}>
+            <ClipboardCheck
+              size={40}
+              color={Colors.primary}
+              strokeWidth={1.8}
+            />
+          </View>
 
           <Text style={styles.emptyTitle}>
-            No check-ins recorded
+            Your journey starts here
           </Text>
 
           <Text style={styles.emptyText}>
-            Complete a daily check-in to see your results here.
+            Complete your first daily reflection to begin building a
+            personal record of your mood, notes and wellbeing.
           </Text>
 
-          <Pressable
-            style={styles.primaryButton}
+          <AppButton
+            title="Start Daily Reflection"
+            icon={ClipboardCheck}
             onPress={() => navigation.navigate('CheckIn')}
-          >
-            <Text style={styles.primaryButtonText}>
-              Start Daily Check-in
-            </Text>
-          </Pressable>
-        </View>
+          />
+        </WarmCard>
       ) : null}
 
       {!errorMessage &&
         entries.map((entry) => {
           const category = getStressCategory(entry.score);
+          const mood = moodDetails[entry.mood] || null;
+          const MoodIcon = mood?.Icon;
 
           return (
-            <View
+            <WarmCard
               key={entry.id}
-              style={styles.historyCard}
+              style={styles.journeyCard}
             >
-              <View style={styles.cardTopRow}>
-                <View style={styles.dateContainer}>
-                  <Text style={styles.dateText}>
-                    {formatDate(entry.date)}
-                  </Text>
+              <View style={styles.entryHeader}>
+                <View style={styles.dateSection}>
+                  <View style={styles.dateIcon}>
+                    <CalendarDays
+                      size={22}
+                      color={Colors.primaryDark}
+                      strokeWidth={1.9}
+                    />
+                  </View>
 
-                  <Text
-                    style={[
-                      styles.categoryText,
-                      { color: category.colour },
-                    ]}
-                  >
-                    {category.label} stress
-                  </Text>
+                  <View style={styles.dateTextContainer}>
+                    <Text style={styles.dateLabel}>
+                      Daily reflection
+                    </Text>
+
+                    <Text style={styles.dateText}>
+                      {formatDate(entry.date)}
+                    </Text>
+                  </View>
                 </View>
 
                 <View
@@ -275,131 +353,233 @@ export default function HistoryScreen({ navigation }) {
                 </View>
               </View>
 
+              <View
+                style={[
+                  styles.categoryBadge,
+                  {
+                    backgroundColor: `${category.colour}18`,
+                    borderColor: `${category.colour}45`,
+                  },
+                ]}
+              >
+                <Text
+                  style={[
+                    styles.categoryText,
+                    {
+                      color: category.colour,
+                    },
+                  ]}
+                >
+                  {category.label} stress
+                </Text>
+              </View>
+
+              {mood && MoodIcon ? (
+                <View
+                  style={[
+                    styles.moodCard,
+                    {
+                      backgroundColor: mood.background,
+                      borderColor: `${mood.colour}55`,
+                    },
+                  ]}
+                >
+                  <View
+                    style={[
+                      styles.moodIcon,
+                      {
+                        backgroundColor: `${mood.colour}18`,
+                      },
+                    ]}
+                  >
+                    <MoodIcon
+                      size={30}
+                      color={mood.colour}
+                      strokeWidth={1.8}
+                    />
+                  </View>
+
+                  <View style={styles.moodTextContainer}>
+                    <Text style={styles.smallLabel}>
+                      Mood
+                    </Text>
+
+                    <Text
+                      style={[
+                        styles.moodValue,
+                        {
+                          color: mood.colour,
+                        },
+                      ]}
+                    >
+                      {mood.label}
+                    </Text>
+                  </View>
+                </View>
+              ) : null}
+
+              {entry.note ? (
+                <View style={styles.noteCard}>
+                  <View style={styles.noteHeader}>
+                    <NotebookText
+                      size={21}
+                      color="#8B6D35"
+                      strokeWidth={1.9}
+                    />
+
+                    <Text style={styles.noteLabel}>
+                      Personal reflection
+                    </Text>
+                  </View>
+
+                  <Text style={styles.noteText}>
+                    “{entry.note}”
+                  </Text>
+                </View>
+              ) : null}
+
               <View style={styles.divider} />
 
+              <Text style={styles.answersHeading}>
+                Daily factors
+              </Text>
+
               <View style={styles.answersGrid}>
-                <View style={styles.answerItem}>
+                <View style={styles.answerCard}>
                   <Text style={styles.answerLabel}>
                     Stress
                   </Text>
+
                   <Text style={styles.answerValue}>
                     {entry.stress}/5
                   </Text>
                 </View>
 
-                <View style={styles.answerItem}>
+                <View style={styles.answerCard}>
                   <Text style={styles.answerLabel}>
                     Anxiety
                   </Text>
+
                   <Text style={styles.answerValue}>
                     {entry.anxiety}/5
                   </Text>
                 </View>
 
-                <View style={styles.answerItem}>
+                <View style={styles.answerCard}>
                   <Text style={styles.answerLabel}>
                     Panic
                   </Text>
+
                   <Text style={styles.answerValue}>
                     {entry.panic}/5
                   </Text>
                 </View>
 
-                <View style={styles.answerItem}>
+                <View style={styles.answerCard}>
                   <Text style={styles.answerLabel}>
                     Sleep
                   </Text>
+
                   <Text style={styles.answerValue}>
                     {entry.sleep}/5
                   </Text>
                 </View>
 
-                <View style={styles.answerItem}>
+                <View style={styles.answerCard}>
                   <Text style={styles.answerLabel}>
                     Workload
                   </Text>
+
                   <Text style={styles.answerValue}>
                     {entry.workload}/5
                   </Text>
                 </View>
 
-                <View style={styles.answerItem}>
+                <View style={styles.answerCard}>
                   <Text style={styles.answerLabel}>
                     Energy
                   </Text>
+
                   <Text style={styles.answerValue}>
                     {entry.energy}/5
                   </Text>
                 </View>
 
-                <View style={styles.answerItem}>
+                <View style={styles.answerCard}>
                   <Text style={styles.answerLabel}>
                     Lifestyle
                   </Text>
+
                   <Text style={styles.answerValue}>
                     {entry.lifestyle}/5
                   </Text>
                 </View>
               </View>
 
-              <Pressable
-                style={[
-                  styles.deleteEntryButton,
-                  isDeleting && styles.disabledButton,
-                ]}
-                onPress={() => requestDeleteEntry(entry)}
+              <AppButton
+                title={
+                  isDeleting
+                    ? 'Please wait...'
+                    : 'Remove This Reflection'
+                }
+                icon={Trash2}
+                variant="danger"
                 disabled={isDeleting}
-                accessibilityRole="button"
-                accessibilityLabel={`Delete check-in from ${formatDate(
+                onPress={() => requestDeleteEntry(entry)}
+                accessibilityLabel={`Remove reflection from ${formatDate(
                   entry.date
                 )}`}
-              >
-                <Text style={styles.deleteEntryButtonText}>
-                  Delete This Check-in
-                </Text>
-              </Pressable>
-            </View>
+              />
+            </WarmCard>
           );
         })}
 
       {!errorMessage && entries.length > 0 ? (
-        <View style={styles.dangerCard}>
-          <Text style={styles.dangerTitle}>
-            Data controls
-          </Text>
+        <WarmCard
+          backgroundColor="#FFF5F2"
+          borderColor="#E8C5BA"
+        >
+          <View style={styles.dataHeader}>
+            <View style={styles.dataIcon}>
+              <ShieldCheck
+                size={25}
+                color="#A05E4B"
+                strokeWidth={1.9}
+              />
+            </View>
 
-          <Text style={styles.dangerText}>
-            Clearing your history permanently removes every saved
-            check-in from this device or browser.
-          </Text>
+            <View style={styles.dataTextContainer}>
+              <Text style={styles.dataTitle}>
+                Your data controls
+              </Text>
 
-          <Pressable
-            style={[
-              styles.clearHistoryButton,
-              isDeleting && styles.disabledButton,
-            ]}
-            onPress={requestClearHistory}
-            disabled={isDeleting}
-            accessibilityRole="button"
-            accessibilityLabel="Delete all saved stress history"
-          >
-            <Text style={styles.clearHistoryButtonText}>
-              {isDeleting
+              <Text style={styles.dataText}>
+                Removing your full journey permanently deletes every
+                saved reflection from this device or browser.
+              </Text>
+            </View>
+          </View>
+
+          <AppButton
+            title={
+              isDeleting
                 ? 'Please wait...'
-                : 'Delete All History'}
-            </Text>
-          </Pressable>
-        </View>
+                : 'Remove All Reflections'
+            }
+            icon={Trash2}
+            variant="danger"
+            disabled={isDeleting}
+            onPress={requestClearHistory}
+          />
+        </WarmCard>
       ) : null}
 
-      <Pressable
-        style={styles.homeButton}
+      <AppButton
+        title="Return to Dashboard"
+        icon={Home}
+        variant="secondary"
         onPress={() => navigation.navigate('Home')}
-      >
-        <Text style={styles.homeButtonText}>
-          Return Home
-        </Text>
-      </Pressable>
+      />
     </ScrollView>
   );
 }
@@ -407,265 +587,289 @@ export default function HistoryScreen({ navigation }) {
 const styles = StyleSheet.create({
   screen: {
     flex: 1,
-    backgroundColor: '#F5F9FF',
+    backgroundColor: Colors.background,
   },
 
   container: {
     flexGrow: 1,
-    padding: 24,
-    paddingBottom: 40,
+    padding: Spacing.lg,
+    paddingBottom: Spacing.xxl,
   },
 
-  centreContainer: {
+  loadingContainer: {
     flex: 1,
-    backgroundColor: '#F5F9FF',
-    justifyContent: 'center',
+    backgroundColor: Colors.background,
     alignItems: 'center',
-    padding: 24,
+    justifyContent: 'center',
+    padding: Spacing.lg,
+  },
+
+  loadingIcon: {
+    width: 70,
+    height: 70,
+    borderRadius: 35,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#E9F2EC',
+    marginBottom: Spacing.lg,
   },
 
   loadingText: {
     fontSize: 16,
-    color: '#475569',
-    marginTop: 16,
+    color: Colors.textSecondary,
+    marginTop: Spacing.md,
   },
 
-  title: {
-    fontSize: 30,
-    fontWeight: 'bold',
-    color: '#2563EB',
-    marginBottom: 10,
+  errorTitle: {
+    fontSize: 19,
+    fontWeight: '600',
+    color: '#A05E4B',
+    marginBottom: Spacing.sm,
   },
 
-  description: {
-    fontSize: 16,
-    color: '#555555',
-    lineHeight: 23,
-    marginBottom: 24,
+  errorText: {
+    fontSize: 14,
+    color: Colors.textSecondary,
+    lineHeight: 21,
+    marginBottom: Spacing.md,
   },
 
-  historyCard: {
-    backgroundColor: '#FFFFFF',
-    padding: 20,
-    borderRadius: 16,
-    marginBottom: 18,
-    shadowColor: '#000000',
-    shadowOpacity: 0.08,
-    shadowRadius: 8,
-    elevation: 3,
+  emptyCard: {
+    alignItems: 'center',
   },
 
-  cardTopRow: {
+  emptyIcon: {
+    width: 78,
+    height: 78,
+    borderRadius: 39,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#EDF5F2',
+    marginBottom: Spacing.md,
+  },
+
+  emptyTitle: {
+    fontSize: Typography.heading,
+    fontWeight: '600',
+    color: Colors.text,
+    textAlign: 'center',
+    marginBottom: Spacing.sm,
+  },
+
+  emptyText: {
+    fontSize: 15,
+    color: Colors.textSecondary,
+    lineHeight: 22,
+    textAlign: 'center',
+    marginBottom: Spacing.lg,
+  },
+
+  journeyCard: {
+    padding: Spacing.lg,
+  },
+
+  entryHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+
+  dateSection: {
+    flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
+    paddingRight: Spacing.md,
   },
 
-  dateContainer: {
+  dateIcon: {
+    width: 45,
+    height: 45,
+    borderRadius: 23,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#E9F2EC',
+    marginRight: Spacing.md,
+  },
+
+  dateTextContainer: {
     flex: 1,
-    paddingRight: 14,
+  },
+
+  dateLabel: {
+    fontSize: 13,
+    color: Colors.textSecondary,
+    marginBottom: 4,
   },
 
   dateText: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: '#1F2937',
-    marginBottom: 6,
-  },
-
-  categoryText: {
     fontSize: 15,
     fontWeight: '600',
+    color: Colors.text,
+    lineHeight: 21,
   },
 
   scoreCircle: {
-    width: 74,
-    height: 74,
-    borderRadius: 37,
-    borderWidth: 5,
+    width: 82,
+    height: 82,
+    borderRadius: 41,
+    borderWidth: 6,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#FFFFFF',
+    backgroundColor: Colors.surface,
   },
 
   scoreText: {
     fontSize: 20,
-    fontWeight: 'bold',
+    fontWeight: '700',
+  },
+
+  categoryBadge: {
+    alignSelf: 'flex-start',
+    borderWidth: 1,
+    borderRadius: 18,
+    paddingHorizontal: 14,
+    paddingVertical: 7,
+    marginTop: Spacing.md,
+  },
+
+  categoryText: {
+    fontSize: 14,
+    fontWeight: '600',
+  },
+
+  moodCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderRadius: 17,
+    padding: Spacing.md,
+    marginTop: Spacing.md,
+  },
+
+  moodIcon: {
+    width: 52,
+    height: 52,
+    borderRadius: 26,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: Spacing.md,
+  },
+
+  moodTextContainer: {
+    flex: 1,
+  },
+
+  smallLabel: {
+    fontSize: 13,
+    color: Colors.textSecondary,
+    marginBottom: 3,
+  },
+
+  moodValue: {
+    fontSize: 18,
+    fontWeight: '600',
+  },
+
+  noteCard: {
+    backgroundColor: '#FFF9EE',
+    borderWidth: 1,
+    borderColor: '#ECDDBE',
+    borderRadius: 17,
+    padding: Spacing.md,
+    marginTop: Spacing.md,
+  },
+
+  noteHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: Spacing.sm,
+  },
+
+  noteLabel: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#8B6D35',
+    marginLeft: Spacing.sm,
+  },
+
+  noteText: {
+    fontSize: 15,
+    color: '#6B5432',
+    lineHeight: 22,
+    fontStyle: 'italic',
   },
 
   divider: {
     height: 1,
-    backgroundColor: '#E2E8F0',
-    marginVertical: 18,
+    backgroundColor: Colors.border,
+    marginVertical: Spacing.lg,
+  },
+
+  answersHeading: {
+    fontSize: 17,
+    fontWeight: '600',
+    color: Colors.text,
+    marginBottom: Spacing.md,
   },
 
   answersGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    marginHorizontal: -4,
+    marginHorizontal: -5,
+    marginBottom: Spacing.sm,
   },
 
-  answerItem: {
+  answerCard: {
     width: '50%',
-    paddingHorizontal: 4,
-    marginBottom: 12,
+    padding: 12,
+    borderWidth: 5,
+    borderColor: Colors.surface,
+    borderRadius: 16,
+    backgroundColor: '#F8F4EF',
   },
 
   answerLabel: {
     fontSize: 13,
-    color: '#64748B',
-    marginBottom: 3,
+    color: Colors.textSecondary,
+    marginBottom: 4,
   },
 
   answerValue: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: '#334155',
+    fontSize: 17,
+    fontWeight: '600',
+    color: Colors.text,
   },
 
-  deleteEntryButton: {
-    minHeight: 48,
-    justifyContent: 'center',
+  dataHeader: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    marginBottom: Spacing.md,
+  },
+
+  dataIcon: {
+    width: 50,
+    height: 50,
+    borderRadius: 25,
     alignItems: 'center',
-    backgroundColor: '#FFF7ED',
-    borderWidth: 1,
-    borderColor: '#FB923C',
-    borderRadius: 11,
-    marginTop: 8,
+    justifyContent: 'center',
+    backgroundColor: '#F7E4DE',
+    marginRight: Spacing.md,
   },
 
-  deleteEntryButtonText: {
-    color: '#C2410C',
-    fontSize: 15,
-    fontWeight: 'bold',
+  dataTextContainer: {
+    flex: 1,
   },
 
-  dangerCard: {
-    backgroundColor: '#FEF2F2',
-    borderWidth: 1,
-    borderColor: '#FCA5A5',
-    borderRadius: 16,
-    padding: 20,
-    marginBottom: 18,
-  },
-
-  dangerTitle: {
-    color: '#991B1B',
+  dataTitle: {
     fontSize: 18,
-    fontWeight: 'bold',
-    marginBottom: 8,
+    fontWeight: '600',
+    color: '#A05E4B',
+    marginBottom: 5,
   },
 
-  dangerText: {
-    color: '#7F1D1D',
+  dataText: {
     fontSize: 14,
+    color: Colors.textSecondary,
     lineHeight: 21,
-    marginBottom: 16,
-  },
-
-  clearHistoryButton: {
-    minHeight: 50,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: '#DC2626',
-    borderRadius: 11,
-  },
-
-  clearHistoryButtonText: {
-    color: '#FFFFFF',
-    fontSize: 16,
-    fontWeight: 'bold',
-  },
-
-  disabledButton: {
-    opacity: 0.55,
-  },
-
-  emptyCard: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 16,
-    padding: 28,
-    alignItems: 'center',
-    marginBottom: 20,
-  },
-
-  emptyIcon: {
-    fontSize: 46,
-    marginBottom: 14,
-  },
-
-  emptyTitle: {
-    fontSize: 21,
-    fontWeight: 'bold',
-    color: '#1F2937',
-    marginBottom: 10,
-  },
-
-  emptyText: {
-    fontSize: 16,
-    color: '#64748B',
-    textAlign: 'center',
-    lineHeight: 23,
-    marginBottom: 22,
-  },
-
-  errorCard: {
-    backgroundColor: '#FEF2F2',
-    borderWidth: 1,
-    borderColor: '#FCA5A5',
-    borderRadius: 14,
-    padding: 18,
-    marginBottom: 20,
-  },
-
-  errorText: {
-    color: '#991B1B',
-    fontSize: 15,
-    lineHeight: 22,
-    marginBottom: 14,
-  },
-
-  retryButton: {
-    alignSelf: 'flex-start',
-    backgroundColor: '#DC2626',
-    paddingVertical: 10,
-    paddingHorizontal: 18,
-    borderRadius: 10,
-  },
-
-  retryButtonText: {
-    color: '#FFFFFF',
-    fontWeight: 'bold',
-  },
-
-  primaryButton: {
-    minHeight: 52,
-    width: '100%',
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: '#2563EB',
-    borderRadius: 12,
-  },
-
-  primaryButtonText: {
-    color: '#FFFFFF',
-    fontSize: 16,
-    fontWeight: 'bold',
-  },
-
-  homeButton: {
-    minHeight: 52,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: '#FFFFFF',
-    borderWidth: 2,
-    borderColor: '#2563EB',
-    borderRadius: 12,
-  },
-
-  homeButtonText: {
-    color: '#2563EB',
-    fontSize: 16,
-    fontWeight: 'bold',
   },
 });
