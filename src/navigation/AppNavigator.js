@@ -7,6 +7,8 @@ import InformationScreen from '../screens/InformationScreen';
 import ProgressScreen from '../screens/ProgressScreen';
 import ResultScreen from '../screens/ResultScreen';
 
+import Colors from '../theme/colors';
+
 const Stack = createNativeStackNavigator();
 
 export default function AppNavigator() {
@@ -15,11 +17,19 @@ export default function AppNavigator() {
       initialRouteName="Home"
       screenOptions={{
         headerStyle: {
-          backgroundColor: '#2563EB',
+          backgroundColor: Colors.primaryDark,
         },
-        headerTintColor: '#FFFFFF',
+
+        headerTintColor: Colors.white,
+
         headerTitleStyle: {
-          fontWeight: 'bold',
+          fontWeight: '600',
+        },
+
+        headerShadowVisible: false,
+
+        contentStyle: {
+          backgroundColor: Colors.background,
         },
       }}
     >
@@ -35,7 +45,7 @@ export default function AppNavigator() {
         name="CheckIn"
         component={CheckInScreen}
         options={{
-          title: 'Daily Check-in',
+          title: 'Daily Reflection',
         }}
       />
 
@@ -43,7 +53,7 @@ export default function AppNavigator() {
         name="Result"
         component={ResultScreen}
         options={{
-          title: 'Stress Result',
+          title: 'Wellbeing Summary',
         }}
       />
 
@@ -51,7 +61,7 @@ export default function AppNavigator() {
         name="History"
         component={HistoryScreen}
         options={{
-          title: 'Stress History',
+          title: 'Your Journey',
         }}
       />
 
@@ -59,7 +69,7 @@ export default function AppNavigator() {
         name="Progress"
         component={ProgressScreen}
         options={{
-          title: 'Stress Progress',
+          title: 'Wellbeing Trends',
         }}
       />
 
@@ -67,7 +77,7 @@ export default function AppNavigator() {
         name="Information"
         component={InformationScreen}
         options={{
-          title: 'Information & Privacy',
+          title: 'Privacy & Information',
         }}
       />
     </Stack.Navigator>

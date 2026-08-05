@@ -11,50 +11,84 @@ import {
 
 import { useFocusEffect } from '@react-navigation/native';
 
+import {
+  ChartLine,
+  ClipboardCheck,
+  Frown,
+  History,
+  Info,
+  Leaf,
+  LockKeyhole,
+  Meh,
+  NotebookText,
+  ShieldCheck,
+  Smile,
+  Sparkles,
+} from 'lucide-react-native';
+
 import { getStressEntries } from '../database/database';
 import { getStressCategory } from '../services/stressCalculation';
+
+import Colors from '../theme/colors';
+import Shadows from '../theme/shadows';
+import Spacing from '../theme/spacing';
+import Typography from '../theme/typography';
 
 const moodDetails = {
   'very-good': {
     label: 'Very good',
-    emoji: '😄',
+    Icon: Smile,
+    colour: Colors.success,
+    background: '#EDF6EF',
   },
+
   good: {
     label: 'Good',
-    emoji: '🙂',
+    Icon: Smile,
+    colour: Colors.primaryDark,
+    background: '#EDF7F5',
   },
+
   neutral: {
     label: 'Neutral',
-    emoji: '😐',
+    Icon: Meh,
+    colour: '#A47E3B',
+    background: '#FBF5E8',
   },
+
   low: {
     label: 'Low',
-    emoji: '🙁',
+    Icon: Frown,
+    colour: Colors.coral,
+    background: '#FCEFEA',
   },
+
   'very-low': {
     label: 'Very low',
-    emoji: '😟',
+    Icon: Frown,
+    colour: Colors.danger,
+    background: '#FBECE9',
   },
 };
 
 export default function HomeScreen({ navigation }) {
   const [latestEntry, setLatestEntry] = useState(null);
+  const [previousEntry, setPreviousEntry] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  const loadLatestEntry = useCallback(async () => {
+  const loadDashboard = useCallback(async () => {
     try {
       setIsLoading(true);
 
       const entries = await getStressEntries();
 
-      if (entries.length > 0) {
-        setLatestEntry(entries[0]);
-      } else {
-        setLatestEntry(null);
-      }
+      setLatestEntry(entries.length > 0 ? entries[0] : null);
+      setPreviousEntry(entries.length > 1 ? entries[1] : null);
     } catch (error) {
-      console.error('Unable to load latest stress entry:', error);
+      console.error('Unable to load dashboard:', error);
+
       setLatestEntry(null);
+      setPreviousEntry(null);
     } finally {
       setIsLoading(false);
     }
@@ -62,8 +96,8 @@ export default function HomeScreen({ navigation }) {
 
   useFocusEffect(
     useCallback(() => {
-      loadLatestEntry();
-    }, [loadLatestEntry])
+      loadDashboard();
+    }, [loadDashboard])
   );
 
   function getGreeting() {
@@ -92,6 +126,49 @@ export default function HomeScreen({ navigation }) {
     });
   }
 
+  function getTrendInformation() {
+    if (!latestEntry || !previousEntry) {
+      return {
+        title: 'Your journey is beginning',
+        message:
+          'Continue completing daily reflections to see how your wellbeing changes over time.',
+        colour: Colors.primaryDark,
+        background: '#EDF7F5',
+      };
+    }
+
+    const difference =
+      Number(latestEntry.score) - Number(previousEntry.score);
+
+    if (difference <= -5) {
+      return {
+        title: 'Your stress level has reduced',
+        message: `Your latest estimate is ${Math.abs(
+          difference
+        )}% lower than your previous check-in.`,
+        colour: '#54785C',
+        background: '#EDF6EF',
+      };
+    }
+
+    if (difference >= 5) {
+      return {
+        title: 'Today may feel more demanding',
+        message: `Your latest estimate is ${difference}% higher than your previous check-in.`,
+        colour: '#A05E4B',
+        background: '#FCEFEA',
+      };
+    }
+
+    return {
+      title: 'Your stress level is stable',
+      message:
+        'Your latest estimate is similar to your previous check-in.',
+      colour: '#8B6D35',
+      background: '#FBF5E8',
+    };
+  }
+
   const category = latestEntry
     ? getStressCategory(latestEntry.score)
     : null;
@@ -100,44 +177,79 @@ export default function HomeScreen({ navigation }) {
     ? moodDetails[latestEntry.mood]
     : null;
 
+  const trend = getTrendInformation();
+
+  const MoodIcon = mood?.Icon;
+
   return (
     <ScrollView
       style={styles.screen}
       contentContainerStyle={styles.container}
+      showsVerticalScrollIndicator={false}
     >
-      <Text style={styles.greeting}>
-        {getGreeting()} 👋
+      <View style={styles.welcomeRow}>
+        <View style={styles.leafContainer}>
+          <Leaf
+            size={27}
+            color={Colors.primaryDark}
+            strokeWidth={2}
+          />
+        </View>
+
+        <View style={styles.welcomeTextContainer}>
+          <Text style={styles.greeting}>
+            {getGreeting()}
+          </Text>
+
+          <Text style={styles.welcomeMessage}>
+            Take a moment for yourself today.
+          </Text>
+        </View>
+      </View>
+
+      <View style={styles.brandCard}>
+        <View style={styles.brandIcon}>
+          <Sparkles
+            size={25}
+            color={Colors.primaryDark}
+          />
+        </View>
+
+        <View style={styles.brandTextContainer}>
+          <Text style={styles.title}>
+            Daily Stress Monitor
+          </Text>
+
+          <Text style={styles.brandSubtitle}>
+            A calm space for reflection and personal wellbeing.
+          </Text>
+        </View>
+      </View>
+
+      <Text style={styles.sectionHeading}>
+        Today’s wellbeing
       </Text>
 
-      <Text style={styles.title}>
-        Daily Stress Monitor
-      </Text>
-
-      <Text style={styles.description}>
-        Monitor your daily stress, mood and wellbeing using short
-        self-reported check-ins.
-      </Text>
-
-      <View style={styles.statusCard}>
-        <Text style={styles.cardTitle}>
-          Latest check-in
-        </Text>
-
+      <View style={styles.wellbeingCard}>
         {isLoading ? (
           <View style={styles.loadingContainer}>
             <ActivityIndicator
               size="large"
-              color="#2563EB"
+              color={Colors.primary}
             />
 
             <Text style={styles.loadingText}>
-              Loading your latest result...
+              Preparing your latest summary...
             </Text>
           </View>
         ) : latestEntry ? (
           <>
-            <View style={styles.resultRow}>
-              <View style={styles.scoreContainer}>
+            <View style={styles.resultHeader}>
+              <View style={styles.resultInformation}>
+                <Text style={styles.smallLabel}>
+                  Latest stress level
+                </Text>
+
                 <Text
                   style={[
                     styles.score,
@@ -149,16 +261,25 @@ export default function HomeScreen({ navigation }) {
                   {latestEntry.score}%
                 </Text>
 
-                <Text
+                <View
                   style={[
-                    styles.category,
+                    styles.categoryBadge,
                     {
-                      color: category.colour,
+                      backgroundColor: `${category.colour}18`,
                     },
                   ]}
                 >
-                  {category.label} stress
-                </Text>
+                  <Text
+                    style={[
+                      styles.categoryText,
+                      {
+                        color: category.colour,
+                      },
+                    ]}
+                  >
+                    {category.label} stress
+                  </Text>
+                </View>
               </View>
 
               <View
@@ -169,9 +290,15 @@ export default function HomeScreen({ navigation }) {
                   },
                 ]}
               >
+                <Leaf
+                  size={27}
+                  color={category.colour}
+                  strokeWidth={2}
+                />
+
                 <Text
                   style={[
-                    styles.circleText,
+                    styles.circleScore,
                     {
                       color: category.colour,
                     },
@@ -182,18 +309,44 @@ export default function HomeScreen({ navigation }) {
               </View>
             </View>
 
-            {mood ? (
-              <View style={styles.moodCard}>
-                <Text style={styles.moodEmoji}>
-                  {mood.emoji}
-                </Text>
+            {mood && MoodIcon ? (
+              <View
+                style={[
+                  styles.contextCard,
+                  {
+                    backgroundColor: mood.background,
+                    borderColor: `${mood.colour}55`,
+                  },
+                ]}
+              >
+                <View
+                  style={[
+                    styles.contextIconContainer,
+                    {
+                      backgroundColor: `${mood.colour}20`,
+                    },
+                  ]}
+                >
+                  <MoodIcon
+                    size={32}
+                    color={mood.colour}
+                    strokeWidth={1.9}
+                  />
+                </View>
 
-                <View style={styles.moodTextContainer}>
+                <View style={styles.contextTextContainer}>
                   <Text style={styles.contextLabel}>
-                    Latest mood
+                    Today’s mood
                   </Text>
 
-                  <Text style={styles.moodValue}>
+                  <Text
+                    style={[
+                      styles.contextValue,
+                      {
+                        color: mood.colour,
+                      },
+                    ]}
+                  >
                     {mood.label}
                   </Text>
                 </View>
@@ -201,105 +354,247 @@ export default function HomeScreen({ navigation }) {
             ) : null}
 
             {latestEntry.note ? (
-              <View style={styles.noteCard}>
-                <Text style={styles.contextLabel}>
-                  Latest daily note
-                </Text>
+              <View style={styles.reflectionCard}>
+                <NotebookText
+                  size={22}
+                  color="#9A7440"
+                  strokeWidth={1.9}
+                />
 
-                <Text
-                  style={styles.noteText}
-                  numberOfLines={3}
-                >
-                  “{latestEntry.note}”
-                </Text>
+                <View style={styles.reflectionTextContainer}>
+                  <Text style={styles.reflectionLabel}>
+                    Today’s reflection
+                  </Text>
+
+                  <Text
+                    style={styles.reflectionText}
+                    numberOfLines={4}
+                  >
+                    “{latestEntry.note}”
+                  </Text>
+                </View>
               </View>
             ) : null}
 
             <View style={styles.divider} />
 
-            <Text style={styles.lastCheckInLabel}>
-              Last check-in
+            <Text style={styles.dateLabel}>
+              Last reflection
             </Text>
 
-            <Text style={styles.lastCheckInDate}>
+            <Text style={styles.dateText}>
               {formatDate(latestEntry.date)}
             </Text>
           </>
         ) : (
-          <View style={styles.emptyResult}>
-            <Text style={styles.emptyIcon}>📋</Text>
+          <View style={styles.emptyState}>
+            <View style={styles.emptyIconContainer}>
+              <ClipboardCheck
+                size={38}
+                color={Colors.primary}
+                strokeWidth={1.8}
+              />
+            </View>
 
             <Text style={styles.emptyTitle}>
-              No check-in completed yet
+              Your wellbeing journey starts here
             </Text>
 
             <Text style={styles.emptyText}>
-              Complete your first daily check-in to see your latest
-              stress result, mood and note here.
+              Complete your first daily reflection to see your mood,
+              stress estimate and personal notes.
             </Text>
           </View>
         )}
       </View>
 
-      <Text style={styles.sectionTitle}>
+      {!isLoading && latestEntry ? (
+        <>
+          <Text style={styles.sectionHeading}>
+            Today’s insight
+          </Text>
+
+          <View
+            style={[
+              styles.insightCard,
+              {
+                backgroundColor: trend.background,
+                borderColor: `${trend.colour}55`,
+              },
+            ]}
+          >
+            <View
+              style={[
+                styles.insightIcon,
+                {
+                  backgroundColor: `${trend.colour}18`,
+                },
+              ]}
+            >
+              <Sparkles
+                size={25}
+                color={trend.colour}
+              />
+            </View>
+
+            <View style={styles.insightTextContainer}>
+              <Text
+                style={[
+                  styles.insightTitle,
+                  {
+                    color: trend.colour,
+                  },
+                ]}
+              >
+                {trend.title}
+              </Text>
+
+              <Text style={styles.insightMessage}>
+                {trend.message}
+              </Text>
+            </View>
+          </View>
+        </>
+      ) : null}
+
+      <Text style={styles.sectionHeading}>
         Quick actions
       </Text>
 
-      <Pressable
-        style={styles.primaryButton}
-        onPress={() => navigation.navigate('CheckIn')}
-        accessibilityRole="button"
-        accessibilityLabel="Start today's daily stress check-in"
-      >
-        <Text style={styles.primaryButtonText}>
-          Start Today’s Check-in
-        </Text>
-      </Pressable>
+      <View style={styles.actionsGrid}>
+        <Pressable
+          style={({ pressed }) => [
+            styles.actionCard,
+            pressed && styles.pressedCard,
+          ]}
+          onPress={() => navigation.navigate('CheckIn')}
+          accessibilityRole="button"
+          accessibilityLabel="Start today's daily reflection"
+        >
+          <View style={styles.primaryActionIcon}>
+            <ClipboardCheck
+              size={27}
+              color={Colors.white}
+            />
+          </View>
 
-      <Pressable
-        style={styles.secondaryButton}
-        onPress={() => navigation.navigate('History')}
-        accessibilityRole="button"
-        accessibilityLabel="View saved stress history"
-      >
-        <Text style={styles.secondaryButtonText}>
-          View Stress History
-        </Text>
-      </Pressable>
+          <Text style={styles.actionTitle}>
+            Daily reflection
+          </Text>
 
-      <Pressable
-        style={styles.progressButton}
-        onPress={() => navigation.navigate('Progress')}
-        accessibilityRole="button"
-        accessibilityLabel="View stress progress graph and statistics"
-      >
-        <Text style={styles.progressButtonText}>
-          View Stress Progress
-        </Text>
-      </Pressable>
+          <Text style={styles.actionDescription}>
+            Record today’s mood and stress factors.
+          </Text>
+        </Pressable>
 
-      <Pressable
-        style={styles.informationButton}
-        onPress={() => navigation.navigate('Information')}
-        accessibilityRole="button"
-        accessibilityLabel="Open information and privacy details"
-      >
-        <Text style={styles.informationButtonText}>
-          Information & Privacy
-        </Text>
-      </Pressable>
+        <Pressable
+          style={({ pressed }) => [
+            styles.actionCard,
+            pressed && styles.pressedCard,
+          ]}
+          onPress={() => navigation.navigate('History')}
+          accessibilityRole="button"
+          accessibilityLabel="View saved wellbeing history"
+        >
+          <View style={styles.secondaryActionIcon}>
+            <History
+              size={27}
+              color={Colors.primaryDark}
+            />
+          </View>
 
-      <View style={styles.infoCard}>
-        <Text style={styles.infoTitle}>
-          About your results
-        </Text>
+          <Text style={styles.actionTitle}>
+            Your journey
+          </Text>
 
-        <Text style={styles.infoText}>
-          Your score is an estimate based on your self-reported
-          responses. Mood and notes provide additional context but do
-          not change the calculated stress score.
-        </Text>
+          <Text style={styles.actionDescription}>
+            Review previous reflections and notes.
+          </Text>
+        </Pressable>
+
+        <Pressable
+          style={({ pressed }) => [
+            styles.actionCard,
+            pressed && styles.pressedCard,
+          ]}
+          onPress={() => navigation.navigate('Progress')}
+          accessibilityRole="button"
+          accessibilityLabel="View wellbeing trends and statistics"
+        >
+          <View style={styles.sageActionIcon}>
+            <ChartLine
+              size={27}
+              color="#54785C"
+            />
+          </View>
+
+          <Text style={styles.actionTitle}>
+            Wellbeing trends
+          </Text>
+
+          <Text style={styles.actionDescription}>
+            Explore progress, averages and changes.
+          </Text>
+        </Pressable>
+
+        <Pressable
+          style={({ pressed }) => [
+            styles.actionCard,
+            pressed && styles.pressedCard,
+          ]}
+          onPress={() => navigation.navigate('Information')}
+          accessibilityRole="button"
+          accessibilityLabel="Open information and privacy details"
+        >
+          <View style={styles.privacyActionIcon}>
+            <ShieldCheck
+              size={27}
+              color="#7A6340"
+            />
+          </View>
+
+          <Text style={styles.actionTitle}>
+            Privacy & safety
+          </Text>
+
+          <Text style={styles.actionDescription}>
+            Learn how your information is stored.
+          </Text>
+        </Pressable>
       </View>
+
+      <View style={styles.privacyCard}>
+        <LockKeyhole
+          size={23}
+          color={Colors.primaryDark}
+          strokeWidth={1.9}
+        />
+
+        <View style={styles.privacyTextContainer}>
+          <Text style={styles.privacyTitle}>
+            Your reflections stay private
+          </Text>
+
+          <Text style={styles.privacyText}>
+            Your current records are stored locally on this device or
+            browser and are not automatically shared.
+          </Text>
+        </View>
+      </View>
+
+      <Pressable
+        style={styles.informationLink}
+        onPress={() => navigation.navigate('Information')}
+      >
+        <Info
+          size={18}
+          color={Colors.textSecondary}
+        />
+
+        <Text style={styles.informationLinkText}>
+          Read the full information and privacy statement
+        </Text>
+      </Pressable>
     </ScrollView>
   );
 }
@@ -307,278 +602,424 @@ export default function HomeScreen({ navigation }) {
 const styles = StyleSheet.create({
   screen: {
     flex: 1,
-    backgroundColor: '#F5F9FF',
+    backgroundColor: Colors.background,
   },
 
   container: {
     flexGrow: 1,
-    padding: 24,
-    paddingBottom: 40,
+    padding: Spacing.lg,
+    paddingBottom: Spacing.xxl,
+  },
+
+  welcomeRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: Spacing.sm,
+    marginBottom: Spacing.lg,
+  },
+
+  leafContainer: {
+    width: 52,
+    height: 52,
+    borderRadius: 26,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#E9F2EC',
+    marginRight: Spacing.md,
+  },
+
+  welcomeTextContainer: {
+    flex: 1,
   },
 
   greeting: {
-    fontSize: 18,
-    color: '#475569',
-    marginTop: 12,
-    marginBottom: 6,
+    fontSize: Typography.heading,
+    fontWeight: '600',
+    color: Colors.text,
+    marginBottom: 3,
+  },
+
+  welcomeMessage: {
+    fontSize: Typography.body,
+    color: Colors.textSecondary,
+  },
+
+  brandCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#EDF5F2',
+    borderWidth: 1,
+    borderColor: '#D2E5DF',
+    borderRadius: 20,
+    padding: Spacing.lg,
+    marginBottom: Spacing.xl,
+  },
+
+  brandIcon: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: '#DDECE7',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: Spacing.md,
+  },
+
+  brandTextContainer: {
+    flex: 1,
   },
 
   title: {
-    fontSize: 31,
-    fontWeight: 'bold',
-    color: '#2563EB',
-    marginBottom: 10,
+    fontSize: 23,
+    fontWeight: '700',
+    color: Colors.primaryDark,
+    marginBottom: 5,
   },
 
-  description: {
-    fontSize: 16,
-    color: '#555555',
-    lineHeight: 23,
-    marginBottom: 24,
+  brandSubtitle: {
+    fontSize: 14,
+    color: Colors.textSecondary,
+    lineHeight: 20,
   },
 
-  statusCard: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 18,
-    padding: 22,
-    marginBottom: 26,
-    shadowColor: '#000000',
-    shadowOpacity: 0.08,
-    shadowRadius: 8,
-    elevation: 3,
+  sectionHeading: {
+    fontSize: Typography.subheading,
+    fontWeight: '600',
+    color: Colors.text,
+    marginBottom: Spacing.md,
   },
 
-  cardTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#1F2937',
-    marginBottom: 20,
+  wellbeingCard: {
+    backgroundColor: Colors.surface,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    borderRadius: 24,
+    padding: Spacing.lg,
+    marginBottom: Spacing.xl,
+    ...Shadows.card,
   },
 
   loadingContainer: {
     alignItems: 'center',
-    paddingVertical: 26,
+    paddingVertical: Spacing.xl,
   },
 
   loadingText: {
     fontSize: 15,
-    color: '#64748B',
-    marginTop: 12,
+    color: Colors.textSecondary,
+    marginTop: Spacing.md,
   },
 
-  resultRow: {
+  resultHeader: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
+    justifyContent: 'space-between',
   },
 
-  scoreContainer: {
+  resultInformation: {
     flex: 1,
-    paddingRight: 12,
+    paddingRight: Spacing.md,
+  },
+
+  smallLabel: {
+    fontSize: 14,
+    color: Colors.textSecondary,
+    marginBottom: Spacing.xs,
   },
 
   score: {
-    fontSize: 48,
-    fontWeight: 'bold',
-    marginBottom: 4,
+    fontSize: 53,
+    fontWeight: '700',
+    marginBottom: Spacing.sm,
   },
 
-  category: {
-    fontSize: 17,
+  categoryBadge: {
+    alignSelf: 'flex-start',
+    paddingVertical: 7,
+    paddingHorizontal: 14,
+    borderRadius: 18,
+  },
+
+  categoryText: {
+    fontSize: 15,
     fontWeight: '600',
   },
 
   scoreCircle: {
-    width: 88,
-    height: 88,
-    borderRadius: 44,
-    borderWidth: 6,
+    width: 105,
+    height: 105,
+    borderRadius: 53,
+    borderWidth: 7,
     alignItems: 'center',
     justifyContent: 'center',
+    backgroundColor: Colors.surface,
   },
 
-  circleText: {
-    fontSize: 20,
-    fontWeight: 'bold',
+  circleScore: {
+    fontSize: 18,
+    fontWeight: '700',
+    marginTop: 2,
   },
 
-  moodCard: {
+  contextCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#F0FDF4',
     borderWidth: 1,
-    borderColor: '#86EFAC',
-    borderRadius: 12,
-    padding: 14,
-    marginTop: 20,
+    borderRadius: 17,
+    padding: Spacing.md,
+    marginTop: Spacing.lg,
   },
 
-  moodEmoji: {
-    fontSize: 34,
-    marginRight: 12,
+  contextIconContainer: {
+    width: 52,
+    height: 52,
+    borderRadius: 26,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: Spacing.md,
   },
 
-  moodTextContainer: {
+  contextTextContainer: {
     flex: 1,
   },
 
   contextLabel: {
     fontSize: 13,
-    color: '#64748B',
-    marginBottom: 4,
+    color: Colors.textSecondary,
+    marginBottom: 3,
   },
 
-  moodValue: {
-    fontSize: 17,
-    fontWeight: 'bold',
-    color: '#166534',
+  contextValue: {
+    fontSize: 18,
+    fontWeight: '600',
   },
 
-  noteCard: {
-    backgroundColor: '#FFFBEB',
+  reflectionCard: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    backgroundColor: '#FBF5E8',
     borderWidth: 1,
-    borderColor: '#FCD34D',
-    borderRadius: 12,
-    padding: 14,
-    marginTop: 12,
+    borderColor: '#EAD9B4',
+    borderRadius: 17,
+    padding: Spacing.md,
+    marginTop: Spacing.md,
   },
 
-  noteText: {
+  reflectionTextContainer: {
+    flex: 1,
+    marginLeft: Spacing.md,
+  },
+
+  reflectionLabel: {
+    fontSize: 13,
+    color: '#8B6D35',
+    marginBottom: 5,
+  },
+
+  reflectionText: {
     fontSize: 15,
-    color: '#78350F',
+    color: '#6B5432',
     lineHeight: 22,
     fontStyle: 'italic',
   },
 
   divider: {
     height: 1,
-    backgroundColor: '#E2E8F0',
-    marginVertical: 20,
+    backgroundColor: Colors.border,
+    marginVertical: Spacing.lg,
   },
 
-  lastCheckInLabel: {
+  dateLabel: {
     fontSize: 13,
-    color: '#64748B',
+    color: Colors.textSecondary,
     marginBottom: 4,
   },
 
-  lastCheckInDate: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#334155',
+  dateText: {
+    fontSize: 15,
+    fontWeight: '500',
+    color: Colors.text,
   },
 
-  emptyResult: {
+  emptyState: {
     alignItems: 'center',
-    paddingVertical: 20,
+    paddingVertical: Spacing.lg,
   },
 
-  emptyIcon: {
-    fontSize: 42,
-    marginBottom: 12,
+  emptyIconContainer: {
+    width: 76,
+    height: 76,
+    borderRadius: 38,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#EDF5F2',
+    marginBottom: Spacing.md,
   },
 
   emptyTitle: {
-    fontSize: 19,
-    fontWeight: 'bold',
-    color: '#1F2937',
-    marginBottom: 8,
+    fontSize: 20,
+    fontWeight: '600',
+    color: Colors.text,
+    textAlign: 'center',
+    marginBottom: Spacing.sm,
   },
 
   emptyText: {
     fontSize: 15,
-    color: '#64748B',
-    lineHeight: 22,
+    color: Colors.textSecondary,
     textAlign: 'center',
+    lineHeight: 22,
   },
 
-  sectionTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: '#1F2937',
-    marginBottom: 14,
-  },
-
-  primaryButton: {
-    minHeight: 54,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: '#2563EB',
-    borderRadius: 12,
-    marginBottom: 14,
-  },
-
-  primaryButtonText: {
-    color: '#FFFFFF',
-    fontSize: 17,
-    fontWeight: 'bold',
-  },
-
-  secondaryButton: {
-    minHeight: 54,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: '#FFFFFF',
-    borderWidth: 2,
-    borderColor: '#2563EB',
-    borderRadius: 12,
-    marginBottom: 14,
-  },
-
-  secondaryButtonText: {
-    color: '#2563EB',
-    fontSize: 17,
-    fontWeight: 'bold',
-  },
-
-  progressButton: {
-    minHeight: 54,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: '#0F766E',
-    borderRadius: 12,
-    marginBottom: 14,
-  },
-
-  progressButtonText: {
-    color: '#FFFFFF',
-    fontSize: 17,
-    fontWeight: 'bold',
-  },
-
-  informationButton: {
-    minHeight: 54,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: '#475569',
-    borderRadius: 12,
-  },
-
-  informationButtonText: {
-    color: '#FFFFFF',
-    fontSize: 17,
-    fontWeight: 'bold',
-  },
-
-  infoCard: {
-    backgroundColor: '#EFF6FF',
+  insightCard: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
     borderWidth: 1,
-    borderColor: '#BFDBFE',
-    borderRadius: 14,
-    padding: 18,
-    marginTop: 24,
+    borderRadius: 20,
+    padding: Spacing.lg,
+    marginBottom: Spacing.xl,
   },
 
-  infoTitle: {
+  insightIcon: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: Spacing.md,
+  },
+
+  insightTextContainer: {
+    flex: 1,
+  },
+
+  insightTitle: {
     fontSize: 17,
-    fontWeight: 'bold',
-    color: '#1E3A8A',
-    marginBottom: 8,
+    fontWeight: '600',
+    marginBottom: 5,
   },
 
-  infoText: {
+  insightMessage: {
     fontSize: 14,
-    color: '#1E40AF',
+    color: Colors.textSecondary,
     lineHeight: 21,
+  },
+
+  actionsGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    marginHorizontal: -6,
+    marginBottom: Spacing.lg,
+  },
+
+  actionCard: {
+    width: '50%',
+    padding: 16,
+    borderWidth: 6,
+    borderColor: Colors.background,
+    backgroundColor: Colors.surface,
+    borderRadius: 22,
+    minHeight: 180,
+    ...Shadows.card,
+  },
+
+  pressedCard: {
+    opacity: 0.75,
+    transform: [{ scale: 0.98 }],
+  },
+
+  primaryActionIcon: {
+    width: 49,
+    height: 49,
+    borderRadius: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: Colors.primary,
+    marginBottom: Spacing.md,
+  },
+
+  secondaryActionIcon: {
+    width: 49,
+    height: 49,
+    borderRadius: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#E5F0EC',
+    marginBottom: Spacing.md,
+  },
+
+  sageActionIcon: {
+    width: 49,
+    height: 49,
+    borderRadius: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#EAF2E9',
+    marginBottom: Spacing.md,
+  },
+
+  privacyActionIcon: {
+    width: 49,
+    height: 49,
+    borderRadius: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#F7EFDD',
+    marginBottom: Spacing.md,
+  },
+
+  actionTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: Colors.text,
+    marginBottom: 6,
+  },
+
+  actionDescription: {
+    fontSize: 13,
+    color: Colors.textSecondary,
+    lineHeight: 19,
+  },
+
+  privacyCard: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    backgroundColor: '#EDF5F2',
+    borderWidth: 1,
+    borderColor: '#D2E5DF',
+    borderRadius: 18,
+    padding: Spacing.lg,
+  },
+
+  privacyTextContainer: {
+    flex: 1,
+    marginLeft: Spacing.md,
+  },
+
+  privacyTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: Colors.primaryDark,
+    marginBottom: 5,
+  },
+
+  privacyText: {
+    fontSize: 14,
+    color: Colors.textSecondary,
+    lineHeight: 21,
+  },
+
+  informationLink: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: Spacing.lg,
+  },
+
+  informationLinkText: {
+    fontSize: 13,
+    color: Colors.textSecondary,
+    marginLeft: Spacing.sm,
+    textAlign: 'center',
   },
 });

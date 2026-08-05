@@ -13,6 +13,21 @@ import {
 } from 'react-native';
 
 import {
+  ArrowLeft,
+  ArrowRight,
+  Check,
+  ClipboardCheck,
+  FileText,
+  Home,
+  Leaf,
+} from 'lucide-react-native';
+
+import AppButton from '../components/AppButton';
+import MoodSelector from '../components/MoodSelector';
+import SectionHeader from '../components/SectionHeader';
+import WarmCard from '../components/WarmCard';
+
+import {
   getTodayStressEntry,
   saveStressEntry,
 } from '../database/database';
@@ -20,55 +35,47 @@ import {
 import { calculateStressScore } from '../services/stressCalculation';
 import questionnaireData from '../services/questionnaireData';
 
-const moodOptions = [
-  {
-    value: 'very-good',
-    label: 'Very good',
-    emoji: '😄',
-  },
-  {
-    value: 'good',
-    label: 'Good',
-    emoji: '🙂',
-  },
-  {
-    value: 'neutral',
-    label: 'Neutral',
-    emoji: '😐',
-  },
-  {
-    value: 'low',
-    label: 'Low',
-    emoji: '🙁',
-  },
-  {
-    value: 'very-low',
-    label: 'Very low',
-    emoji: '😟',
-  },
-];
+import Colors from '../theme/colors';
+import Shadows from '../theme/shadows';
+import Spacing from '../theme/spacing';
+import Typography from '../theme/typography';
 
 export default function CheckInScreen({ navigation }) {
-  const [checkInStage, setCheckInStage] = useState('context');
-  const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
+  const [checkInStage, setCheckInStage] =
+    useState('context');
+
+  const [currentQuestionIndex, setCurrentQuestionIndex] =
+    useState(0);
+
   const [answers, setAnswers] = useState({});
   const [selectedMood, setSelectedMood] = useState('');
   const [dailyNote, setDailyNote] = useState('');
+
   const [isSaving, setIsSaving] = useState(false);
-  const [isCheckingToday, setIsCheckingToday] = useState(true);
+  const [isCheckingToday, setIsCheckingToday] =
+    useState(true);
+
   const [todayEntry, setTodayEntry] = useState(null);
 
-  const currentQuestion = questionnaireData[currentQuestionIndex];
-  const selectedValue = answers[currentQuestion.id];
+  const currentQuestion =
+    questionnaireData[currentQuestionIndex];
 
-  const isFirstQuestion = currentQuestionIndex === 0;
+  const selectedValue =
+    answers[currentQuestion.id];
+
+  const isFirstQuestion =
+    currentQuestionIndex === 0;
+
   const isLastQuestion =
-    currentQuestionIndex === questionnaireData.length - 1;
+    currentQuestionIndex ===
+    questionnaireData.length - 1;
 
   useEffect(() => {
     async function checkTodayEntry() {
       try {
-        const existingEntry = await getTodayStressEntry();
+        const existingEntry =
+          await getTodayStressEntry();
+
         setTodayEntry(existingEntry);
       } catch (error) {
         console.error(
@@ -93,21 +100,25 @@ export default function CheckInScreen({ navigation }) {
   }
 
   function formatTodayEntryDate(dateValue) {
-    return new Date(dateValue).toLocaleString('en-GB', {
-      day: '2-digit',
-      month: 'long',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-    });
+    return new Date(dateValue).toLocaleString(
+      'en-GB',
+      {
+        day: '2-digit',
+        month: 'long',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+      }
+    );
   }
 
   function continueToQuestionnaire() {
     if (!selectedMood) {
       showMessage(
         'Mood required',
-        'Please select the mood that best describes how you feel today.'
+        'Please select the option that best describes how you feel today.'
       );
+
       return;
     }
 
@@ -127,6 +138,7 @@ export default function CheckInScreen({ navigation }) {
         'Answer required',
         'Please select an answer before continuing.'
       );
+
       return;
     }
 
@@ -145,14 +157,15 @@ export default function CheckInScreen({ navigation }) {
           setTodayEntry(existingTodayEntry);
 
           showMessage(
-            'Check-in already completed',
-            'You already have a main check-in saved for today.'
+            'Reflection already completed',
+            'You already have one main daily reflection saved for today.'
           );
 
           return;
         }
 
-        const score = calculateStressScore(answers);
+        const score =
+          calculateStressScore(answers);
 
         await saveStressEntry(
           score,
@@ -168,11 +181,14 @@ export default function CheckInScreen({ navigation }) {
           note: dailyNote.trim(),
         });
       } catch (error) {
-        console.error('Unable to save check-in:', error);
+        console.error(
+          'Unable to save check-in:',
+          error
+        );
 
         showMessage(
           'Save failed',
-          'The check-in could not be saved. Please try again.'
+          'Your reflection could not be saved. Please try again.'
         );
       } finally {
         setIsSaving(false);
@@ -207,13 +223,21 @@ export default function CheckInScreen({ navigation }) {
   if (isCheckingToday) {
     return (
       <View style={styles.loadingContainer}>
+        <View style={styles.loadingIcon}>
+          <Leaf
+            size={31}
+            color={Colors.primaryDark}
+            strokeWidth={1.9}
+          />
+        </View>
+
         <ActivityIndicator
           size="large"
-          color="#2563EB"
+          color={Colors.primary}
         />
 
         <Text style={styles.loadingText}>
-          Checking today’s daily entry...
+          Preparing today’s reflection...
         </Text>
       </View>
     );
@@ -223,22 +247,32 @@ export default function CheckInScreen({ navigation }) {
     return (
       <ScrollView
         style={styles.screen}
-        contentContainerStyle={styles.completedContainer}
+        contentContainerStyle={
+          styles.completedContainer
+        }
+        showsVerticalScrollIndicator={false}
       >
-        <View style={styles.completedCard}>
-          <Text style={styles.completedIcon}>✓</Text>
+        <WarmCard style={styles.completedCard}>
+          <View style={styles.completedIcon}>
+            <Check
+              size={38}
+              color="#54785C"
+              strokeWidth={2.2}
+            />
+          </View>
 
           <Text style={styles.completedTitle}>
-            Today’s check-in is complete
+            Today’s reflection is complete
           </Text>
 
           <Text style={styles.completedText}>
-            You already have one main daily check-in saved for today.
+            You already have one main wellbeing
+            reflection saved for today.
           </Text>
 
           <View style={styles.savedResultCard}>
             <Text style={styles.savedResultLabel}>
-              Today’s saved score
+              Today’s stress level
             </Text>
 
             <Text style={styles.savedResultScore}>
@@ -247,47 +281,53 @@ export default function CheckInScreen({ navigation }) {
 
             {todayEntry.mood ? (
               <Text style={styles.savedContextText}>
-                Mood: {todayEntry.mood.replace('-', ' ')}
+                Mood:{' '}
+                {todayEntry.mood.replaceAll(
+                  '-',
+                  ' '
+                )}
               </Text>
             ) : null}
 
             <Text style={styles.savedResultDate}>
-              Saved {formatTodayEntryDate(todayEntry.date)}
+              Saved{' '}
+              {formatTodayEntryDate(
+                todayEntry.date
+              )}
             </Text>
           </View>
 
           <Text style={styles.completedExplanation}>
-            Limiting the application to one main result per day keeps
-            the history and progress graph consistent.
+            One main reflection per day keeps your
+            history and wellbeing trends clear and
+            consistent.
           </Text>
-        </View>
+        </WarmCard>
 
-        <Pressable
-          style={styles.primaryFullButton}
-          onPress={() => navigation.navigate('History')}
-        >
-          <Text style={styles.primaryButtonText}>
-            View Stress History
-          </Text>
-        </Pressable>
+        <AppButton
+          title="View Your Journey"
+          icon={ClipboardCheck}
+          onPress={() =>
+            navigation.navigate('History')
+          }
+        />
 
-        <Pressable
-          style={styles.secondaryFullButton}
-          onPress={() => navigation.navigate('Progress')}
-        >
-          <Text style={styles.secondaryFullButtonText}>
-            View Stress Progress
-          </Text>
-        </Pressable>
+        <AppButton
+          title="View Wellbeing Trends"
+          variant="sage"
+          onPress={() =>
+            navigation.navigate('Progress')
+          }
+        />
 
-        <Pressable
-          style={styles.homeButton}
-          onPress={() => navigation.navigate('Home')}
-        >
-          <Text style={styles.homeButtonText}>
-            Return Home
-          </Text>
-        </Pressable>
+        <AppButton
+          title="Return Home"
+          icon={Home}
+          variant="secondary"
+          onPress={() =>
+            navigation.navigate('Home')
+          }
+        />
       </ScrollView>
     );
   }
@@ -298,111 +338,87 @@ export default function CheckInScreen({ navigation }) {
         style={styles.screen}
         contentContainerStyle={styles.container}
         keyboardShouldPersistTaps="handled"
+        showsVerticalScrollIndicator={false}
       >
-        <Text style={styles.title}>Daily Check-in</Text>
+        <SectionHeader
+          title="How are you feeling today?"
+          description="Take a quiet moment to reflect before continuing."
+          icon={Leaf}
+        />
 
-        <Text style={styles.description}>
-          Begin by recording your current mood and an optional note
-          about your day.
-        </Text>
-
-        <View style={styles.contextCard}>
+        <WarmCard>
           <Text style={styles.contextTitle}>
-            How would you describe your mood today?
+            Choose today’s mood
           </Text>
 
           <Text style={styles.contextHelp}>
-            Mood provides additional context and does not change the
-            calculated stress score.
+            Your mood adds useful personal context
+            but does not change the calculated stress
+            level.
           </Text>
 
-          {moodOptions.map((mood) => {
-            const isSelected = selectedMood === mood.value;
+          <MoodSelector
+            selectedMood={selectedMood}
+            onSelect={setSelectedMood}
+          />
+        </WarmCard>
 
-            return (
-              <Pressable
-                key={mood.value}
-                style={[
-                  styles.moodOption,
-                  isSelected && styles.selectedMoodOption,
-                ]}
-                onPress={() => setSelectedMood(mood.value)}
-                accessibilityRole="button"
-                accessibilityState={{
-                  selected: isSelected,
-                }}
-                accessibilityLabel={`${mood.label} mood`}
-              >
-                <Text style={styles.moodEmoji}>
-                  {mood.emoji}
-                </Text>
+        <WarmCard
+          backgroundColor="#FFF9EE"
+          borderColor="#ECDDBE"
+        >
+          <View style={styles.noteHeader}>
+            <View style={styles.noteIcon}>
+              <FileText
+                size={23}
+                color="#8B6D35"
+                strokeWidth={1.9}
+              />
+            </View>
 
-                <Text
-                  style={[
-                    styles.moodLabel,
-                    isSelected && styles.selectedMoodText,
-                  ]}
-                >
-                  {mood.label}
-                </Text>
+            <View style={styles.noteHeadingText}>
+              <Text style={styles.contextTitle}>
+                Optional daily reflection
+              </Text>
 
-                <Text
-                  style={[
-                    styles.moodSelection,
-                    isSelected && styles.selectedMoodText,
-                  ]}
-                >
-                  {isSelected ? 'Selected' : ''}
-                </Text>
-              </Pressable>
-            );
-          })}
-        </View>
-
-        <View style={styles.noteCard}>
-          <Text style={styles.contextTitle}>
-            Optional daily note
-          </Text>
-
-          <Text style={styles.contextHelp}>
-            Record anything that may have influenced your mood or
-            stress today.
-          </Text>
+              <Text style={styles.contextHelp}>
+                Write anything that may have
+                influenced your mood or stress today.
+              </Text>
+            </View>
+          </View>
 
           <TextInput
             style={styles.noteInput}
             value={dailyNote}
             onChangeText={setDailyNote}
             placeholder="For example: Busy day at work, poor sleep or an important event."
-            placeholderTextColor="#94A3B8"
+            placeholderTextColor="#A49B91"
             multiline
             maxLength={300}
             textAlignVertical="top"
-            accessibilityLabel="Optional daily note"
+            accessibilityLabel="Optional daily reflection note"
           />
 
           <Text style={styles.characterCount}>
             {dailyNote.length}/300 characters
           </Text>
-        </View>
+        </WarmCard>
 
-        <Pressable
-          style={styles.continueButton}
+        <AppButton
+          title="Continue to Questions"
+          icon={ArrowRight}
           onPress={continueToQuestionnaire}
-        >
-          <Text style={styles.primaryButtonText}>
-            Continue to Questions
-          </Text>
-        </Pressable>
+        />
 
-        <Pressable
-          style={styles.homeButton}
-          onPress={() => navigation.navigate('Home')}
-        >
-          <Text style={styles.homeButtonText}>
-            Cancel and Return Home
-          </Text>
-        </Pressable>
+        <AppButton
+          title="Cancel and Return Home"
+          icon={Home}
+          variant="secondary"
+          onPress={() =>
+            navigation.navigate('Home')
+          }
+        />
       </ScrollView>
     );
   }
@@ -411,108 +427,146 @@ export default function CheckInScreen({ navigation }) {
     <ScrollView
       style={styles.screen}
       contentContainerStyle={styles.container}
+      showsVerticalScrollIndicator={false}
     >
-      <Text style={styles.progressText}>
-        Question {currentQuestionIndex + 1} of{' '}
-        {questionnaireData.length}
-      </Text>
+      <View style={styles.questionProgressCard}>
+        <View style={styles.progressHeader}>
+          <Text style={styles.progressText}>
+            Question {currentQuestionIndex + 1} of{' '}
+            {questionnaireData.length}
+          </Text>
 
-      <View style={styles.progressBackground}>
-        <View
-          style={[
-            styles.progressFill,
-            {
-              width: `${progressPercentage}%`,
-            },
-          ]}
-        />
+          <Text style={styles.progressPercentageText}>
+            {Math.round(progressPercentage)}%
+          </Text>
+        </View>
+
+        <View style={styles.progressBackground}>
+          <View
+            style={[
+              styles.progressFill,
+              {
+                width: `${progressPercentage}%`,
+              },
+            ]}
+          />
+        </View>
       </View>
 
-      <Text style={styles.title}>Daily Check-in</Text>
+      <SectionHeader
+        title="Your daily reflection"
+        description="Choose the answer that feels closest to your experience today."
+        icon={ClipboardCheck}
+      />
 
-      <Text style={styles.description}>
-        Select the answer that best describes how you feel today.
-      </Text>
-
-      <View style={styles.card}>
+      <WarmCard>
         <Text style={styles.question}>
           {currentQuestion.question}
         </Text>
 
-        {currentQuestion.options.map((option) => {
-          const isSelected =
-            selectedValue === option.value;
+        {currentQuestion.options.map(
+          (option) => {
+            const isSelected =
+              selectedValue === option.value;
 
-          return (
-            <Pressable
-              key={option.value}
-              style={[
-                styles.option,
-                isSelected && styles.selectedOption,
-                isSaving && styles.disabledOption,
-              ]}
-              onPress={() => selectAnswer(option.value)}
-              disabled={isSaving}
-              accessibilityRole="button"
-              accessibilityState={{
-                selected: isSelected,
-                disabled: isSaving,
-              }}
-              accessibilityLabel={`${option.label}, rating ${option.value} out of 5`}
-            >
-              <Text style={styles.emoji}>
-                {option.emoji}
-              </Text>
-
-              <Text
-                style={[
-                  styles.optionText,
-                  isSelected && styles.selectedOptionText,
+            return (
+              <Pressable
+                key={option.value}
+                style={({ pressed }) => [
+                  styles.option,
+                  isSelected &&
+                    styles.selectedOption,
+                  pressed && styles.pressedOption,
+                  isSaving &&
+                    styles.disabledOption,
                 ]}
+                onPress={() =>
+                  selectAnswer(option.value)
+                }
+                disabled={isSaving}
+                accessibilityRole="button"
+                accessibilityState={{
+                  selected: isSelected,
+                  disabled: isSaving,
+                }}
+                accessibilityLabel={`${option.label}, rating ${option.value} out of 5`}
               >
-                {option.label}
-              </Text>
+                <View
+                  style={[
+                    styles.optionNumber,
+                    isSelected &&
+                      styles.selectedOptionNumber,
+                  ]}
+                >
+                  <Text
+                    style={[
+                      styles.optionNumberText,
+                      isSelected &&
+                        styles.selectedOptionNumberText,
+                    ]}
+                  >
+                    {option.value}
+                  </Text>
+                </View>
 
-              <Text
-                style={[
-                  styles.optionValue,
-                  isSelected && styles.selectedOptionText,
-                ]}
-              >
-                {option.value}
-              </Text>
-            </Pressable>
-          );
-        })}
-      </View>
+                <Text
+                  style={[
+                    styles.optionText,
+                    isSelected &&
+                      styles.selectedOptionText,
+                  ]}
+                >
+                  {option.label}
+                </Text>
+
+                <View
+                  style={[
+                    styles.optionCheck,
+                    isSelected &&
+                      styles.selectedOptionCheck,
+                  ]}
+                >
+                  {isSelected ? (
+                    <Check
+                      size={15}
+                      color={Colors.white}
+                      strokeWidth={2.4}
+                    />
+                  ) : null}
+                </View>
+              </Pressable>
+            );
+          }
+        )}
+      </WarmCard>
 
       <View style={styles.buttonRow}>
-        <Pressable
-          style={styles.secondaryButton}
+        <AppButton
+          title="Previous"
+          icon={ArrowLeft}
+          variant="secondary"
           onPress={goToPreviousQuestion}
           disabled={isSaving}
-        >
-          <Text style={styles.secondaryButtonText}>
-            Previous
-          </Text>
-        </Pressable>
+          style={styles.halfButton}
+        />
 
-        <Pressable
-          style={[
-            styles.primaryButton,
-            isSaving && styles.savingButton,
-          ]}
-          onPress={goToNextQuestion}
-          disabled={isSaving}
-        >
-          <Text style={styles.primaryButtonText}>
-            {isSaving
+        <AppButton
+          title={
+            isSaving
               ? 'Saving...'
               : isLastQuestion
-                ? 'Complete Check-in'
-                : 'Next'}
-          </Text>
-        </Pressable>
+                ? 'Complete'
+                : 'Next'
+          }
+          icon={
+            isLastQuestion
+              ? Check
+              : ArrowRight
+          }
+          onPress={goToNextQuestion}
+          disabled={isSaving}
+          style={styles.halfButton}
+        />
       </View>
     </ScrollView>
   );
@@ -521,383 +575,302 @@ export default function CheckInScreen({ navigation }) {
 const styles = StyleSheet.create({
   screen: {
     flex: 1,
-    backgroundColor: '#F5F9FF',
+    backgroundColor: Colors.background,
   },
 
   container: {
     flexGrow: 1,
-    padding: 24,
-    paddingBottom: 40,
+    padding: Spacing.lg,
+    paddingBottom: Spacing.xxl,
   },
 
   loadingContainer: {
     flex: 1,
-    backgroundColor: '#F5F9FF',
+    backgroundColor: Colors.background,
     alignItems: 'center',
     justifyContent: 'center',
-    padding: 24,
+    padding: Spacing.lg,
+  },
+
+  loadingIcon: {
+    width: 68,
+    height: 68,
+    borderRadius: 34,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#E9F2EC',
+    marginBottom: Spacing.lg,
   },
 
   loadingText: {
     fontSize: 16,
-    color: '#475569',
-    marginTop: 16,
+    color: Colors.textSecondary,
+    marginTop: Spacing.md,
   },
 
   completedContainer: {
     flexGrow: 1,
     justifyContent: 'center',
-    padding: 24,
-    paddingBottom: 40,
+    padding: Spacing.lg,
+    paddingBottom: Spacing.xxl,
   },
 
   completedCard: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 18,
-    padding: 28,
     alignItems: 'center',
-    marginBottom: 22,
   },
 
   completedIcon: {
-    width: 64,
-    height: 64,
-    borderRadius: 32,
-    backgroundColor: '#DCFCE7',
-    color: '#15803D',
-    fontSize: 38,
-    fontWeight: 'bold',
-    textAlign: 'center',
-    lineHeight: 64,
-    marginBottom: 16,
+    width: 72,
+    height: 72,
+    borderRadius: 36,
+    backgroundColor: '#EDF6EF',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: Spacing.md,
   },
 
   completedTitle: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#1F2937',
+    fontSize: Typography.heading,
+    fontWeight: '600',
+    color: Colors.text,
     textAlign: 'center',
-    marginBottom: 10,
+    marginBottom: Spacing.sm,
   },
 
   completedText: {
-    fontSize: 16,
-    color: '#64748B',
+    fontSize: Typography.body,
+    color: Colors.textSecondary,
     textAlign: 'center',
     lineHeight: 23,
-    marginBottom: 20,
+    marginBottom: Spacing.lg,
   },
 
   savedResultCard: {
     width: '100%',
-    backgroundColor: '#EFF6FF',
+    backgroundColor: '#EDF5F2',
     borderWidth: 1,
-    borderColor: '#BFDBFE',
-    borderRadius: 14,
-    padding: 18,
+    borderColor: '#D2E5DF',
+    borderRadius: 18,
+    padding: Spacing.lg,
     alignItems: 'center',
-    marginBottom: 18,
+    marginBottom: Spacing.lg,
   },
 
   savedResultLabel: {
     fontSize: 14,
-    color: '#1E40AF',
-    marginBottom: 6,
+    color: Colors.primaryDark,
+    marginBottom: Spacing.xs,
   },
 
   savedResultScore: {
-    fontSize: 45,
-    fontWeight: 'bold',
-    color: '#2563EB',
-    marginBottom: 6,
+    fontSize: 48,
+    fontWeight: '700',
+    color: Colors.primaryDark,
+    marginBottom: Spacing.xs,
   },
 
   savedContextText: {
     fontSize: 14,
-    color: '#334155',
+    color: Colors.text,
     textTransform: 'capitalize',
-    marginBottom: 6,
+    marginBottom: Spacing.xs,
   },
 
   savedResultDate: {
     fontSize: 13,
-    color: '#475569',
+    color: Colors.textSecondary,
     textAlign: 'center',
   },
 
   completedExplanation: {
     fontSize: 14,
-    color: '#64748B',
+    color: Colors.textSecondary,
     lineHeight: 21,
     textAlign: 'center',
   },
 
-  contextCard: {
-    backgroundColor: '#FFFFFF',
-    padding: 20,
-    borderRadius: 16,
-    marginBottom: 18,
-  },
-
-  noteCard: {
-    backgroundColor: '#FFFFFF',
-    padding: 20,
-    borderRadius: 16,
-    marginBottom: 18,
-  },
-
   contextTitle: {
     fontSize: 20,
-    fontWeight: 'bold',
-    color: '#1F2937',
-    marginBottom: 8,
+    fontWeight: '600',
+    color: Colors.text,
+    marginBottom: Spacing.sm,
   },
 
   contextHelp: {
     fontSize: 14,
-    color: '#64748B',
+    color: Colors.textSecondary,
     lineHeight: 21,
-    marginBottom: 16,
+    marginBottom: Spacing.md,
   },
 
-  moodOption: {
-    minHeight: 58,
+  noteHeader: {
     flexDirection: 'row',
+    alignItems: 'flex-start',
+  },
+
+  noteIcon: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
     alignItems: 'center',
-    backgroundColor: '#F8FAFC',
-    borderWidth: 2,
-    borderColor: '#E2E8F0',
-    borderRadius: 12,
-    paddingHorizontal: 16,
-    marginBottom: 10,
+    justifyContent: 'center',
+    backgroundColor: '#F5E9CE',
+    marginRight: Spacing.md,
   },
 
-  selectedMoodOption: {
-    backgroundColor: '#E8F0FF',
-    borderColor: '#2563EB',
-  },
-
-  moodEmoji: {
-    fontSize: 25,
-    marginRight: 12,
-  },
-
-  moodLabel: {
+  noteHeadingText: {
     flex: 1,
-    fontSize: 16,
-    color: '#334155',
-  },
-
-  moodSelection: {
-    fontSize: 13,
-    color: '#64748B',
-  },
-
-  selectedMoodText: {
-    color: '#2563EB',
-    fontWeight: 'bold',
   },
 
   noteInput: {
-    minHeight: 120,
-    backgroundColor: '#F8FAFC',
-    borderWidth: 2,
-    borderColor: '#E2E8F0',
-    borderRadius: 12,
-    padding: 14,
+    minHeight: 125,
+    backgroundColor: Colors.surface,
+    borderWidth: 1.5,
+    borderColor: '#E6D5B5',
+    borderRadius: 16,
+    padding: Spacing.md,
     fontSize: 16,
-    color: '#1F2937',
+    color: Colors.text,
+    lineHeight: 23,
   },
 
   characterCount: {
     fontSize: 12,
-    color: '#64748B',
+    color: Colors.textSecondary,
     textAlign: 'right',
-    marginTop: 6,
+    marginTop: Spacing.sm,
   },
 
-  continueButton: {
-    minHeight: 54,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: '#2563EB',
-    borderRadius: 12,
-    marginBottom: 12,
+  questionProgressCard: {
+    backgroundColor: '#EDF5F2',
+    borderRadius: 18,
+    padding: Spacing.md,
+    marginBottom: Spacing.lg,
   },
 
-  primaryFullButton: {
-    minHeight: 54,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: '#2563EB',
-    borderRadius: 12,
-    marginBottom: 12,
-  },
-
-  secondaryFullButton: {
-    minHeight: 54,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: '#FFFFFF',
-    borderWidth: 2,
-    borderColor: '#0F766E',
-    borderRadius: 12,
-    marginBottom: 12,
-  },
-
-  secondaryFullButtonText: {
-    color: '#0F766E',
-    fontSize: 17,
-    fontWeight: 'bold',
-  },
-
-  homeButton: {
-    minHeight: 54,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: '#FFFFFF',
-    borderWidth: 2,
-    borderColor: '#2563EB',
-    borderRadius: 12,
-  },
-
-  homeButtonText: {
-    color: '#2563EB',
-    fontSize: 17,
-    fontWeight: 'bold',
+  progressHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: Spacing.sm,
   },
 
   progressText: {
     fontSize: 14,
-    color: '#555555',
-    marginBottom: 8,
+    fontWeight: '500',
+    color: Colors.primaryDark,
+  },
+
+  progressPercentageText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: Colors.primaryDark,
   },
 
   progressBackground: {
-    height: 8,
-    backgroundColor: '#DCE7F8',
-    borderRadius: 4,
+    height: 9,
+    backgroundColor: '#D6E6E1',
+    borderRadius: 5,
     overflow: 'hidden',
-    marginBottom: 24,
   },
 
   progressFill: {
     height: '100%',
-    backgroundColor: '#2563EB',
-    borderRadius: 4,
-  },
-
-  title: {
-    fontSize: 30,
-    fontWeight: 'bold',
-    color: '#2563EB',
-    marginBottom: 10,
-  },
-
-  description: {
-    fontSize: 16,
-    color: '#555555',
-    lineHeight: 23,
-    marginBottom: 24,
-  },
-
-  card: {
-    backgroundColor: '#FFFFFF',
-    padding: 20,
-    borderRadius: 16,
+    backgroundColor: Colors.primary,
+    borderRadius: 5,
   },
 
   question: {
-    fontSize: 20,
+    fontSize: 21,
     fontWeight: '600',
-    color: '#1F2937',
-    lineHeight: 28,
-    marginBottom: 20,
+    color: Colors.text,
+    lineHeight: 29,
+    marginBottom: Spacing.lg,
   },
 
   option: {
-    minHeight: 58,
+    minHeight: 66,
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#F8FAFC',
-    borderWidth: 2,
-    borderColor: '#E2E8F0',
-    borderRadius: 12,
-    paddingHorizontal: 16,
-    marginBottom: 12,
+    backgroundColor: '#FCFAF7',
+    borderWidth: 1.5,
+    borderColor: Colors.border,
+    borderRadius: 17,
+    paddingHorizontal: Spacing.md,
+    marginBottom: Spacing.md,
   },
 
   selectedOption: {
-    backgroundColor: '#E8F0FF',
-    borderColor: '#2563EB',
+    backgroundColor: '#EDF5F2',
+    borderColor: Colors.primary,
+    borderWidth: 2,
+    ...Shadows.card,
+  },
+
+  pressedOption: {
+    opacity: 0.82,
+    transform: [{ scale: 0.99 }],
   },
 
   disabledOption: {
-    opacity: 0.65,
+    opacity: 0.55,
   },
 
-  emoji: {
-    fontSize: 23,
-    marginRight: 12,
+  optionNumber: {
+    width: 38,
+    height: 38,
+    borderRadius: 19,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#F1ECE5',
+    marginRight: Spacing.md,
+  },
+
+  selectedOptionNumber: {
+    backgroundColor: Colors.primary,
+  },
+
+  optionNumberText: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: Colors.textSecondary,
+  },
+
+  selectedOptionNumberText: {
+    color: Colors.white,
   },
 
   optionText: {
     flex: 1,
     fontSize: 16,
-    color: '#334155',
-  },
-
-  optionValue: {
-    fontSize: 15,
-    fontWeight: 'bold',
-    color: '#64748B',
+    color: Colors.text,
   },
 
   selectedOptionText: {
-    color: '#2563EB',
-    fontWeight: 'bold',
+    color: Colors.primaryDark,
+    fontWeight: '600',
+  },
+
+  optionCheck: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    borderWidth: 1.5,
+    borderColor: Colors.border,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+
+  selectedOptionCheck: {
+    borderColor: Colors.primary,
+    backgroundColor: Colors.primary,
   },
 
   buttonRow: {
     flexDirection: 'row',
-    gap: 12,
-    marginTop: 24,
+    gap: Spacing.md,
   },
 
-  secondaryButton: {
+  halfButton: {
     flex: 1,
-    minHeight: 52,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: '#FFFFFF',
-    borderWidth: 2,
-    borderColor: '#2563EB',
-    borderRadius: 12,
-  },
-
-  secondaryButtonText: {
-    color: '#2563EB',
-    fontSize: 16,
-    fontWeight: 'bold',
-  },
-
-  primaryButton: {
-    flex: 1,
-    minHeight: 52,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: '#2563EB',
-    borderRadius: 12,
-  },
-
-  savingButton: {
-    backgroundColor: '#64748B',
-  },
-
-  primaryButtonText: {
-    color: '#FFFFFF',
-    fontSize: 16,
-    fontWeight: 'bold',
-    textAlign: 'center',
   },
 });
