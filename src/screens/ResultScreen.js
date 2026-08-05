@@ -15,14 +15,44 @@ import {
 
 import { getStressCategory } from '../services/stressCalculation';
 
+const moodDetails = {
+  'very-good': {
+    label: 'Very good',
+    emoji: '😄',
+  },
+  good: {
+    label: 'Good',
+    emoji: '🙂',
+  },
+  neutral: {
+    label: 'Neutral',
+    emoji: '😐',
+  },
+  low: {
+    label: 'Low',
+    emoji: '🙁',
+  },
+  'very-low': {
+    label: 'Very low',
+    emoji: '😟',
+  },
+};
+
 export default function ResultScreen({ route, navigation }) {
-  const { score, answers } = route.params;
+  const {
+    score,
+    answers,
+    mood = '',
+    note = '',
+  } = route.params;
 
   const category = getStressCategory(score);
   const factorBreakdown = getFactorBreakdown(answers);
   const mainContributors = getMainContributors(answers);
   const positiveFactors = getPositiveFactors(answers);
   const suggestions = getSuggestions(answers);
+
+  const selectedMood = moodDetails[mood] || null;
 
   function getBarWidth(value) {
     return `${(Number(value) / 5) * 100}%`;
@@ -91,6 +121,43 @@ export default function ResultScreen({ route, navigation }) {
         </Text>
       </View>
 
+      {selectedMood ? (
+        <View style={styles.moodCard}>
+          <Text style={styles.moodCardTitle}>
+            Today’s mood
+          </Text>
+
+          <View style={styles.moodRow}>
+            <Text style={styles.moodEmoji}>
+              {selectedMood.emoji}
+            </Text>
+
+            <View style={styles.moodTextContainer}>
+              <Text style={styles.moodLabel}>
+                {selectedMood.label}
+              </Text>
+
+              <Text style={styles.moodExplanation}>
+                Your mood provides additional context but does not
+                change the calculated stress score.
+              </Text>
+            </View>
+          </View>
+        </View>
+      ) : null}
+
+      {note ? (
+        <View style={styles.noteCard}>
+          <Text style={styles.noteTitle}>
+            Daily note
+          </Text>
+
+          <Text style={styles.noteText}>
+            “{note}”
+          </Text>
+        </View>
+      ) : null}
+
       <View style={styles.explanationCard}>
         <Text style={styles.sectionTitle}>
           What influenced this estimate?
@@ -154,8 +221,8 @@ export default function ResultScreen({ route, navigation }) {
         </Text>
 
         <Text style={styles.sectionDescription}>
-          These factors had the largest calculated contribution to this
-          prototype estimate.
+          These factors had the largest calculated contribution to
+          this prototype estimate.
         </Text>
 
         {mainContributors.length > 0 ? (
@@ -183,8 +250,8 @@ export default function ResultScreen({ route, navigation }) {
           ))
         ) : (
           <Text style={styles.emptySectionText}>
-            No strong contributing factors were identified from today’s
-            responses.
+            No strong contributing factors were identified from
+            today’s responses.
           </Text>
         )}
       </View>
@@ -221,8 +288,8 @@ export default function ResultScreen({ route, navigation }) {
         </Text>
 
         <Text style={styles.suggestionsIntroduction}>
-          These are general self-care ideas selected from your answers.
-          They are not medical treatment recommendations.
+          These are general self-care ideas selected from your
+          answers. They are not medical treatment recommendations.
         </Text>
 
         {suggestions.map((suggestion, index) => (
@@ -359,6 +426,72 @@ const styles = StyleSheet.create({
     color: '#334155',
     textAlign: 'center',
     lineHeight: 25,
+  },
+
+  moodCard: {
+    backgroundColor: '#F0FDF4',
+    borderWidth: 1,
+    borderColor: '#86EFAC',
+    borderRadius: 16,
+    padding: 20,
+    marginBottom: 18,
+  },
+
+  moodCardTitle: {
+    fontSize: 19,
+    fontWeight: 'bold',
+    color: '#166534',
+    marginBottom: 14,
+  },
+
+  moodRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+
+  moodEmoji: {
+    fontSize: 44,
+    marginRight: 16,
+  },
+
+  moodTextContainer: {
+    flex: 1,
+  },
+
+  moodLabel: {
+    fontSize: 19,
+    fontWeight: 'bold',
+    color: '#166534',
+    marginBottom: 4,
+  },
+
+  moodExplanation: {
+    fontSize: 14,
+    color: '#15803D',
+    lineHeight: 20,
+  },
+
+  noteCard: {
+    backgroundColor: '#FFFBEB',
+    borderWidth: 1,
+    borderColor: '#FCD34D',
+    borderRadius: 16,
+    padding: 20,
+    marginBottom: 18,
+  },
+
+  noteTitle: {
+    fontSize: 19,
+    fontWeight: 'bold',
+    color: '#92400E',
+    marginBottom: 10,
+  },
+
+  noteText: {
+    fontSize: 16,
+    color: '#78350F',
+    lineHeight: 24,
+    fontStyle: 'italic',
   },
 
   explanationCard: {
