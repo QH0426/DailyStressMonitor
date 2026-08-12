@@ -2,11 +2,15 @@ import {
   Pressable,
   StyleSheet,
   Text,
+  useWindowDimensions,
   View,
 } from 'react-native';
 
 import {
+  Annoyed,
+  Check,
   Frown,
+  Laugh,
   Meh,
   Smile,
 } from 'lucide-react-native';
@@ -19,12 +23,13 @@ const moodOptions = [
   {
     value: 'very-good',
     label: 'Very good',
-    Icon: Smile,
+    Icon: Laugh,
     colour: '#5F8F68',
     background: '#EAF4EC',
     message:
       'It is lovely to hear that you are feeling positive today.',
   },
+
   {
     value: 'good',
     label: 'Good',
@@ -34,6 +39,7 @@ const moodOptions = [
     message:
       'You seem to be having a positive day. Take a moment to appreciate it.',
   },
+
   {
     value: 'neutral',
     label: 'Neutral',
@@ -43,6 +49,7 @@ const moodOptions = [
     message:
       'Some days feel steady and balanced. That is completely okay.',
   },
+
   {
     value: 'low',
     label: 'Low',
@@ -52,10 +59,11 @@ const moodOptions = [
     message:
       'Thank you for checking in. Let us gently explore how today has felt.',
   },
+
   {
     value: 'very-low',
     label: 'Very low',
-    Icon: Frown,
+    Icon: Annoyed,
     colour: '#A9574A',
     background: '#F9E7E3',
     message:
@@ -67,15 +75,33 @@ export default function MoodSelector({
   selectedMood,
   onSelect,
 }) {
+  const { width } = useWindowDimensions();
+
+  const isWide = width >= 900;
+
   const selectedOption = moodOptions.find(
     (mood) => mood.value === selectedMood
   );
 
-  const SelectedMoodIcon = selectedOption?.Icon;
+  const SelectedMoodIcon =
+    selectedOption?.Icon;
 
   return (
     <View>
-      <View style={styles.grid}>
+      <Text style={styles.questionText}>
+        How are you feeling today?
+      </Text>
+
+      <Text style={styles.questionHelp}>
+        Choose the option that feels closest to your mood right now.
+      </Text>
+
+      <View
+        style={[
+          styles.grid,
+          isWide && styles.gridWide,
+        ]}
+      >
         {moodOptions.map((mood) => {
           const isSelected =
             selectedMood === mood.value;
@@ -87,32 +113,65 @@ export default function MoodSelector({
               key={mood.value}
               style={({ pressed }) => [
                 styles.moodCard,
+
+                isWide
+                  ? styles.moodCardWide
+                  : styles.moodCardMobile,
+
                 {
-                  backgroundColor: mood.background,
+                  backgroundColor: isSelected
+                    ? mood.background
+                    : Colors.surface,
+
                   borderColor: isSelected
                     ? mood.colour
                     : Colors.border,
                 },
-                isSelected && styles.selectedCard,
-                pressed && styles.pressedCard,
+
+                isSelected &&
+                  styles.selectedCard,
+
+                pressed &&
+                  styles.pressedCard,
               ]}
-              onPress={() => onSelect(mood.value)}
+              onPress={() =>
+                onSelect(mood.value)
+              }
               accessibilityRole="button"
               accessibilityLabel={`${mood.label} mood`}
               accessibilityState={{
                 selected: isSelected,
               }}
             >
+              {isSelected ? (
+                <View
+                  style={[
+                    styles.checkBadge,
+                    {
+                      backgroundColor:
+                        mood.colour,
+                    },
+                  ]}
+                >
+                  <Check
+                    size={13}
+                    color={Colors.white}
+                    strokeWidth={3}
+                  />
+                </View>
+              ) : null}
+
               <View
                 style={[
                   styles.iconCircle,
                   {
-                    backgroundColor: `${mood.colour}18`,
+                    backgroundColor:
+                      `${mood.colour}14`,
                   },
                 ]}
               >
                 <MoodIcon
-                  size={38}
+                  size={34}
                   color={mood.colour}
                   strokeWidth={1.8}
                 />
@@ -128,53 +187,54 @@ export default function MoodSelector({
               >
                 {mood.label}
               </Text>
-
-              <View
-                style={[
-                  styles.selectionIndicator,
-                  {
-                    borderColor: mood.colour,
-                    backgroundColor: isSelected
-                      ? mood.colour
-                      : 'transparent',
-                  },
-                ]}
-              >
-                {isSelected ? (
-                  <Text style={styles.checkMark}>
-                    ✓
-                  </Text>
-                ) : null}
-              </View>
             </Pressable>
           );
         })}
       </View>
 
-      {selectedOption && SelectedMoodIcon ? (
+      {selectedOption &&
+      SelectedMoodIcon ? (
         <View
           style={[
             styles.messageCard,
             {
               backgroundColor:
                 selectedOption.background,
+
               borderColor:
-                `${selectedOption.colour}55`,
+                `${selectedOption.colour}45`,
             },
           ]}
         >
-          <SelectedMoodIcon
-            size={25}
-            color={selectedOption.colour}
-            strokeWidth={1.9}
-          />
+          <View
+            style={[
+              styles.messageIconCircle,
+              {
+                backgroundColor:
+                  `${selectedOption.colour}12`,
+              },
+            ]}
+          >
+            <SelectedMoodIcon
+              size={24}
+              color={
+                selectedOption.colour
+              }
+              strokeWidth={1.9}
+            />
+          </View>
 
-          <View style={styles.messageTextContainer}>
+          <View
+            style={
+              styles.messageTextContainer
+            }
+          >
             <Text
               style={[
                 styles.messageTitle,
                 {
-                  color: selectedOption.colour,
+                  color:
+                    selectedOption.colour,
                 },
               ]}
             >
@@ -182,79 +242,101 @@ export default function MoodSelector({
               {selectedOption.label.toLowerCase()}
             </Text>
 
-            <Text style={styles.messageText}>
+            <Text
+              style={styles.messageText}
+            >
               {selectedOption.message}
             </Text>
           </View>
         </View>
-      ) : (
-        <Text style={styles.helpText}>
-          Select the option that feels closest to
-          how you feel today.
-        </Text>
-      )}
+      ) : null}
     </View>
   );
 }
 
 const styles = StyleSheet.create({
+  questionText: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: Colors.text,
+    marginBottom: 4,
+  },
+
+  questionHelp: {
+    fontSize: 14,
+    color: Colors.textSecondary,
+    lineHeight: 20,
+    marginBottom: Spacing.md,
+  },
+
   grid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    marginHorizontal: -6,
+    marginHorizontal: -5,
+  },
+
+  gridWide: {
+    flexWrap: 'nowrap',
   },
 
   moodCard: {
-    width: '50%',
-    minHeight: 156,
+    minHeight: 125,
     borderWidth: 1.5,
-    borderRadius: 22,
+    borderRadius: 18,
     padding: Spacing.md,
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: 12,
-    borderColor: Colors.border,
+    marginHorizontal: 5,
+    marginBottom: 10,
+    position: 'relative',
+  },
+
+  moodCardWide: {
+    flex: 1,
+  },
+
+  moodCardMobile: {
+    width: '47%',
   },
 
   selectedCard: {
-    borderWidth: 2.5,
-    transform: [{ scale: 1.02 }],
+    borderWidth: 2,
     ...Shadows.card,
   },
 
   pressedCard: {
     opacity: 0.82,
-    transform: [{ scale: 0.98 }],
+    transform: [
+      {
+        scale: 0.98,
+      },
+    ],
+  },
+
+  checkBadge: {
+    position: 'absolute',
+    top: 10,
+    right: 10,
+    width: 23,
+    height: 23,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
 
   iconCircle: {
-    width: 68,
-    height: 68,
-    borderRadius: 34,
+    width: 58,
+    height: 58,
+    borderRadius: 29,
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: Spacing.sm,
+    marginBottom: 9,
   },
 
   moodLabel: {
-    fontSize: 16,
+    fontSize: 15,
     fontWeight: '600',
-    marginBottom: Spacing.sm,
-  },
-
-  selectionIndicator: {
-    width: 24,
-    height: 24,
-    borderRadius: 12,
-    borderWidth: 1.5,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-
-  checkMark: {
-    color: Colors.white,
-    fontSize: 14,
-    fontWeight: 'bold',
+    textAlign: 'center',
   },
 
   messageCard: {
@@ -264,6 +346,14 @@ const styles = StyleSheet.create({
     borderRadius: 18,
     padding: Spacing.md,
     marginTop: Spacing.sm,
+  },
+
+  messageIconCircle: {
+    width: 42,
+    height: 42,
+    borderRadius: 21,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
 
   messageTextContainer: {
@@ -281,13 +371,5 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: Colors.textSecondary,
     lineHeight: 21,
-  },
-
-  helpText: {
-    fontSize: 14,
-    color: Colors.textSecondary,
-    lineHeight: 21,
-    textAlign: 'center',
-    marginTop: Spacing.sm,
   },
 });

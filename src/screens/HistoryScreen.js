@@ -4,6 +4,7 @@ import {
   ActivityIndicator,
   Alert,
   Platform,
+  Pressable,
   ScrollView,
   StyleSheet,
   Text,
@@ -14,7 +15,8 @@ import { useFocusEffect } from '@react-navigation/native';
 
 import {
   CalendarDays,
-  CheckCircle2,
+  ChevronDown,
+  ChevronUp,
   ClipboardCheck,
   Frown,
   History,
@@ -27,7 +29,6 @@ import {
 } from 'lucide-react-native';
 
 import AppButton from '../components/AppButton';
-import SectionHeader from '../components/SectionHeader';
 import WarmCard from '../components/WarmCard';
 
 import {
@@ -39,6 +40,7 @@ import {
 import { getStressCategory } from '../services/stressCalculation';
 
 import Colors from '../theme/colors';
+import Shadows from '../theme/shadows';
 import Spacing from '../theme/spacing';
 import Typography from '../theme/typography';
 
@@ -79,11 +81,79 @@ const moodDetails = {
   },
 };
 
+const newFactors = [
+  {
+    key: 'anxiety',
+    label: 'Anxiety',
+  },
+  {
+    key: 'panic',
+    label: 'Panic / overwhelm',
+  },
+  {
+    key: 'sleep',
+    label: 'Sleep',
+  },
+  {
+    key: 'workload',
+    label: 'Daily responsibilities',
+  },
+  {
+    key: 'energy',
+    label: 'Energy',
+  },
+];
+
+const oldFactors = [
+  {
+    key: 'stress',
+    label: 'Stress',
+  },
+  {
+    key: 'anxiety',
+    label: 'Anxiety',
+  },
+  {
+    key: 'panic',
+    label: 'Panic',
+  },
+  {
+    key: 'sleep',
+    label: 'Sleep',
+  },
+  {
+    key: 'workload',
+    label: 'Workload',
+  },
+  {
+    key: 'energy',
+    label: 'Energy',
+  },
+  {
+    key: 'lifestyle',
+    label: 'Lifestyle',
+  },
+];
+
+function getEntryFactors(entry) {
+  if (entry.questionnaireVersion === 2) {
+    return newFactors;
+  }
+
+  return oldFactors.filter(
+    (factor) =>
+      entry[factor.key] !== undefined &&
+      entry[factor.key] !== null
+  );
+}
+
 export default function HistoryScreen({ navigation }) {
   const [entries, setEntries] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isDeleting, setIsDeleting] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
+  const [expandedEntryId, setExpandedEntryId] =
+    useState(null);
 
   const loadEntries = useCallback(async () => {
     try {
@@ -91,9 +161,13 @@ export default function HistoryScreen({ navigation }) {
       setErrorMessage('');
 
       const storedEntries = await getStressEntries();
+
       setEntries(storedEntries);
     } catch (error) {
-      console.error('Unable to load wellbeing journey:', error);
+      console.error(
+        'Unable to load wellbeing journey:',
+        error
+      );
 
       setErrorMessage(
         'Your saved reflections could not be loaded. Please try again.'
@@ -110,18 +184,28 @@ export default function HistoryScreen({ navigation }) {
   );
 
   function formatDate(dateValue) {
-    return new Date(dateValue).toLocaleString('en-GB', {
-      day: '2-digit',
-      month: 'long',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-    });
+    return new Date(dateValue).toLocaleString(
+      'en-GB',
+      {
+        day: '2-digit',
+        month: 'long',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+      }
+    );
   }
 
-  function confirmAction(title, message, confirmText, onConfirm) {
+  function confirmAction(
+    title,
+    message,
+    confirmText,
+    onConfirm
+  ) {
     if (Platform.OS === 'web') {
-      const confirmed = window.confirm(`${title}\n\n${message}`);
+      const confirmed = window.confirm(
+        `${title}\n\n${message}`
+      );
 
       if (confirmed) {
         onConfirm();
@@ -168,6 +252,11 @@ export default function HistoryScreen({ navigation }) {
       setIsDeleting(true);
 
       await deleteStressEntry(entryId);
+
+      if (expandedEntryId === entryId) {
+        setExpandedEntryId(null);
+      }
+
       await loadEntries();
 
       showMessage(
@@ -175,7 +264,10 @@ export default function HistoryScreen({ navigation }) {
         'The selected reflection has been removed from your journey.'
       );
     } catch (error) {
-      console.error('Unable to delete reflection:', error);
+      console.error(
+        'Unable to delete reflection:',
+        error
+      );
 
       showMessage(
         'Unable to remove reflection',
@@ -200,6 +292,9 @@ export default function HistoryScreen({ navigation }) {
       setIsDeleting(true);
 
       await clearStressEntries();
+
+      setExpandedEntryId(null);
+
       await loadEntries();
 
       showMessage(
@@ -207,7 +302,10 @@ export default function HistoryScreen({ navigation }) {
         'All saved reflections have been removed.'
       );
     } catch (error) {
-      console.error('Unable to clear journey:', error);
+      console.error(
+        'Unable to clear journey:',
+        error
+      );
 
       showMessage(
         'Unable to clear journey',
@@ -216,6 +314,14 @@ export default function HistoryScreen({ navigation }) {
     } finally {
       setIsDeleting(false);
     }
+  }
+
+  function toggleEntry(entryId) {
+    setExpandedEntryId(
+      expandedEntryId === entryId
+        ? null
+        : entryId
+    );
   }
 
   if (isLoading) {
@@ -247,339 +353,368 @@ export default function HistoryScreen({ navigation }) {
       contentContainerStyle={styles.container}
       showsVerticalScrollIndicator={false}
     >
-      <SectionHeader
-        title="Your Wellbeing Journey"
-        description="Every reflection can help you understand how your wellbeing changes over time."
-        icon={History}
-      />
+      <View style={styles.contentWrapper}>
+        <View style={styles.pageHeader}>
+          <View style={styles.headerTextContainer}>
+            <Text style={styles.pageEyebrow}>
+              YOUR REFLECTIONS
+            </Text>
 
-      {errorMessage ? (
-        <WarmCard
-          backgroundColor="#FBECE9"
-          borderColor="#E7B8AE"
-        >
-          <Text style={styles.errorTitle}>
-            We could not load your reflections
-          </Text>
+            <Text style={styles.pageTitle}>
+              Your Wellbeing Journey
+            </Text>
 
-          <Text style={styles.errorText}>
-            {errorMessage}
-          </Text>
+            <Text style={styles.pageDescription}>
+              Review your saved reflections without
+              needing to open every detail at once.
+            </Text>
+          </View>
 
-          <AppButton
-            title="Try Again"
-            onPress={loadEntries}
-          />
-        </WarmCard>
-      ) : null}
-
-      {!errorMessage && entries.length === 0 ? (
-        <WarmCard style={styles.emptyCard}>
-          <View style={styles.emptyIcon}>
-            <ClipboardCheck
-              size={40}
-              color={Colors.primary}
+          <View style={styles.headerIcon}>
+            <History
+              size={34}
+              color={Colors.primaryDark}
               strokeWidth={1.8}
             />
           </View>
+        </View>
 
-          <Text style={styles.emptyTitle}>
-            Your journey starts here
-          </Text>
+        {errorMessage ? (
+          <WarmCard
+            backgroundColor="#FBECE9"
+            borderColor="#E7B8AE"
+          >
+            <Text style={styles.errorTitle}>
+              We could not load your reflections
+            </Text>
 
-          <Text style={styles.emptyText}>
-            Complete your first daily reflection to begin building a
-            personal record of your mood, notes and wellbeing.
-          </Text>
+            <Text style={styles.errorText}>
+              {errorMessage}
+            </Text>
 
-          <AppButton
-            title="Start Daily Reflection"
-            icon={ClipboardCheck}
-            onPress={() => navigation.navigate('CheckIn')}
-          />
-        </WarmCard>
-      ) : null}
+            <AppButton
+              title="Try Again"
+              onPress={loadEntries}
+            />
+          </WarmCard>
+        ) : null}
 
-      {!errorMessage &&
-        entries.map((entry) => {
-          const category = getStressCategory(entry.score);
-          const mood = moodDetails[entry.mood] || null;
-          const MoodIcon = mood?.Icon;
+        {!errorMessage && entries.length === 0 ? (
+          <WarmCard style={styles.emptyCard}>
+            <View style={styles.emptyIcon}>
+              <ClipboardCheck
+                size={40}
+                color={Colors.primary}
+                strokeWidth={1.8}
+              />
+            </View>
 
-          return (
-            <WarmCard
-              key={entry.id}
-              style={styles.journeyCard}
-            >
-              <View style={styles.entryHeader}>
-                <View style={styles.dateSection}>
-                  <View style={styles.dateIcon}>
-                    <CalendarDays
-                      size={22}
-                      color={Colors.primaryDark}
-                      strokeWidth={1.9}
-                    />
-                  </View>
+            <Text style={styles.emptyTitle}>
+              Your journey starts here
+            </Text>
 
-                  <View style={styles.dateTextContainer}>
-                    <Text style={styles.dateLabel}>
-                      Daily reflection
-                    </Text>
+            <Text style={styles.emptyText}>
+              Complete your first daily reflection to
+              begin building a personal record of your
+              mood, notes and wellbeing.
+            </Text>
 
-                    <Text style={styles.dateText}>
-                      {formatDate(entry.date)}
-                    </Text>
-                  </View>
-                </View>
+            <AppButton
+              title="Start Daily Reflection"
+              icon={ClipboardCheck}
+              onPress={() =>
+                navigation.navigate('CheckIn')
+              }
+            />
+          </WarmCard>
+        ) : null}
 
-                <View
-                  style={[
-                    styles.scoreCircle,
-                    {
-                      borderColor: category.colour,
-                    },
-                  ]}
-                >
-                  <Text
-                    style={[
-                      styles.scoreText,
-                      {
-                        color: category.colour,
-                      },
-                    ]}
-                  >
-                    {entry.score}%
-                  </Text>
-                </View>
-              </View>
+        {!errorMessage &&
+          entries.map((entry) => {
+            const category =
+              getStressCategory(entry.score);
 
+            const mood =
+              moodDetails[entry.mood] || null;
+
+            const MoodIcon = mood?.Icon;
+
+            const factors =
+              getEntryFactors(entry);
+
+            const isExpanded =
+              expandedEntryId === entry.id;
+
+            return (
               <View
-                style={[
-                  styles.categoryBadge,
-                  {
-                    backgroundColor: `${category.colour}18`,
-                    borderColor: `${category.colour}45`,
-                  },
-                ]}
+                key={entry.id}
+                style={styles.journeyCard}
               >
-                <Text
-                  style={[
-                    styles.categoryText,
-                    {
-                      color: category.colour,
-                    },
-                  ]}
-                >
-                  {category.label} stress
-                </Text>
-              </View>
+                <View style={styles.entryTopRow}>
+                  <View style={styles.dateSection}>
+                    <View style={styles.dateIcon}>
+                      <CalendarDays
+                        size={20}
+                        color={Colors.primaryDark}
+                        strokeWidth={1.9}
+                      />
+                    </View>
 
-              {mood && MoodIcon ? (
-                <View
-                  style={[
-                    styles.moodCard,
-                    {
-                      backgroundColor: mood.background,
-                      borderColor: `${mood.colour}55`,
-                    },
-                  ]}
-                >
-                  <View
-                    style={[
-                      styles.moodIcon,
-                      {
-                        backgroundColor: `${mood.colour}18`,
-                      },
-                    ]}
-                  >
-                    <MoodIcon
-                      size={30}
-                      color={mood.colour}
-                      strokeWidth={1.8}
-                    />
+                    <View style={styles.dateTextContainer}>
+                      <Text style={styles.dateLabel}>
+                        Daily reflection
+                      </Text>
+
+                      <Text style={styles.dateText}>
+                        {formatDate(entry.date)}
+                      </Text>
+                    </View>
                   </View>
 
-                  <View style={styles.moodTextContainer}>
-                    <Text style={styles.smallLabel}>
-                      Mood
-                    </Text>
-
+                  <View style={styles.scoreSection}>
                     <Text
                       style={[
-                        styles.moodValue,
+                        styles.scoreText,
                         {
-                          color: mood.colour,
+                          color: category.colour,
                         },
                       ]}
                     >
-                      {mood.label}
+                      {entry.score}%
                     </Text>
+
+                    <View
+                      style={[
+                        styles.categoryBadge,
+                        {
+                          backgroundColor:
+                            `${category.colour}16`,
+                        },
+                      ]}
+                    >
+                      <Text
+                        style={[
+                          styles.categoryText,
+                          {
+                            color:
+                              category.colour,
+                          },
+                        ]}
+                      >
+                        {category.label}
+                      </Text>
+                    </View>
                   </View>
                 </View>
-              ) : null}
 
-              {entry.note ? (
-                <View style={styles.noteCard}>
-                  <View style={styles.noteHeader}>
-                    <NotebookText
-                      size={21}
-                      color="#8B6D35"
-                      strokeWidth={1.9}
+                <View style={styles.summaryDivider} />
+
+                <View style={styles.summaryBottomRow}>
+                  {mood && MoodIcon ? (
+                    <View style={styles.compactMood}>
+                      <View
+                        style={[
+                          styles.compactMoodIcon,
+                          {
+                            backgroundColor:
+                              mood.background,
+                          },
+                        ]}
+                      >
+                        <MoodIcon
+                          size={22}
+                          color={mood.colour}
+                          strokeWidth={1.8}
+                        />
+                      </View>
+
+                      <View>
+                        <Text style={styles.smallLabel}>
+                          Mood
+                        </Text>
+
+                        <Text
+                          style={[
+                            styles.compactMoodValue,
+                            {
+                              color: mood.colour,
+                            },
+                          ]}
+                        >
+                          {mood.label}
+                        </Text>
+                      </View>
+                    </View>
+                  ) : (
+                    <Text style={styles.noMoodText}>
+                      No mood recorded
+                    </Text>
+                  )}
+
+                  <Pressable
+                    style={({ pressed }) => [
+                      styles.detailsButton,
+                      pressed &&
+                        styles.detailsButtonPressed,
+                    ]}
+                    onPress={() =>
+                      toggleEntry(entry.id)
+                    }
+                    accessibilityRole="button"
+                    accessibilityLabel={
+                      isExpanded
+                        ? 'Hide reflection details'
+                        : 'View reflection details'
+                    }
+                  >
+                    <Text style={styles.detailsButtonText}>
+                      {isExpanded
+                        ? 'Hide details'
+                        : 'View details'}
+                    </Text>
+
+                    {isExpanded ? (
+                      <ChevronUp
+                        size={18}
+                        color={Colors.primaryDark}
+                      />
+                    ) : (
+                      <ChevronDown
+                        size={18}
+                        color={Colors.primaryDark}
+                      />
+                    )}
+                  </Pressable>
+                </View>
+
+                {isExpanded ? (
+                  <View style={styles.detailsSection}>
+                    {entry.note ? (
+                      <View style={styles.noteCard}>
+                        <View style={styles.noteHeader}>
+                          <NotebookText
+                            size={20}
+                            color="#8B6D35"
+                            strokeWidth={1.9}
+                          />
+
+                          <Text style={styles.noteLabel}>
+                            Personal reflection
+                          </Text>
+                        </View>
+
+                        <Text style={styles.noteText}>
+                          “{entry.note}”
+                        </Text>
+                      </View>
+                    ) : (
+                      <View style={styles.noNoteCard}>
+                        <NotebookText
+                          size={19}
+                          color={Colors.textSecondary}
+                          strokeWidth={1.8}
+                        />
+
+                        <Text style={styles.noNoteText}>
+                          No personal note was added to this reflection.
+                        </Text>
+                      </View>
+                    )}
+
+                    <Text style={styles.answersHeading}>
+                      Daily factors
+                    </Text>
+
+                    <View style={styles.answersGrid}>
+                      {factors.map((factor) => (
+                        <View
+                          key={factor.key}
+                          style={styles.answerCard}
+                        >
+                          <Text style={styles.answerLabel}>
+                            {factor.label}
+                          </Text>
+
+                          <Text style={styles.answerValue}>
+                            {entry[factor.key]}/5
+                          </Text>
+                        </View>
+                      ))}
+                    </View>
+
+                    <AppButton
+                      title={
+                        isDeleting
+                          ? 'Please wait...'
+                          : 'Remove This Reflection'
+                      }
+                      icon={Trash2}
+                      variant="danger"
+                      disabled={isDeleting}
+                      onPress={() =>
+                        requestDeleteEntry(entry)
+                      }
+                      accessibilityLabel={`Remove reflection from ${formatDate(
+                        entry.date
+                      )}`}
                     />
-
-                    <Text style={styles.noteLabel}>
-                      Personal reflection
-                    </Text>
                   </View>
+                ) : null}
+              </View>
+            );
+          })}
 
-                  <Text style={styles.noteText}>
-                    “{entry.note}”
-                  </Text>
-                </View>
-              ) : null}
-
-              <View style={styles.divider} />
-
-              <Text style={styles.answersHeading}>
-                Daily factors
-              </Text>
-
-              <View style={styles.answersGrid}>
-                <View style={styles.answerCard}>
-                  <Text style={styles.answerLabel}>
-                    Stress
-                  </Text>
-
-                  <Text style={styles.answerValue}>
-                    {entry.stress}/5
-                  </Text>
-                </View>
-
-                <View style={styles.answerCard}>
-                  <Text style={styles.answerLabel}>
-                    Anxiety
-                  </Text>
-
-                  <Text style={styles.answerValue}>
-                    {entry.anxiety}/5
-                  </Text>
-                </View>
-
-                <View style={styles.answerCard}>
-                  <Text style={styles.answerLabel}>
-                    Panic
-                  </Text>
-
-                  <Text style={styles.answerValue}>
-                    {entry.panic}/5
-                  </Text>
-                </View>
-
-                <View style={styles.answerCard}>
-                  <Text style={styles.answerLabel}>
-                    Sleep
-                  </Text>
-
-                  <Text style={styles.answerValue}>
-                    {entry.sleep}/5
-                  </Text>
-                </View>
-
-                <View style={styles.answerCard}>
-                  <Text style={styles.answerLabel}>
-                    Workload
-                  </Text>
-
-                  <Text style={styles.answerValue}>
-                    {entry.workload}/5
-                  </Text>
-                </View>
-
-                <View style={styles.answerCard}>
-                  <Text style={styles.answerLabel}>
-                    Energy
-                  </Text>
-
-                  <Text style={styles.answerValue}>
-                    {entry.energy}/5
-                  </Text>
-                </View>
-
-                <View style={styles.answerCard}>
-                  <Text style={styles.answerLabel}>
-                    Lifestyle
-                  </Text>
-
-                  <Text style={styles.answerValue}>
-                    {entry.lifestyle}/5
-                  </Text>
-                </View>
+        {!errorMessage &&
+        entries.length > 0 ? (
+          <WarmCard
+            backgroundColor="#FFF5F2"
+            borderColor="#E8C5BA"
+          >
+            <View style={styles.dataHeader}>
+              <View style={styles.dataIcon}>
+                <ShieldCheck
+                  size={25}
+                  color="#A05E4B"
+                  strokeWidth={1.9}
+                />
               </View>
 
-              <AppButton
-                title={
-                  isDeleting
-                    ? 'Please wait...'
-                    : 'Remove This Reflection'
-                }
-                icon={Trash2}
-                variant="danger"
-                disabled={isDeleting}
-                onPress={() => requestDeleteEntry(entry)}
-                accessibilityLabel={`Remove reflection from ${formatDate(
-                  entry.date
-                )}`}
-              />
-            </WarmCard>
-          );
-        })}
+              <View style={styles.dataTextContainer}>
+                <Text style={styles.dataTitle}>
+                  Your data controls
+                </Text>
 
-      {!errorMessage && entries.length > 0 ? (
-        <WarmCard
-          backgroundColor="#FFF5F2"
-          borderColor="#E8C5BA"
-        >
-          <View style={styles.dataHeader}>
-            <View style={styles.dataIcon}>
-              <ShieldCheck
-                size={25}
-                color="#A05E4B"
-                strokeWidth={1.9}
-              />
+                <Text style={styles.dataText}>
+                  Removing your full journey permanently
+                  deletes every saved reflection from your
+                  account.
+                </Text>
+              </View>
             </View>
 
-            <View style={styles.dataTextContainer}>
-              <Text style={styles.dataTitle}>
-                Your data controls
-              </Text>
+            <AppButton
+              title={
+                isDeleting
+                  ? 'Please wait...'
+                  : 'Remove All Reflections'
+              }
+              icon={Trash2}
+              variant="danger"
+              disabled={isDeleting}
+              onPress={requestClearHistory}
+            />
+          </WarmCard>
+        ) : null}
 
-              <Text style={styles.dataText}>
-                Removing your full journey permanently deletes every
-                saved reflection from this device or browser.
-              </Text>
-            </View>
-          </View>
-
-          <AppButton
-            title={
-              isDeleting
-                ? 'Please wait...'
-                : 'Remove All Reflections'
-            }
-            icon={Trash2}
-            variant="danger"
-            disabled={isDeleting}
-            onPress={requestClearHistory}
-          />
-        </WarmCard>
-      ) : null}
-
-      <AppButton
-        title="Return to Dashboard"
-        icon={Home}
-        variant="secondary"
-        onPress={() => navigation.navigate('Home')}
-      />
+        <AppButton
+          title="Return to Dashboard"
+          icon={Home}
+          variant="secondary"
+          onPress={() =>
+            navigation.navigate('Home')
+          }
+        />
+      </View>
     </ScrollView>
   );
 }
@@ -594,6 +729,12 @@ const styles = StyleSheet.create({
     flexGrow: 1,
     padding: Spacing.lg,
     paddingBottom: Spacing.xxl,
+  },
+
+  contentWrapper: {
+    width: '100%',
+    maxWidth: 1100,
+    alignSelf: 'center',
   },
 
   loadingContainer: {
@@ -618,6 +759,54 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: Colors.textSecondary,
     marginTop: Spacing.md,
+  },
+
+  pageHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#EDF5F2',
+    borderWidth: 1,
+    borderColor: '#D2E5DF',
+    borderRadius: 24,
+    padding: Spacing.lg,
+    marginBottom: Spacing.lg,
+  },
+
+  headerTextContainer: {
+    flex: 1,
+  },
+
+  pageEyebrow: {
+    fontSize: 11,
+    fontWeight: '700',
+    letterSpacing: 1.1,
+    color: Colors.primaryDark,
+    marginBottom: 5,
+  },
+
+  pageTitle: {
+    fontSize: Typography.heading,
+    fontWeight: '700',
+    color: Colors.text,
+    marginBottom: 5,
+  },
+
+  pageDescription: {
+    fontSize: 14,
+    color: Colors.textSecondary,
+    lineHeight: 21,
+  },
+
+  headerIcon: {
+    width: 66,
+    height: 66,
+    borderRadius: 33,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: Colors.surface,
+    borderWidth: 1,
+    borderColor: '#D2E5DF',
+    marginLeft: Spacing.lg,
   },
 
   errorTitle: {
@@ -665,13 +854,19 @@ const styles = StyleSheet.create({
   },
 
   journeyCard: {
-    padding: Spacing.lg,
+    backgroundColor: Colors.surface,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    borderRadius: 20,
+    padding: Spacing.md,
+    marginBottom: Spacing.md,
+    ...Shadows.card,
   },
 
-  entryHeader: {
+  entryTopRow: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
+    justifyContent: 'space-between',
   },
 
   dateSection: {
@@ -682,9 +877,9 @@ const styles = StyleSheet.create({
   },
 
   dateIcon: {
-    width: 45,
-    height: 45,
-    borderRadius: 23,
+    width: 42,
+    height: 42,
+    borderRadius: 21,
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: '#E9F2EC',
@@ -696,87 +891,115 @@ const styles = StyleSheet.create({
   },
 
   dateLabel: {
-    fontSize: 13,
+    fontSize: 12,
     color: Colors.textSecondary,
-    marginBottom: 4,
+    marginBottom: 2,
   },
 
   dateText: {
-    fontSize: 15,
+    fontSize: 14,
     fontWeight: '600',
     color: Colors.text,
-    lineHeight: 21,
+    lineHeight: 20,
   },
 
-  scoreCircle: {
-    width: 82,
-    height: 82,
-    borderRadius: 41,
-    borderWidth: 6,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: Colors.surface,
+  scoreSection: {
+    alignItems: 'flex-end',
   },
 
   scoreText: {
-    fontSize: 20,
+    fontSize: 26,
     fontWeight: '700',
+    marginBottom: 4,
   },
 
   categoryBadge: {
-    alignSelf: 'flex-start',
-    borderWidth: 1,
-    borderRadius: 18,
-    paddingHorizontal: 14,
-    paddingVertical: 7,
-    marginTop: Spacing.md,
+    borderRadius: 14,
+    paddingHorizontal: 9,
+    paddingVertical: 4,
   },
 
   categoryText: {
+    fontSize: 11,
+    fontWeight: '600',
+  },
+
+  summaryDivider: {
+    height: 1,
+    backgroundColor: Colors.border,
+    marginVertical: Spacing.md,
+  },
+
+  summaryBottomRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+
+  compactMood: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+
+  compactMoodIcon: {
+    width: 42,
+    height: 42,
+    borderRadius: 21,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: Spacing.sm,
+  },
+
+  smallLabel: {
+    fontSize: 11,
+    color: Colors.textSecondary,
+    marginBottom: 2,
+  },
+
+  compactMoodValue: {
     fontSize: 14,
     fontWeight: '600',
   },
 
-  moodCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    borderWidth: 1,
-    borderRadius: 17,
-    padding: Spacing.md,
-    marginTop: Spacing.md,
-  },
-
-  moodIcon: {
-    width: 52,
-    height: 52,
-    borderRadius: 26,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: Spacing.md,
-  },
-
-  moodTextContainer: {
-    flex: 1,
-  },
-
-  smallLabel: {
+  noMoodText: {
     fontSize: 13,
     color: Colors.textSecondary,
-    marginBottom: 3,
   },
 
-  moodValue: {
-    fontSize: 18,
+  detailsButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    minHeight: 40,
+    paddingHorizontal: 12,
+    borderRadius: 20,
+    backgroundColor: '#EDF5F2',
+  },
+
+  detailsButtonPressed: {
+    opacity: 0.75,
+  },
+
+  detailsButtonText: {
+    fontSize: 13,
     fontWeight: '600',
+    color: Colors.primaryDark,
+    marginRight: 5,
+  },
+
+  detailsSection: {
+    borderTopWidth: 1,
+    borderTopColor: Colors.border,
+    marginTop: Spacing.md,
+    paddingTop: Spacing.md,
   },
 
   noteCard: {
     backgroundColor: '#FFF9EE',
     borderWidth: 1,
     borderColor: '#ECDDBE',
-    borderRadius: 17,
+    borderRadius: 15,
     padding: Spacing.md,
-    marginTop: Spacing.md,
+    marginBottom: Spacing.md,
   },
 
   noteHeader: {
@@ -793,49 +1016,59 @@ const styles = StyleSheet.create({
   },
 
   noteText: {
-    fontSize: 15,
+    fontSize: 14,
     color: '#6B5432',
-    lineHeight: 22,
+    lineHeight: 21,
     fontStyle: 'italic',
   },
 
-  divider: {
-    height: 1,
-    backgroundColor: Colors.border,
-    marginVertical: Spacing.lg,
+  noNoteCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#F8F6F3',
+    borderRadius: 14,
+    padding: Spacing.md,
+    marginBottom: Spacing.md,
+  },
+
+  noNoteText: {
+    flex: 1,
+    fontSize: 13,
+    color: Colors.textSecondary,
+    marginLeft: Spacing.sm,
   },
 
   answersHeading: {
-    fontSize: 17,
+    fontSize: 15,
     fontWeight: '600',
     color: Colors.text,
-    marginBottom: Spacing.md,
+    marginBottom: Spacing.sm,
   },
 
   answersGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    marginHorizontal: -5,
-    marginBottom: Spacing.sm,
+    marginHorizontal: -4,
+    marginBottom: Spacing.md,
   },
 
   answerCard: {
     width: '50%',
-    padding: 12,
-    borderWidth: 5,
+    padding: 10,
+    borderWidth: 4,
     borderColor: Colors.surface,
-    borderRadius: 16,
+    borderRadius: 13,
     backgroundColor: '#F8F4EF',
   },
 
   answerLabel: {
-    fontSize: 13,
+    fontSize: 12,
     color: Colors.textSecondary,
-    marginBottom: 4,
+    marginBottom: 3,
   },
 
   answerValue: {
-    fontSize: 17,
+    fontSize: 16,
     fontWeight: '600',
     color: Colors.text,
   },

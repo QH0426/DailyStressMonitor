@@ -2,28 +2,29 @@ import { useCallback, useState } from 'react';
 
 import {
   ActivityIndicator,
+  Image,
   Pressable,
   ScrollView,
   StyleSheet,
   Text,
+  useWindowDimensions,
   View,
 } from 'react-native';
 
 import { useFocusEffect } from '@react-navigation/native';
 
 import {
+  ArrowRight,
   ChartLine,
   ClipboardCheck,
   Frown,
   History,
   Info,
-  Leaf,
   LockKeyhole,
   Meh,
   NotebookText,
   ShieldCheck,
   Smile,
-  Sparkles,
 } from 'lucide-react-native';
 
 import { getStressEntries } from '../database/database';
@@ -76,16 +77,32 @@ export default function HomeScreen({ navigation }) {
   const [previousEntry, setPreviousEntry] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
 
+  const { width } = useWindowDimensions();
+
+  const isWide = width >= 760;
+
   const loadDashboard = useCallback(async () => {
     try {
       setIsLoading(true);
 
       const entries = await getStressEntries();
 
-      setLatestEntry(entries.length > 0 ? entries[0] : null);
-      setPreviousEntry(entries.length > 1 ? entries[1] : null);
+      const currentEntries = entries.filter(
+        (entry) => entry.questionnaireVersion === 2
+      );
+
+      setLatestEntry(
+        currentEntries.length > 0 ? currentEntries[0] : null
+      );
+
+      setPreviousEntry(
+        currentEntries.length > 1 ? currentEntries[1] : null
+      );
     } catch (error) {
-      console.error('Unable to load dashboard:', error);
+      console.error(
+        'Unable to load dashboard:',
+        error
+      );
 
       setLatestEntry(null);
       setPreviousEntry(null);
@@ -115,9 +132,7 @@ export default function HomeScreen({ navigation }) {
   }
 
   function formatDate(dateValue) {
-    const date = new Date(dateValue);
-
-    return date.toLocaleString('en-GB', {
+    return new Date(dateValue).toLocaleString('en-GB', {
       day: '2-digit',
       month: 'long',
       year: 'numeric',
@@ -129,20 +144,22 @@ export default function HomeScreen({ navigation }) {
   function getTrendInformation() {
     if (!latestEntry || !previousEntry) {
       return {
-        title: 'Your journey is beginning',
+        title: 'Your wellbeing journey is beginning',
         message:
-          'Continue completing daily reflections to see how your wellbeing changes over time.',
+          'Continue completing daily reflections to begin seeing changes over time.',
         colour: Colors.primaryDark,
         background: '#EDF7F5',
       };
     }
 
     const difference =
-      Number(latestEntry.score) - Number(previousEntry.score);
+      Number(latestEntry.score) -
+      Number(previousEntry.score);
 
     if (difference <= -5) {
       return {
-        title: 'Your stress level has reduced',
+        title:
+          'Your estimated stress level has reduced',
         message: `Your latest estimate is ${Math.abs(
           difference
         )}% lower than your previous check-in.`,
@@ -153,7 +170,8 @@ export default function HomeScreen({ navigation }) {
 
     if (difference >= 5) {
       return {
-        title: 'Today may feel more demanding',
+        title:
+          'Today may feel more demanding',
         message: `Your latest estimate is ${difference}% higher than your previous check-in.`,
         colour: '#A05E4B',
         background: '#FCEFEA',
@@ -161,7 +179,8 @@ export default function HomeScreen({ navigation }) {
     }
 
     return {
-      title: 'Your stress level is stable',
+      title:
+        'Your estimated stress level is stable',
       message:
         'Your latest estimate is similar to your previous check-in.',
       colour: '#8B6D35',
@@ -187,414 +206,433 @@ export default function HomeScreen({ navigation }) {
       contentContainerStyle={styles.container}
       showsVerticalScrollIndicator={false}
     >
-      <View style={styles.welcomeRow}>
-        <View style={styles.leafContainer}>
-          <Leaf
-            size={27}
-            color={Colors.primaryDark}
-            strokeWidth={2}
-          />
-        </View>
+      <View style={styles.contentWrapper}>
+        <View style={styles.welcomeRow}>
+          <View style={styles.welcomeTextContainer}>
+            <Text style={styles.greeting}>
+              {getGreeting()}
+            </Text>
 
-        <View style={styles.welcomeTextContainer}>
-          <Text style={styles.greeting}>
-            {getGreeting()}
-          </Text>
-
-          <Text style={styles.welcomeMessage}>
-            Take a moment for yourself today.
-          </Text>
-        </View>
-      </View>
-
-      <View style={styles.brandCard}>
-        <View style={styles.brandIcon}>
-          <Sparkles
-            size={25}
-            color={Colors.primaryDark}
-          />
-        </View>
-
-        <View style={styles.brandTextContainer}>
-          <Text style={styles.title}>
-            Daily Stress Monitor
-          </Text>
-
-          <Text style={styles.brandSubtitle}>
-            A calm space for reflection and personal wellbeing.
-          </Text>
-        </View>
-      </View>
-
-      <Text style={styles.sectionHeading}>
-        Today’s wellbeing
-      </Text>
-
-      <View style={styles.wellbeingCard}>
-        {isLoading ? (
-          <View style={styles.loadingContainer}>
-            <ActivityIndicator
-              size="large"
-              color={Colors.primary}
-            />
-
-            <Text style={styles.loadingText}>
-              Preparing your latest summary...
+            <Text style={styles.welcomeMessage}>
+              Take a moment for yourself today.
             </Text>
           </View>
-        ) : latestEntry ? (
-          <>
-            <View style={styles.resultHeader}>
-              <View style={styles.resultInformation}>
-                <Text style={styles.smallLabel}>
-                  Latest stress level
+        </View>
+
+        <View
+          style={[
+            styles.heroCard,
+            isWide && styles.heroCardWide,
+          ]}
+        >
+          <View style={styles.heroText}>
+            <Text style={styles.heroLabel}>
+              DAILY WELLBEING
+            </Text>
+
+            <Text style={styles.heroTitle}>
+              Daily Stress Monitor
+            </Text>
+
+            <Text style={styles.heroDescription}>
+              A calm space to pause, reflect and understand
+              your daily wellbeing.
+            </Text>
+
+            <View style={styles.calmPrompt}>
+              <View style={styles.calmPromptTextContainer}>
+                <Text style={styles.calmPromptTitle}>
+                  Pause for a moment.
                 </Text>
 
-                <Text
-                  style={[
-                    styles.score,
-                    {
-                      color: category.colour,
-                    },
-                  ]}
-                >
-                  {latestEntry.score}%
-                </Text>
+                <View style={styles.calmPromptSecondRow}>
+                  <Text style={styles.calmPromptText}>
+                    Imagine a place where you feel calm.
+                  </Text>
 
-                <View
-                  style={[
-                    styles.categoryBadge,
-                    {
-                      backgroundColor: `${category.colour}18`,
-                    },
-                  ]}
-                >
+                  <ArrowRight
+                    size={20}
+                    color={Colors.primaryDark}
+                    strokeWidth={1.8}
+                  />
+                </View>
+              </View>
+            </View>
+
+            <Pressable
+              style={({ pressed }) => [
+                styles.heroButton,
+                pressed && styles.pressedButton,
+              ]}
+              onPress={() =>
+                navigation.navigate('CheckIn')
+              }
+              accessibilityRole="button"
+              accessibilityLabel="Start today's reflection"
+            >
+              <Text style={styles.heroButtonText}>
+                Start Today’s Reflection
+              </Text>
+
+              <ArrowRight
+                size={21}
+                color={Colors.white}
+              />
+            </Pressable>
+          </View>
+
+          <View style={styles.heroImageContainer}>
+            <Image
+              source={require('../../assets/nature-calm.png')}
+              style={styles.heroImage}
+              resizeMode="cover"
+            />
+          </View>
+        </View>
+
+        <Text style={styles.sectionHeading}>
+          Today’s wellbeing
+        </Text>
+
+        <View style={styles.wellbeingCard}>
+          {isLoading ? (
+            <View style={styles.loadingContainer}>
+              <ActivityIndicator
+                size="large"
+                color={Colors.primary}
+              />
+
+              <Text style={styles.loadingText}>
+                Preparing your latest summary...
+              </Text>
+            </View>
+          ) : latestEntry ? (
+            <>
+              <View style={styles.resultRow}>
+                <View style={styles.scoreSection}>
+                  <Text style={styles.smallLabel}>
+                    Latest estimate
+                  </Text>
+
                   <Text
                     style={[
-                      styles.categoryText,
+                      styles.score,
                       {
                         color: category.colour,
                       },
                     ]}
                   >
-                    {category.label} stress
-                  </Text>
-                </View>
-              </View>
-
-              <View
-                style={[
-                  styles.scoreCircle,
-                  {
-                    borderColor: category.colour,
-                  },
-                ]}
-              >
-                <Leaf
-                  size={27}
-                  color={category.colour}
-                  strokeWidth={2}
-                />
-
-                <Text
-                  style={[
-                    styles.circleScore,
-                    {
-                      color: category.colour,
-                    },
-                  ]}
-                >
-                  {latestEntry.score}%
-                </Text>
-              </View>
-            </View>
-
-            {mood && MoodIcon ? (
-              <View
-                style={[
-                  styles.contextCard,
-                  {
-                    backgroundColor: mood.background,
-                    borderColor: `${mood.colour}55`,
-                  },
-                ]}
-              >
-                <View
-                  style={[
-                    styles.contextIconContainer,
-                    {
-                      backgroundColor: `${mood.colour}20`,
-                    },
-                  ]}
-                >
-                  <MoodIcon
-                    size={32}
-                    color={mood.colour}
-                    strokeWidth={1.9}
-                  />
-                </View>
-
-                <View style={styles.contextTextContainer}>
-                  <Text style={styles.contextLabel}>
-                    Today’s mood
+                    {latestEntry.score}%
                   </Text>
 
-                  <Text
+                  <View
                     style={[
-                      styles.contextValue,
+                      styles.categoryBadge,
                       {
-                        color: mood.colour,
+                        backgroundColor:
+                          `${category.colour}18`,
                       },
                     ]}
                   >
-                    {mood.label}
-                  </Text>
+                    <Text
+                      style={[
+                        styles.categoryText,
+                        {
+                          color: category.colour,
+                        },
+                      ]}
+                    >
+                      {category.label} stress
+                    </Text>
+                  </View>
+                </View>
+
+                <View style={styles.resultDivider} />
+
+                <View style={styles.moodSection}>
+                  {mood && MoodIcon ? (
+                    <>
+                      <View
+                        style={[
+                          styles.dashboardMoodIcon,
+                          {
+                            backgroundColor:
+                              mood.background,
+                          },
+                        ]}
+                      >
+                        <MoodIcon
+                          size={36}
+                          color={mood.colour}
+                          strokeWidth={1.8}
+                        />
+                      </View>
+
+                      <Text style={styles.smallLabel}>
+                        Mood
+                      </Text>
+
+                      <Text
+                        style={[
+                          styles.dashboardMoodText,
+                          {
+                            color: mood.colour,
+                          },
+                        ]}
+                      >
+                        {mood.label}
+                      </Text>
+                    </>
+                  ) : (
+                    <Text style={styles.emptyMoodText}>
+                      Mood information will appear here.
+                    </Text>
+                  )}
                 </View>
               </View>
-            ) : null}
 
-            {latestEntry.note ? (
-              <View style={styles.reflectionCard}>
+              <View style={styles.latestDateRow}>
                 <NotebookText
-                  size={22}
-                  color="#9A7440"
-                  strokeWidth={1.9}
+                  size={18}
+                  color="#8B6D35"
                 />
 
-                <View style={styles.reflectionTextContainer}>
-                  <Text style={styles.reflectionLabel}>
-                    Today’s reflection
-                  </Text>
+                <Text style={styles.latestDateText}>
+                  Last check-in:{' '}
+                  {formatDate(latestEntry.date)}
+                </Text>
+              </View>
+
+              {latestEntry.note ? (
+                <View style={styles.reflectionCard}>
+                  <NotebookText
+                    size={21}
+                    color="#9A7440"
+                  />
 
                   <Text
                     style={styles.reflectionText}
-                    numberOfLines={4}
+                    numberOfLines={2}
                   >
                     “{latestEntry.note}”
                   </Text>
                 </View>
+              ) : null}
+            </>
+          ) : (
+            <View style={styles.emptyState}>
+              <View style={styles.emptyIconContainer}>
+                <ClipboardCheck
+                  size={38}
+                  color={Colors.primary}
+                  strokeWidth={1.8}
+                />
               </View>
-            ) : null}
 
-            <View style={styles.divider} />
+              <Text style={styles.emptyTitle}>
+                Your updated wellbeing journey starts here
+              </Text>
 
-            <Text style={styles.dateLabel}>
-              Last reflection
-            </Text>
-
-            <Text style={styles.dateText}>
-              {formatDate(latestEntry.date)}
-            </Text>
-          </>
-        ) : (
-          <View style={styles.emptyState}>
-            <View style={styles.emptyIconContainer}>
-              <ClipboardCheck
-                size={38}
-                color={Colors.primary}
-                strokeWidth={1.8}
-              />
+              <Text style={styles.emptyText}>
+                Complete your five-question daily reflection
+                to see your estimated stress level and mood.
+              </Text>
             </View>
+          )}
+        </View>
 
-            <Text style={styles.emptyTitle}>
-              Your wellbeing journey starts here
+        {!isLoading && latestEntry ? (
+          <>
+            <Text style={styles.sectionHeading}>
+              Today’s insight
             </Text>
 
-            <Text style={styles.emptyText}>
-              Complete your first daily reflection to see your mood,
-              stress estimate and personal notes.
-            </Text>
-          </View>
-        )}
-      </View>
-
-      {!isLoading && latestEntry ? (
-        <>
-          <Text style={styles.sectionHeading}>
-            Today’s insight
-          </Text>
-
-          <View
-            style={[
-              styles.insightCard,
-              {
-                backgroundColor: trend.background,
-                borderColor: `${trend.colour}55`,
-              },
-            ]}
-          >
             <View
               style={[
-                styles.insightIcon,
+                styles.insightCard,
                 {
-                  backgroundColor: `${trend.colour}18`,
+                  backgroundColor: trend.background,
+                  borderColor: `${trend.colour}55`,
                 },
               ]}
             >
-              <Sparkles
-                size={25}
-                color={trend.colour}
-              />
-            </View>
-
-            <View style={styles.insightTextContainer}>
-              <Text
+              <View
                 style={[
-                  styles.insightTitle,
+                  styles.insightIcon,
                   {
-                    color: trend.colour,
+                    backgroundColor:
+                      `${trend.colour}18`,
                   },
                 ]}
               >
-                {trend.title}
-              </Text>
+                <ChartLine
+                  size={25}
+                  color={trend.colour}
+                />
+              </View>
 
-              <Text style={styles.insightMessage}>
-                {trend.message}
-              </Text>
+              <View style={styles.insightTextContainer}>
+                <Text
+                  style={[
+                    styles.insightTitle,
+                    {
+                      color: trend.colour,
+                    },
+                  ]}
+                >
+                  {trend.title}
+                </Text>
+
+                <Text style={styles.insightMessage}>
+                  {trend.message}
+                </Text>
+              </View>
             </View>
-          </View>
-        </>
-      ) : null}
+          </>
+        ) : null}
 
-      <Text style={styles.sectionHeading}>
-        Quick actions
-      </Text>
-
-      <View style={styles.actionsGrid}>
-        <Pressable
-          style={({ pressed }) => [
-            styles.actionCard,
-            pressed && styles.pressedCard,
-          ]}
-          onPress={() => navigation.navigate('CheckIn')}
-          accessibilityRole="button"
-          accessibilityLabel="Start today's daily reflection"
-        >
-          <View style={styles.primaryActionIcon}>
-            <ClipboardCheck
-              size={27}
-              color={Colors.white}
-            />
-          </View>
-
-          <Text style={styles.actionTitle}>
-            Daily reflection
-          </Text>
-
-          <Text style={styles.actionDescription}>
-            Record today’s mood and stress factors.
-          </Text>
-        </Pressable>
-
-        <Pressable
-          style={({ pressed }) => [
-            styles.actionCard,
-            pressed && styles.pressedCard,
-          ]}
-          onPress={() => navigation.navigate('History')}
-          accessibilityRole="button"
-          accessibilityLabel="View saved wellbeing history"
-        >
-          <View style={styles.secondaryActionIcon}>
-            <History
-              size={27}
-              color={Colors.primaryDark}
-            />
-          </View>
-
-          <Text style={styles.actionTitle}>
-            Your journey
-          </Text>
-
-          <Text style={styles.actionDescription}>
-            Review previous reflections and notes.
-          </Text>
-        </Pressable>
-
-        <Pressable
-          style={({ pressed }) => [
-            styles.actionCard,
-            pressed && styles.pressedCard,
-          ]}
-          onPress={() => navigation.navigate('Progress')}
-          accessibilityRole="button"
-          accessibilityLabel="View wellbeing trends and statistics"
-        >
-          <View style={styles.sageActionIcon}>
-            <ChartLine
-              size={27}
-              color="#54785C"
-            />
-          </View>
-
-          <Text style={styles.actionTitle}>
-            Wellbeing trends
-          </Text>
-
-          <Text style={styles.actionDescription}>
-            Explore progress, averages and changes.
-          </Text>
-        </Pressable>
-
-        <Pressable
-          style={({ pressed }) => [
-            styles.actionCard,
-            pressed && styles.pressedCard,
-          ]}
-          onPress={() => navigation.navigate('Information')}
-          accessibilityRole="button"
-          accessibilityLabel="Open information and privacy details"
-        >
-          <View style={styles.privacyActionIcon}>
-            <ShieldCheck
-              size={27}
-              color="#7A6340"
-            />
-          </View>
-
-          <Text style={styles.actionTitle}>
-            Privacy & safety
-          </Text>
-
-          <Text style={styles.actionDescription}>
-            Learn how your information is stored.
-          </Text>
-        </Pressable>
-      </View>
-
-      <View style={styles.privacyCard}>
-        <LockKeyhole
-          size={23}
-          color={Colors.primaryDark}
-          strokeWidth={1.9}
-        />
-
-        <View style={styles.privacyTextContainer}>
-          <Text style={styles.privacyTitle}>
-            Your reflections stay private
-          </Text>
-
-          <Text style={styles.privacyText}>
-            Your current records are stored locally on this device or
-            browser and are not automatically shared.
-          </Text>
-        </View>
-      </View>
-
-      <Pressable
-        style={styles.informationLink}
-        onPress={() => navigation.navigate('Information')}
-      >
-        <Info
-          size={18}
-          color={Colors.textSecondary}
-        />
-
-        <Text style={styles.informationLinkText}>
-          Read the full information and privacy statement
+        <Text style={styles.sectionHeading}>
+          Quick actions
         </Text>
-      </Pressable>
+
+        <View style={styles.actionsGrid}>
+          <Pressable
+            style={({ pressed }) => [
+              styles.actionCard,
+              pressed && styles.pressedCard,
+            ]}
+            onPress={() =>
+              navigation.navigate('CheckIn')
+            }
+          >
+            <View style={styles.primaryActionIcon}>
+              <ClipboardCheck
+                size={27}
+                color={Colors.white}
+              />
+            </View>
+
+            <Text style={styles.actionTitle}>
+              Reflection
+            </Text>
+
+            <Text style={styles.actionDescription}>
+              Start today’s check-in.
+            </Text>
+          </Pressable>
+
+          <Pressable
+            style={({ pressed }) => [
+              styles.actionCard,
+              pressed && styles.pressedCard,
+            ]}
+            onPress={() =>
+              navigation.navigate('History')
+            }
+          >
+            <View style={styles.secondaryActionIcon}>
+              <History
+                size={27}
+                color={Colors.primaryDark}
+              />
+            </View>
+
+            <Text style={styles.actionTitle}>
+              Journey
+            </Text>
+
+            <Text style={styles.actionDescription}>
+              Review your reflections.
+            </Text>
+          </Pressable>
+
+          <Pressable
+            style={({ pressed }) => [
+              styles.actionCard,
+              pressed && styles.pressedCard,
+            ]}
+            onPress={() =>
+              navigation.navigate('Progress')
+            }
+          >
+            <View style={styles.sageActionIcon}>
+              <ChartLine
+                size={27}
+                color="#54785C"
+              />
+            </View>
+
+            <Text style={styles.actionTitle}>
+              Trends
+            </Text>
+
+            <Text style={styles.actionDescription}>
+              Explore your progress.
+            </Text>
+          </Pressable>
+
+          <Pressable
+            style={({ pressed }) => [
+              styles.actionCard,
+              pressed && styles.pressedCard,
+            ]}
+            onPress={() =>
+              navigation.navigate('Information')
+            }
+          >
+            <View style={styles.privacyActionIcon}>
+              <ShieldCheck
+                size={27}
+                color="#7A6340"
+              />
+            </View>
+
+            <Text style={styles.actionTitle}>
+              Privacy
+            </Text>
+
+            <Text style={styles.actionDescription}>
+              Learn how your data is protected.
+            </Text>
+          </Pressable>
+        </View>
+
+        <View style={styles.privacyCard}>
+          <LockKeyhole
+            size={24}
+            color={Colors.primaryDark}
+            strokeWidth={1.9}
+          />
+
+          <View style={styles.privacyTextContainer}>
+            <Text style={styles.privacyTitle}>
+              Your reflections stay private
+            </Text>
+
+            <Text style={styles.privacyText}>
+              Your reflections are stored securely in your
+              authenticated account and are not automatically
+              shared with other users.
+            </Text>
+          </View>
+        </View>
+
+        <Pressable
+          style={styles.informationLink}
+          onPress={() =>
+            navigation.navigate('Information')
+          }
+        >
+          <Info
+            size={18}
+            color={Colors.textSecondary}
+          />
+
+          <Text style={styles.informationLinkText}>
+            Read the full information and privacy statement
+          </Text>
+        </Pressable>
+      </View>
     </ScrollView>
   );
 }
@@ -611,21 +649,17 @@ const styles = StyleSheet.create({
     paddingBottom: Spacing.xxl,
   },
 
+  contentWrapper: {
+    width: '100%',
+    maxWidth: 1500,
+    alignSelf: 'center',
+  },
+
   welcomeRow: {
     flexDirection: 'row',
     alignItems: 'center',
     marginTop: Spacing.sm,
     marginBottom: Spacing.lg,
-  },
-
-  leafContainer: {
-    width: 52,
-    height: 52,
-    borderRadius: 26,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#E9F2EC',
-    marginRight: Spacing.md,
   },
 
   welcomeTextContainer: {
@@ -644,42 +678,111 @@ const styles = StyleSheet.create({
     color: Colors.textSecondary,
   },
 
-  brandCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#EDF5F2',
+  heroCard: {
+    backgroundColor: '#F3F5EA',
     borderWidth: 1,
-    borderColor: '#D2E5DF',
-    borderRadius: 20,
-    padding: Spacing.lg,
+    borderColor: '#DCE5D5',
+    borderRadius: 28,
+    overflow: 'hidden',
     marginBottom: Spacing.xl,
+    ...Shadows.card,
   },
 
-  brandIcon: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    backgroundColor: '#DDECE7',
-    alignItems: 'center',
+  heroCardWide: {
+    flexDirection: 'row',
+  },
+
+  heroText: {
+    flex: 1,
+    padding: Spacing.xl,
     justifyContent: 'center',
-    marginRight: Spacing.md,
   },
 
-  brandTextContainer: {
+  heroLabel: {
+    fontSize: 12,
+    fontWeight: '700',
+    letterSpacing: 1.2,
+    color: Colors.primaryDark,
+    marginBottom: Spacing.sm,
+  },
+
+  heroTitle: {
+    fontSize: 30,
+    fontWeight: '700',
+    color: Colors.primaryDark,
+    marginBottom: Spacing.sm,
+  },
+
+  heroDescription: {
+    fontSize: 16,
+    color: Colors.textSecondary,
+    lineHeight: 24,
+    maxWidth: 430,
+    marginBottom: Spacing.md,
+  },
+
+  calmPrompt: {
+    maxWidth: 430,
+    marginBottom: Spacing.lg,
+    paddingVertical: 4,
+  },
+
+  calmPromptTextContainer: {
     flex: 1,
   },
 
-  title: {
-    fontSize: 23,
-    fontWeight: '700',
+  calmPromptTitle: {
+    fontSize: 14,
+    fontWeight: '600',
     color: Colors.primaryDark,
-    marginBottom: 5,
+    marginBottom: 4,
   },
 
-  brandSubtitle: {
-    fontSize: 14,
+  calmPromptSecondRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+
+  calmPromptText: {
+    fontSize: 13,
     color: Colors.textSecondary,
-    lineHeight: 20,
+    lineHeight: 18,
+    marginRight: 8,
+  },
+
+  heroButton: {
+    alignSelf: 'flex-start',
+    minHeight: 52,
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: Colors.primary,
+    borderRadius: 26,
+    paddingHorizontal: 22,
+    gap: 10,
+  },
+
+  heroButtonText: {
+    color: Colors.white,
+    fontSize: 15,
+    fontWeight: '600',
+  },
+
+  pressedButton: {
+    opacity: 0.82,
+    transform: [{ scale: 0.99 }],
+  },
+
+  heroImageContainer: {
+    flex: 1,
+    minHeight: 290,
+    position: 'relative',
+    overflow: 'hidden',
+  },
+
+  heroImage: {
+    width: '100%',
+    height: '100%',
+    position: 'absolute',
   },
 
   sectionHeading: {
@@ -710,135 +813,110 @@ const styles = StyleSheet.create({
     marginTop: Spacing.md,
   },
 
-  resultHeader: {
+  resultRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
+    maxWidth: 850,
+    width: '100%',
+    alignSelf: 'center',
   },
 
-  resultInformation: {
+  scoreSection: {
     flex: 1,
-    paddingRight: Spacing.md,
+    alignItems: 'center',
+    padding: Spacing.md,
+  },
+
+  moodSection: {
+    flex: 1,
+    alignItems: 'center',
+    padding: Spacing.md,
+  },
+
+  resultDivider: {
+    width: 1,
+    alignSelf: 'stretch',
+    backgroundColor: Colors.border,
   },
 
   smallLabel: {
-    fontSize: 14,
-    color: Colors.textSecondary,
-    marginBottom: Spacing.xs,
-  },
-
-  score: {
-    fontSize: 53,
-    fontWeight: '700',
-    marginBottom: Spacing.sm,
-  },
-
-  categoryBadge: {
-    alignSelf: 'flex-start',
-    paddingVertical: 7,
-    paddingHorizontal: 14,
-    borderRadius: 18,
-  },
-
-  categoryText: {
-    fontSize: 15,
-    fontWeight: '600',
-  },
-
-  scoreCircle: {
-    width: 105,
-    height: 105,
-    borderRadius: 53,
-    borderWidth: 7,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: Colors.surface,
-  },
-
-  circleScore: {
-    fontSize: 18,
-    fontWeight: '700',
-    marginTop: 2,
-  },
-
-  contextCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    borderWidth: 1,
-    borderRadius: 17,
-    padding: Spacing.md,
-    marginTop: Spacing.lg,
-  },
-
-  contextIconContainer: {
-    width: 52,
-    height: 52,
-    borderRadius: 26,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: Spacing.md,
-  },
-
-  contextTextContainer: {
-    flex: 1,
-  },
-
-  contextLabel: {
-    fontSize: 13,
-    color: Colors.textSecondary,
-    marginBottom: 3,
-  },
-
-  contextValue: {
-    fontSize: 18,
-    fontWeight: '600',
-  },
-
-  reflectionCard: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    backgroundColor: '#FBF5E8',
-    borderWidth: 1,
-    borderColor: '#EAD9B4',
-    borderRadius: 17,
-    padding: Spacing.md,
-    marginTop: Spacing.md,
-  },
-
-  reflectionTextContainer: {
-    flex: 1,
-    marginLeft: Spacing.md,
-  },
-
-  reflectionLabel: {
-    fontSize: 13,
-    color: '#8B6D35',
-    marginBottom: 5,
-  },
-
-  reflectionText: {
-    fontSize: 15,
-    color: '#6B5432',
-    lineHeight: 22,
-    fontStyle: 'italic',
-  },
-
-  divider: {
-    height: 1,
-    backgroundColor: Colors.border,
-    marginVertical: Spacing.lg,
-  },
-
-  dateLabel: {
     fontSize: 13,
     color: Colors.textSecondary,
     marginBottom: 4,
   },
 
-  dateText: {
-    fontSize: 15,
-    fontWeight: '500',
-    color: Colors.text,
+  score: {
+    fontSize: 42,
+    fontWeight: '700',
+    marginBottom: Spacing.sm,
+  },
+
+  categoryBadge: {
+    alignSelf: 'center',
+    paddingVertical: 6,
+    paddingHorizontal: 13,
+    borderRadius: 17,
+  },
+
+  categoryText: {
+    fontSize: 14,
+    fontWeight: '600',
+  },
+
+  dashboardMoodIcon: {
+    width: 62,
+    height: 62,
+    borderRadius: 31,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: Spacing.sm,
+  },
+
+  dashboardMoodText: {
+    fontSize: 18,
+    fontWeight: '600',
+  },
+
+  emptyMoodText: {
+    fontSize: 13,
+    color: Colors.textSecondary,
+    textAlign: 'center',
+  },
+
+  latestDateRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderTopWidth: 1,
+    borderTopColor: Colors.border,
+    marginTop: Spacing.md,
+    paddingTop: Spacing.md,
+  },
+
+  latestDateText: {
+    fontSize: 13,
+    color: Colors.textSecondary,
+    marginLeft: Spacing.sm,
+  },
+
+  reflectionCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#FBF5E8',
+    borderWidth: 1,
+    borderColor: '#EAD9B4',
+    borderRadius: 15,
+    padding: Spacing.md,
+    marginTop: Spacing.md,
+  },
+
+  reflectionText: {
+    flex: 1,
+    fontSize: 13,
+    color: '#6B5432',
+    lineHeight: 19,
+    fontStyle: 'italic',
+    marginLeft: Spacing.sm,
   },
 
   emptyState: {
@@ -919,7 +997,7 @@ const styles = StyleSheet.create({
     borderColor: Colors.background,
     backgroundColor: Colors.surface,
     borderRadius: 22,
-    minHeight: 180,
+    minHeight: 150,
     ...Shadows.card,
   },
 
