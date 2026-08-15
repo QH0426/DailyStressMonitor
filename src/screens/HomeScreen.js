@@ -18,6 +18,7 @@ import {
   ChartLine,
   ClipboardCheck,
   Frown,
+  Heart,
   History,
   Info,
   LockKeyhole,
@@ -79,7 +80,7 @@ export default function HomeScreen({ navigation }) {
 
   const { width } = useWindowDimensions();
 
-  const isWide = width >= 760;
+  const isWide = width >= 850;
 
   const loadDashboard = useCallback(async () => {
     try {
@@ -207,6 +208,9 @@ export default function HomeScreen({ navigation }) {
       showsVerticalScrollIndicator={false}
     >
       <View style={styles.contentWrapper}>
+
+        {/* Welcome */}
+
         <View style={styles.welcomeRow}>
           <View style={styles.welcomeTextContainer}>
             <Text style={styles.greeting}>
@@ -217,7 +221,17 @@ export default function HomeScreen({ navigation }) {
               Take a moment for yourself today.
             </Text>
           </View>
+
+          <View style={styles.welcomeHeart}>
+            <Heart
+              size={22}
+              color={Colors.primaryDark}
+              strokeWidth={1.8}
+            />
+          </View>
         </View>
+
+        {/* Hero */}
 
         <View
           style={[
@@ -225,38 +239,43 @@ export default function HomeScreen({ navigation }) {
             isWide && styles.heroCardWide,
           ]}
         >
-          <View style={styles.heroText}>
-            <Text style={styles.heroLabel}>
-              DAILY WELLBEING
-            </Text>
+          <View
+            style={[
+              styles.heroText,
+              isWide && styles.heroTextWide,
+            ]}
+          >
+            <View style={styles.heroBadge}>
+              <Heart
+                size={15}
+                color={Colors.primaryDark}
+                strokeWidth={1.8}
+              />
+
+              <Text style={styles.heroLabel}>
+                DAILY WELLBEING
+              </Text>
+            </View>
 
             <Text style={styles.heroTitle}>
-              Daily Stress Monitor
+              Pause. Reflect. Understand.
             </Text>
 
             <Text style={styles.heroDescription}>
-              A calm space to pause, reflect and understand
-              your daily wellbeing.
+              A private space to check in with yourself,
+              understand your daily stress and notice
+              changes in your wellbeing over time.
             </Text>
 
             <View style={styles.calmPrompt}>
-              <View style={styles.calmPromptTextContainer}>
-                <Text style={styles.calmPromptTitle}>
-                  Pause for a moment.
-                </Text>
+              <Text style={styles.calmPromptTitle}>
+                A moment for you
+              </Text>
 
-                <View style={styles.calmPromptSecondRow}>
-                  <Text style={styles.calmPromptText}>
-                    Imagine a place where you feel calm.
-                  </Text>
-
-                  <ArrowRight
-                    size={20}
-                    color={Colors.primaryDark}
-                    strokeWidth={1.8}
-                  />
-                </View>
-              </View>
+              <Text style={styles.calmPromptText}>
+                Slow down for a moment and notice how
+                you are feeling today.
+              </Text>
             </View>
 
             <Pressable
@@ -275,24 +294,52 @@ export default function HomeScreen({ navigation }) {
               </Text>
 
               <ArrowRight
-                size={21}
+                size={20}
                 color={Colors.white}
+                strokeWidth={2}
               />
             </Pressable>
           </View>
 
-          <View style={styles.heroImageContainer}>
+          <View
+            style={[
+              styles.heroImageContainer,
+              isWide && styles.heroImageContainerWide,
+            ]}
+          >
             <Image
-              source={require('../../assets/nature-calm.png')}
+              source={require('../../assets/images/pexels-vie-studio-7006364.jpg')}
               style={styles.heroImage}
               resizeMode="cover"
             />
+
+            <View style={styles.heroImageOverlay} />
+
+            <View style={styles.imageMessage}>
+              <Text style={styles.imageMessageSmall}>
+                TODAY’S REMINDER
+              </Text>
+
+              <Text style={styles.imageMessageMain}>
+                Give yourself permission to pause.
+              </Text>
+            </View>
           </View>
         </View>
 
-        <Text style={styles.sectionHeading}>
-          Today’s wellbeing
-        </Text>
+        {/* Today's wellbeing */}
+
+        <View style={styles.sectionHeaderRow}>
+          <View>
+            <Text style={styles.sectionHeading}>
+              Today’s wellbeing
+            </Text>
+
+            <Text style={styles.sectionSubtitle}>
+              Your latest personal check-in.
+            </Text>
+          </View>
+        </View>
 
         <View style={styles.wellbeingCard}>
           {isLoading ? (
@@ -308,11 +355,20 @@ export default function HomeScreen({ navigation }) {
             </View>
           ) : latestEntry ? (
             <>
-              <View style={styles.resultRow}>
+              <View
+                style={[
+                  styles.resultRow,
+                  !isWide && styles.resultRowMobile,
+                ]}
+              >
                 <View style={styles.scoreSection}>
-                  <Text style={styles.smallLabel}>
-                    Latest estimate
-                  </Text>
+                  <View style={styles.scoreLabelRow}>
+                    <View style={styles.scoreDot} />
+
+                    <Text style={styles.smallLabel}>
+                      Latest stress estimate
+                    </Text>
+                  </View>
 
                   <Text
                     style={[
@@ -345,9 +401,18 @@ export default function HomeScreen({ navigation }) {
                       {category.label} stress
                     </Text>
                   </View>
+
+                  <Text style={styles.scoreHelpText}>
+                    This estimate is based on your latest
+                    daily reflection.
+                  </Text>
                 </View>
 
-                <View style={styles.resultDivider} />
+                {isWide ? (
+                  <View style={styles.resultDivider} />
+                ) : (
+                  <View style={styles.resultDividerMobile} />
+                )}
 
                 <View style={styles.moodSection}>
                   {mood && MoodIcon ? (
@@ -362,14 +427,14 @@ export default function HomeScreen({ navigation }) {
                         ]}
                       >
                         <MoodIcon
-                          size={36}
+                          size={38}
                           color={mood.colour}
                           strokeWidth={1.8}
                         />
                       </View>
 
                       <Text style={styles.smallLabel}>
-                        Mood
+                        Today’s mood
                       </Text>
 
                       <Text
@@ -381,6 +446,11 @@ export default function HomeScreen({ navigation }) {
                         ]}
                       >
                         {mood.label}
+                      </Text>
+
+                      <Text style={styles.moodHelpText}>
+                        Your mood adds personal context
+                        to today’s reflection.
                       </Text>
                     </>
                   ) : (
@@ -395,6 +465,7 @@ export default function HomeScreen({ navigation }) {
                 <NotebookText
                   size={18}
                   color="#8B6D35"
+                  strokeWidth={1.8}
                 />
 
                 <Text style={styles.latestDateText}>
@@ -405,17 +476,26 @@ export default function HomeScreen({ navigation }) {
 
               {latestEntry.note ? (
                 <View style={styles.reflectionCard}>
-                  <NotebookText
-                    size={21}
-                    color="#9A7440"
-                  />
+                  <View style={styles.reflectionIcon}>
+                    <NotebookText
+                      size={21}
+                      color="#8B6D35"
+                      strokeWidth={1.8}
+                    />
+                  </View>
 
-                  <Text
-                    style={styles.reflectionText}
-                    numberOfLines={2}
-                  >
-                    “{latestEntry.note}”
-                  </Text>
+                  <View style={styles.reflectionTextContainer}>
+                    <Text style={styles.reflectionLabel}>
+                      Your reflection
+                    </Text>
+
+                    <Text
+                      style={styles.reflectionText}
+                      numberOfLines={3}
+                    >
+                      “{latestEntry.note}”
+                    </Text>
+                  </View>
                 </View>
               ) : null}
             </>
@@ -430,16 +510,37 @@ export default function HomeScreen({ navigation }) {
               </View>
 
               <Text style={styles.emptyTitle}>
-                Your updated wellbeing journey starts here
+                Your wellbeing journey starts here
               </Text>
 
               <Text style={styles.emptyText}>
                 Complete your five-question daily reflection
                 to see your estimated stress level and mood.
               </Text>
+
+              <Pressable
+                style={({ pressed }) => [
+                  styles.emptyButton,
+                  pressed && styles.pressedButton,
+                ]}
+                onPress={() =>
+                  navigation.navigate('CheckIn')
+                }
+              >
+                <Text style={styles.emptyButtonText}>
+                  Begin your first reflection
+                </Text>
+
+                <ArrowRight
+                  size={18}
+                  color={Colors.white}
+                />
+              </Pressable>
             </View>
           )}
         </View>
+
+        {/* Insight */}
 
         {!isLoading && latestEntry ? (
           <>
@@ -468,6 +569,7 @@ export default function HomeScreen({ navigation }) {
                 <ChartLine
                   size={25}
                   color={trend.colour}
+                  strokeWidth={1.9}
                 />
               </View>
 
@@ -491,14 +593,26 @@ export default function HomeScreen({ navigation }) {
           </>
         ) : null}
 
-        <Text style={styles.sectionHeading}>
-          Quick actions
-        </Text>
+        {/* Quick actions */}
+
+        <View style={styles.sectionHeaderRow}>
+          <View>
+            <Text style={styles.sectionHeading}>
+              Quick actions
+            </Text>
+
+            <Text style={styles.sectionSubtitle}>
+              Continue your wellbeing journey.
+            </Text>
+          </View>
+        </View>
 
         <View style={styles.actionsGrid}>
+
           <Pressable
             style={({ pressed }) => [
               styles.actionCard,
+              isWide && styles.actionCardWide,
               pressed && styles.pressedCard,
             ]}
             onPress={() =>
@@ -507,7 +621,7 @@ export default function HomeScreen({ navigation }) {
           >
             <View style={styles.primaryActionIcon}>
               <ClipboardCheck
-                size={27}
+                size={25}
                 color={Colors.white}
               />
             </View>
@@ -519,11 +633,18 @@ export default function HomeScreen({ navigation }) {
             <Text style={styles.actionDescription}>
               Start today’s check-in.
             </Text>
+
+            <ArrowRight
+              size={18}
+              color={Colors.primaryDark}
+              style={styles.actionArrow}
+            />
           </Pressable>
 
           <Pressable
             style={({ pressed }) => [
               styles.actionCard,
+              isWide && styles.actionCardWide,
               pressed && styles.pressedCard,
             ]}
             onPress={() =>
@@ -532,7 +653,7 @@ export default function HomeScreen({ navigation }) {
           >
             <View style={styles.secondaryActionIcon}>
               <History
-                size={27}
+                size={25}
                 color={Colors.primaryDark}
               />
             </View>
@@ -544,11 +665,18 @@ export default function HomeScreen({ navigation }) {
             <Text style={styles.actionDescription}>
               Review your reflections.
             </Text>
+
+            <ArrowRight
+              size={18}
+              color={Colors.primaryDark}
+              style={styles.actionArrow}
+            />
           </Pressable>
 
           <Pressable
             style={({ pressed }) => [
               styles.actionCard,
+              isWide && styles.actionCardWide,
               pressed && styles.pressedCard,
             ]}
             onPress={() =>
@@ -557,7 +685,7 @@ export default function HomeScreen({ navigation }) {
           >
             <View style={styles.sageActionIcon}>
               <ChartLine
-                size={27}
+                size={25}
                 color="#54785C"
               />
             </View>
@@ -569,11 +697,18 @@ export default function HomeScreen({ navigation }) {
             <Text style={styles.actionDescription}>
               Explore your progress.
             </Text>
+
+            <ArrowRight
+              size={18}
+              color={Colors.primaryDark}
+              style={styles.actionArrow}
+            />
           </Pressable>
 
           <Pressable
             style={({ pressed }) => [
               styles.actionCard,
+              isWide && styles.actionCardWide,
               pressed && styles.pressedCard,
             ]}
             onPress={() =>
@@ -582,7 +717,7 @@ export default function HomeScreen({ navigation }) {
           >
             <View style={styles.privacyActionIcon}>
               <ShieldCheck
-                size={27}
+                size={25}
                 color="#7A6340"
               />
             </View>
@@ -594,15 +729,25 @@ export default function HomeScreen({ navigation }) {
             <Text style={styles.actionDescription}>
               Learn how your data is protected.
             </Text>
+
+            <ArrowRight
+              size={18}
+              color={Colors.primaryDark}
+              style={styles.actionArrow}
+            />
           </Pressable>
         </View>
 
+        {/* Privacy */}
+
         <View style={styles.privacyCard}>
-          <LockKeyhole
-            size={24}
-            color={Colors.primaryDark}
-            strokeWidth={1.9}
-          />
+          <View style={styles.privacyIconContainer}>
+            <LockKeyhole
+              size={24}
+              color={Colors.primaryDark}
+              strokeWidth={1.9}
+            />
+          </View>
 
           <View style={styles.privacyTextContainer}>
             <Text style={styles.privacyTitle}>
@@ -640,7 +785,7 @@ export default function HomeScreen({ navigation }) {
 const styles = StyleSheet.create({
   screen: {
     flex: 1,
-    backgroundColor: Colors.background,
+    backgroundColor: '#F7F4EF',
   },
 
   container: {
@@ -651,7 +796,7 @@ const styles = StyleSheet.create({
 
   contentWrapper: {
     width: '100%',
-    maxWidth: 1500,
+    maxWidth: 1380,
     alignSelf: 'center',
   },
 
@@ -668,9 +813,9 @@ const styles = StyleSheet.create({
 
   greeting: {
     fontSize: Typography.heading,
-    fontWeight: '600',
+    fontWeight: '700',
     color: Colors.text,
-    marginBottom: 3,
+    marginBottom: 4,
   },
 
   welcomeMessage: {
@@ -678,11 +823,20 @@ const styles = StyleSheet.create({
     color: Colors.textSecondary,
   },
 
+  welcomeHeart: {
+    width: 48,
+    height: 48,
+    borderRadius: 17,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#E8F0EA',
+  },
+
   heroCard: {
-    backgroundColor: '#F3F5EA',
+    backgroundColor: '#F4EFE8',
     borderWidth: 1,
-    borderColor: '#DCE5D5',
-    borderRadius: 28,
+    borderColor: '#E6DED3',
+    borderRadius: 30,
     overflow: 'hidden',
     marginBottom: Spacing.xl,
     ...Shadows.card,
@@ -690,45 +844,63 @@ const styles = StyleSheet.create({
 
   heroCardWide: {
     flexDirection: 'row',
+    minHeight: 390,
   },
 
   heroText: {
-    flex: 1,
     padding: Spacing.xl,
     justifyContent: 'center',
   },
 
+  heroTextWide: {
+    width: '52%',
+    paddingHorizontal: 42,
+    paddingVertical: 38,
+  },
+
+  heroBadge: {
+    alignSelf: 'flex-start',
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#E9F0E8',
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 18,
+    marginBottom: Spacing.md,
+  },
+
   heroLabel: {
-    fontSize: 12,
+    fontSize: 11,
     fontWeight: '700',
-    letterSpacing: 1.2,
+    letterSpacing: 1.1,
     color: Colors.primaryDark,
-    marginBottom: Spacing.sm,
+    marginLeft: 7,
   },
 
   heroTitle: {
-    fontSize: 30,
+    fontSize: 34,
     fontWeight: '700',
-    color: Colors.primaryDark,
-    marginBottom: Spacing.sm,
+    color: '#29473D',
+    lineHeight: 42,
+    marginBottom: Spacing.md,
   },
 
   heroDescription: {
     fontSize: 16,
     color: Colors.textSecondary,
     lineHeight: 24,
-    maxWidth: 430,
-    marginBottom: Spacing.md,
+    maxWidth: 500,
+    marginBottom: Spacing.lg,
   },
 
   calmPrompt: {
-    maxWidth: 430,
+    backgroundColor: 'rgba(255,255,255,0.58)',
+    borderWidth: 1,
+    borderColor: '#E3DDD4',
+    borderRadius: 17,
+    padding: Spacing.md,
+    maxWidth: 470,
     marginBottom: Spacing.lg,
-    paddingVertical: 4,
-  },
-
-  calmPromptTextContainer: {
-    flex: 1,
   },
 
   calmPromptTitle: {
@@ -738,16 +910,10 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
 
-  calmPromptSecondRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-
   calmPromptText: {
     fontSize: 13,
     color: Colors.textSecondary,
-    lineHeight: 18,
-    marginRight: 8,
+    lineHeight: 19,
   },
 
   heroButton: {
@@ -768,35 +934,77 @@ const styles = StyleSheet.create({
   },
 
   pressedButton: {
-    opacity: 0.82,
+    opacity: 0.84,
     transform: [{ scale: 0.99 }],
   },
 
   heroImageContainer: {
-    flex: 1,
-    minHeight: 290,
+    minHeight: 330,
     position: 'relative',
     overflow: 'hidden',
   },
 
+  heroImageContainerWide: {
+    width: '48%',
+    minHeight: 390,
+  },
+
   heroImage: {
+    ...StyleSheet.absoluteFillObject,
     width: '100%',
     height: '100%',
+  },
+
+  heroImageOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(90, 71, 52, 0.06)',
+  },
+
+  imageMessage: {
     position: 'absolute',
+    left: 22,
+    right: 22,
+    bottom: 22,
+    backgroundColor: 'rgba(255,255,255,0.90)',
+    borderRadius: 18,
+    padding: Spacing.md,
+  },
+
+  imageMessageSmall: {
+    fontSize: 10,
+    fontWeight: '700',
+    letterSpacing: 1,
+    color: '#8B6D35',
+    marginBottom: 4,
+  },
+
+  imageMessageMain: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: '#51483D',
+  },
+
+  sectionHeaderRow: {
+    marginBottom: Spacing.md,
   },
 
   sectionHeading: {
     fontSize: Typography.subheading,
-    fontWeight: '600',
+    fontWeight: '700',
     color: Colors.text,
-    marginBottom: Spacing.md,
+    marginBottom: 3,
+  },
+
+  sectionSubtitle: {
+    fontSize: 13,
+    color: Colors.textSecondary,
   },
 
   wellbeingCard: {
-    backgroundColor: Colors.surface,
+    backgroundColor: '#FBFAF7',
     borderWidth: 1,
-    borderColor: Colors.border,
-    borderRadius: 24,
+    borderColor: '#E5E0D8',
+    borderRadius: 26,
     padding: Spacing.lg,
     marginBottom: Spacing.xl,
     ...Shadows.card,
@@ -815,47 +1023,71 @@ const styles = StyleSheet.create({
 
   resultRow: {
     flexDirection: 'row',
-    alignItems: 'center',
-    maxWidth: 850,
+    alignItems: 'stretch',
+    maxWidth: 980,
     width: '100%',
     alignSelf: 'center',
+  },
+
+  resultRowMobile: {
+    flexDirection: 'column',
   },
 
   scoreSection: {
     flex: 1,
     alignItems: 'center',
-    padding: Spacing.md,
+    padding: Spacing.lg,
   },
 
   moodSection: {
     flex: 1,
     alignItems: 'center',
-    padding: Spacing.md,
+    padding: Spacing.lg,
   },
 
   resultDivider: {
     width: 1,
     alignSelf: 'stretch',
-    backgroundColor: Colors.border,
+    backgroundColor: '#E4DED6',
+  },
+
+  resultDividerMobile: {
+    height: 1,
+    width: '100%',
+    backgroundColor: '#E4DED6',
+  },
+
+  scoreLabelRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 7,
+  },
+
+  scoreDot: {
+    width: 7,
+    height: 7,
+    borderRadius: 4,
+    backgroundColor: Colors.primary,
+    marginRight: 7,
   },
 
   smallLabel: {
     fontSize: 13,
     color: Colors.textSecondary,
-    marginBottom: 4,
+    marginBottom: 5,
   },
 
   score: {
-    fontSize: 42,
+    fontSize: 54,
     fontWeight: '700',
     marginBottom: Spacing.sm,
   },
 
   categoryBadge: {
     alignSelf: 'center',
-    paddingVertical: 6,
-    paddingHorizontal: 13,
-    borderRadius: 17,
+    paddingVertical: 7,
+    paddingHorizontal: 14,
+    borderRadius: 18,
   },
 
   categoryText: {
@@ -863,18 +1095,36 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
 
+  scoreHelpText: {
+    maxWidth: 290,
+    fontSize: 12,
+    color: Colors.textSecondary,
+    lineHeight: 18,
+    textAlign: 'center',
+    marginTop: Spacing.md,
+  },
+
   dashboardMoodIcon: {
-    width: 62,
-    height: 62,
-    borderRadius: 31,
+    width: 72,
+    height: 72,
+    borderRadius: 24,
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: Spacing.sm,
+    marginBottom: Spacing.md,
   },
 
   dashboardMoodText: {
-    fontSize: 18,
+    fontSize: 19,
     fontWeight: '600',
+  },
+
+  moodHelpText: {
+    maxWidth: 290,
+    fontSize: 12,
+    color: Colors.textSecondary,
+    lineHeight: 18,
+    textAlign: 'center',
+    marginTop: Spacing.md,
   },
 
   emptyMoodText: {
@@ -888,7 +1138,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     borderTopWidth: 1,
-    borderTopColor: Colors.border,
+    borderTopColor: '#E5E0D8',
     marginTop: Spacing.md,
     paddingTop: Spacing.md,
   },
@@ -901,33 +1151,52 @@ const styles = StyleSheet.create({
 
   reflectionCard: {
     flexDirection: 'row',
-    alignItems: 'center',
+    alignItems: 'flex-start',
     backgroundColor: '#FBF5E8',
     borderWidth: 1,
     borderColor: '#EAD9B4',
-    borderRadius: 15,
+    borderRadius: 17,
     padding: Spacing.md,
     marginTop: Spacing.md,
   },
 
-  reflectionText: {
+  reflectionIcon: {
+    width: 42,
+    height: 42,
+    borderRadius: 14,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#F4E8CB',
+  },
+
+  reflectionTextContainer: {
     flex: 1,
+    marginLeft: Spacing.md,
+  },
+
+  reflectionLabel: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#8B6D35',
+    marginBottom: 4,
+  },
+
+  reflectionText: {
     fontSize: 13,
     color: '#6B5432',
     lineHeight: 19,
     fontStyle: 'italic',
-    marginLeft: Spacing.sm,
   },
 
   emptyState: {
     alignItems: 'center',
-    paddingVertical: Spacing.lg,
+    paddingVertical: Spacing.xl,
   },
 
   emptyIconContainer: {
     width: 76,
     height: 76,
-    borderRadius: 38,
+    borderRadius: 24,
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: '#EDF5F2',
@@ -943,25 +1212,43 @@ const styles = StyleSheet.create({
   },
 
   emptyText: {
+    maxWidth: 480,
     fontSize: 15,
     color: Colors.textSecondary,
     textAlign: 'center',
     lineHeight: 22,
   },
 
+  emptyButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: Colors.primary,
+    borderRadius: 24,
+    paddingHorizontal: 20,
+    paddingVertical: 13,
+    marginTop: Spacing.lg,
+    gap: 8,
+  },
+
+  emptyButtonText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: Colors.white,
+  },
+
   insightCard: {
     flexDirection: 'row',
     alignItems: 'flex-start',
     borderWidth: 1,
-    borderRadius: 20,
+    borderRadius: 22,
     padding: Spacing.lg,
     marginBottom: Spacing.xl,
   },
 
   insightIcon: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
+    width: 50,
+    height: 50,
+    borderRadius: 17,
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: Spacing.md,
@@ -992,23 +1279,28 @@ const styles = StyleSheet.create({
 
   actionCard: {
     width: '50%',
-    padding: 16,
+    padding: 17,
     borderWidth: 6,
-    borderColor: Colors.background,
-    backgroundColor: Colors.surface,
-    borderRadius: 22,
-    minHeight: 150,
+    borderColor: '#F7F4EF',
+    backgroundColor: '#FBFAF7',
+    borderRadius: 24,
+    minHeight: 165,
+    position: 'relative',
     ...Shadows.card,
   },
 
+  actionCardWide: {
+    width: '25%',
+  },
+
   pressedCard: {
-    opacity: 0.75,
+    opacity: 0.78,
     transform: [{ scale: 0.98 }],
   },
 
   primaryActionIcon: {
-    width: 49,
-    height: 49,
+    width: 48,
+    height: 48,
     borderRadius: 16,
     alignItems: 'center',
     justifyContent: 'center',
@@ -1017,8 +1309,8 @@ const styles = StyleSheet.create({
   },
 
   secondaryActionIcon: {
-    width: 49,
-    height: 49,
+    width: 48,
+    height: 48,
     borderRadius: 16,
     alignItems: 'center',
     justifyContent: 'center',
@@ -1027,8 +1319,8 @@ const styles = StyleSheet.create({
   },
 
   sageActionIcon: {
-    width: 49,
-    height: 49,
+    width: 48,
+    height: 48,
     borderRadius: 16,
     alignItems: 'center',
     justifyContent: 'center',
@@ -1037,8 +1329,8 @@ const styles = StyleSheet.create({
   },
 
   privacyActionIcon: {
-    width: 49,
-    height: 49,
+    width: 48,
+    height: 48,
     borderRadius: 16,
     alignItems: 'center',
     justifyContent: 'center',
@@ -1057,6 +1349,13 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: Colors.textSecondary,
     lineHeight: 19,
+    paddingRight: 22,
+  },
+
+  actionArrow: {
+    position: 'absolute',
+    right: 16,
+    bottom: 16,
   },
 
   privacyCard: {
@@ -1065,8 +1364,17 @@ const styles = StyleSheet.create({
     backgroundColor: '#EDF5F2',
     borderWidth: 1,
     borderColor: '#D2E5DF',
-    borderRadius: 18,
+    borderRadius: 20,
     padding: Spacing.lg,
+  },
+
+  privacyIconContainer: {
+    width: 48,
+    height: 48,
+    borderRadius: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#DDECE5',
   },
 
   privacyTextContainer: {

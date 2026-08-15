@@ -13,6 +13,7 @@ import {
   ArrowDownRight,
   ArrowRight,
   ArrowUpRight,
+  BatteryMedium,
   BedDouble,
   ChartLine,
   CheckCircle2,
@@ -20,6 +21,7 @@ import {
   HeartHandshake,
   History,
   Home,
+  Info,
   Leaf,
   Lightbulb,
   Meh,
@@ -29,7 +31,6 @@ import {
   NotebookText,
   ShieldCheck,
   Smile,
-  Sparkles,
   TriangleAlert,
   Waves,
 } from 'lucide-react-native';
@@ -94,7 +95,7 @@ function getFactorIcon(key) {
     panic: TriangleAlert,
     sleep: MoonStar,
     workload: ClipboardList,
-    energy: Sparkles,
+    energy: BatteryMedium,
   };
 
   return icons[key] || Leaf;
@@ -135,6 +136,41 @@ function getSuggestionIcon(suggestion) {
   return Lightbulb;
 }
 
+function getInfluenceInformation(factor) {
+  if (!factor || !factor.weight) {
+    return {
+      label: 'Low influence',
+      colour: '#54785C',
+      background: '#EDF6EF',
+    };
+  }
+
+  const influencePercentage =
+    (factor.impact / factor.weight) * 100;
+
+  if (influencePercentage >= 75) {
+    return {
+      label: 'High influence',
+      colour: '#A05E4B',
+      background: '#FCEFEA',
+    };
+  }
+
+  if (influencePercentage >= 40) {
+    return {
+      label: 'Moderate influence',
+      colour: '#9A7740',
+      background: '#FBF5E8',
+    };
+  }
+
+  return {
+    label: 'Low influence',
+    colour: '#54785C',
+    background: '#EDF6EF',
+  };
+}
+
 export default function ResultScreen({
   route,
   navigation,
@@ -147,7 +183,6 @@ export default function ResultScreen({
   } = route.params;
 
   const { width } = useWindowDimensions();
-
   const isWide = width >= 850;
 
   const [previousEntry, setPreviousEntry] =
@@ -238,14 +273,13 @@ export default function ResultScreen({
   function getComparisonInformation() {
     if (!previousEntry) {
       return {
-        Icon: Sparkles,
+        Icon: ChartLine,
         title:
-          'Your updated journey is beginning',
+          'Your wellbeing journey is beginning',
         message:
           'Complete another reflection to begin comparing changes over time.',
         colour: Colors.primaryDark,
         background: '#EDF5F2',
-        border: '#D2E5DF',
       };
     }
 
@@ -263,7 +297,6 @@ export default function ResultScreen({
         )}% lower than your previous estimate.`,
         colour: '#54785C',
         background: '#EDF6EF',
-        border: '#C9DFC9',
       };
     }
 
@@ -275,7 +308,6 @@ export default function ResultScreen({
         message: `${difference}% higher than your previous estimate.`,
         colour: '#A05E4B',
         background: '#FCEFEA',
-        border: '#E7C3B8',
       };
     }
 
@@ -287,7 +319,6 @@ export default function ResultScreen({
         'Your latest estimate is relatively stable.',
       colour: '#8B6D35',
       background: '#FBF5E8',
-      border: '#EAD9B4',
     };
   }
 
@@ -305,7 +336,7 @@ export default function ResultScreen({
     >
       <View style={styles.contentWrapper}>
 
-        {/* Compact top summary */}
+        {/* Main summary */}
 
         <View style={styles.summaryCard}>
           <View
@@ -315,15 +346,7 @@ export default function ResultScreen({
                 styles.summaryMainRowMobile,
             ]}
           >
-            {/* Score */}
-
-            <View
-              style={[
-                styles.scoreSection,
-                isWide &&
-                  styles.scoreSectionWide,
-              ]}
-            >
+            <View style={styles.scoreSection}>
               <View
                 style={[
                   styles.scoreCircle,
@@ -348,7 +371,7 @@ export default function ResultScreen({
 
               <View style={styles.scoreTextContainer}>
                 <Text style={styles.smallUpperLabel}>
-                  ESTIMATED STRESS LEVEL
+                  TODAY'S ESTIMATED STRESS LEVEL
                 </Text>
 
                 <View
@@ -384,8 +407,6 @@ export default function ResultScreen({
             {isWide ? (
               <View style={styles.verticalDivider} />
             ) : null}
-
-            {/* Mood */}
 
             {selectedMood &&
             SelectedMoodIcon ? (
@@ -430,8 +451,6 @@ export default function ResultScreen({
               <View style={styles.verticalDivider} />
             ) : null}
 
-            {/* Trend */}
-
             <View style={styles.trendSummarySection}>
               <View
                 style={[
@@ -452,7 +471,7 @@ export default function ResultScreen({
               </View>
 
               <Text style={styles.topInfoLabel}>
-                Trend
+                Compared with last time
               </Text>
 
               {isLoadingComparison ? (
@@ -487,7 +506,7 @@ export default function ResultScreen({
           </View>
         </View>
 
-        {/* Note */}
+        {/* User note */}
 
         {note ? (
           <View style={styles.noteStrip}>
@@ -512,16 +531,24 @@ export default function ResultScreen({
           </View>
         ) : null}
 
-        {/* Factors */}
+        {/* Explainability */}
 
-        <View style={styles.sectionHeaderRow}>
-          <Text style={styles.sectionTitle}>
-            What shaped today’s estimate?
-          </Text>
+        <View style={styles.explanationHeader}>
+          <View>
+            <Text style={styles.sectionEyebrow}>
+              WHY THIS SCORE?
+            </Text>
 
-          <Text style={styles.sectionHint}>
-            Five daily indicators
-          </Text>
+            <Text style={styles.sectionTitleLarge}>
+              What shaped today’s estimate?
+            </Text>
+
+            <Text style={styles.sectionDescription}>
+              Your result combines five self-reported
+              wellbeing indicators. Each factor has a
+              different weighting in the estimate.
+            </Text>
+          </View>
         </View>
 
         <View
@@ -540,6 +567,11 @@ export default function ResultScreen({
                   factor.key
                 );
 
+              const influence =
+                getInfluenceInformation(
+                  factor
+                );
+
               return (
                 <View
                   key={factor.key}
@@ -549,55 +581,150 @@ export default function ResultScreen({
                       styles.factorCardWide,
                   ]}
                 >
-                  <View
-                    style={[
-                      styles.factorIcon,
-                      {
-                        backgroundColor:
-                          `${factorColour}14`,
-                      },
-                    ]}
-                  >
-                    <FactorIcon
-                      size={20}
-                      color={
-                        factorColour
-                      }
-                      strokeWidth={1.9}
-                    />
+                  <View style={styles.factorTopRow}>
+                    <View
+                      style={[
+                        styles.factorIcon,
+                        {
+                          backgroundColor:
+                            `${factorColour}14`,
+                        },
+                      ]}
+                    >
+                      <FactorIcon
+                        size={21}
+                        color={
+                          factorColour
+                        }
+                        strokeWidth={1.9}
+                      />
+                    </View>
+
+                    <Text style={styles.factorWeight}>
+                      {factor.weight}% weight
+                    </Text>
                   </View>
 
                   <Text style={styles.factorLabel}>
                     {factor.label}
                   </Text>
 
-                  <Text
-                    style={[
-                      styles.factorValue,
-                      {
-                        color:
-                          factorColour,
-                      },
-                    ]}
-                  >
-                    {factor.value}/5
-                  </Text>
+                  <View style={styles.factorRatingRow}>
+                    <Text
+                      style={[
+                        styles.factorValue,
+                        {
+                          color:
+                            factorColour,
+                        },
+                      ]}
+                    >
+                      {factor.value}/5
+                    </Text>
+
+                    <View
+                      style={[
+                        styles.influenceBadge,
+                        {
+                          backgroundColor:
+                            influence.background,
+                        },
+                      ]}
+                    >
+                      <Text
+                        style={[
+                          styles.influenceText,
+                          {
+                            color:
+                              influence.colour,
+                          },
+                        ]}
+                      >
+                        {influence.label}
+                      </Text>
+                    </View>
+                  </View>
 
                   <Text
                     style={
                       styles.factorDescription
                     }
-                    numberOfLines={1}
                   >
                     {factor.description}
                   </Text>
+
+                  <View style={styles.contributionRow}>
+                    <Text style={styles.contributionLabel}>
+                      Contribution
+                    </Text>
+
+                    <Text style={styles.contributionValue}>
+                      {factor.impact.toFixed(1)} / {factor.weight}
+                    </Text>
+                  </View>
+
+                  <View style={styles.factorBarBackground}>
+                    <View
+                      style={[
+                        styles.factorBarFill,
+                        {
+                          width: `${
+                            factor.weight > 0
+                              ? Math.min(
+                                  100,
+                                  (factor.impact /
+                                    factor.weight) *
+                                    100
+                                )
+                              : 0
+                          }%`,
+                          backgroundColor:
+                            factorColour,
+                        },
+                      ]}
+                    />
+                  </View>
                 </View>
               );
             }
           )}
         </View>
 
-        {/* Overview */}
+        {/* How score works */}
+
+        <View style={styles.howScoreCard}>
+          <View style={styles.howScoreIcon}>
+            <Info
+              size={22}
+              color={Colors.primaryDark}
+              strokeWidth={1.9}
+            />
+          </View>
+
+          <View style={styles.howScoreText}>
+            <Text style={styles.howScoreTitle}>
+              How this estimate works
+            </Text>
+
+            <Text style={styles.howScoreDescription}>
+              Anxiety contributes up to 25% of the estimate.
+              Panic/overwhelm, sleep and daily
+              responsibilities each contribute up to 20%,
+              while energy contributes up to 15%. For sleep
+              and energy, lower ratings increase the estimated
+              stress contribution. For anxiety, panic and
+              responsibilities, higher ratings increase it.
+            </Text>
+
+            <Text style={styles.howScoreNote}>
+              The percentage is designed for personal
+              reflection and trend monitoring, not as a
+              clinical measurement.
+            </Text>
+          </View>
+        </View>
+
+        {/* Main challenge and strength */}
 
         <View
           style={[
@@ -629,7 +756,7 @@ export default function ResultScreen({
                   styles.challengeLabel
                 }
               >
-                Main challenge
+                Main challenge today
               </Text>
             </View>
 
@@ -852,7 +979,7 @@ export default function ResultScreen({
 const styles = StyleSheet.create({
   screen: {
     flex: 1,
-    backgroundColor: Colors.background,
+    backgroundColor: '#F7F4EF',
   },
 
   container: {
@@ -868,9 +995,9 @@ const styles = StyleSheet.create({
   },
 
   summaryCard: {
-    backgroundColor: Colors.surface,
+    backgroundColor: '#FBFAF7',
     borderWidth: 1,
-    borderColor: Colors.border,
+    borderColor: '#E5E0D8',
     borderRadius: 24,
     padding: Spacing.lg,
     marginBottom: Spacing.md,
@@ -892,14 +1019,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
 
-  scoreSectionWide: {
-    paddingRight: Spacing.lg,
-  },
-
   scoreCircle: {
-    width: 95,
-    height: 95,
-    borderRadius: 48,
+    width: 102,
+    height: 102,
+    borderRadius: 51,
     borderWidth: 7,
     alignItems: 'center',
     justifyContent: 'center',
@@ -907,7 +1030,7 @@ const styles = StyleSheet.create({
   },
 
   score: {
-    fontSize: 29,
+    fontSize: 31,
     fontWeight: '700',
   },
 
@@ -944,7 +1067,7 @@ const styles = StyleSheet.create({
 
   verticalDivider: {
     width: 1,
-    backgroundColor: Colors.border,
+    backgroundColor: '#E5E0D8',
     marginHorizontal: Spacing.md,
   },
 
@@ -964,7 +1087,7 @@ const styles = StyleSheet.create({
   topInfoIcon: {
     width: 44,
     height: 44,
-    borderRadius: 22,
+    borderRadius: 15,
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 5,
@@ -1002,7 +1125,7 @@ const styles = StyleSheet.create({
     borderColor: '#ECDDBE',
     borderRadius: 16,
     padding: Spacing.md,
-    marginBottom: Spacing.md,
+    marginBottom: Spacing.lg,
   },
 
   noteTextContainer: {
@@ -1024,22 +1147,30 @@ const styles = StyleSheet.create({
     lineHeight: 18,
   },
 
-  sectionHeaderRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: Spacing.sm,
+  explanationHeader: {
+    marginBottom: Spacing.md,
   },
 
-  sectionTitle: {
-    fontSize: 17,
-    fontWeight: '600',
+  sectionEyebrow: {
+    fontSize: 10,
+    fontWeight: '700',
+    letterSpacing: 1.1,
+    color: Colors.primaryDark,
+    marginBottom: 4,
+  },
+
+  sectionTitleLarge: {
+    fontSize: 22,
+    fontWeight: '700',
     color: Colors.text,
+    marginBottom: 5,
   },
 
-  sectionHint: {
-    fontSize: 11,
+  sectionDescription: {
+    maxWidth: 700,
+    fontSize: 13,
     color: Colors.textSecondary,
+    lineHeight: 19,
   },
 
   factorGrid: {
@@ -1055,12 +1186,12 @@ const styles = StyleSheet.create({
 
   factorCard: {
     width: '50%',
-    minHeight: 115,
-    backgroundColor: Colors.surface,
+    backgroundColor: '#FBFAF7',
     borderWidth: 4,
-    borderColor: Colors.background,
-    borderRadius: 17,
-    padding: 12,
+    borderColor: '#F7F4EF',
+    borderRadius: 19,
+    padding: 14,
+    ...Shadows.card,
   },
 
   factorCardWide: {
@@ -1068,30 +1199,138 @@ const styles = StyleSheet.create({
     width: 'auto',
   },
 
+  factorTopRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 7,
+  },
+
   factorIcon: {
-    width: 35,
-    height: 35,
-    borderRadius: 18,
+    width: 38,
+    height: 38,
+    borderRadius: 13,
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: 6,
+  },
+
+  factorWeight: {
+    fontSize: 10,
+    fontWeight: '600',
+    color: Colors.textSecondary,
   },
 
   factorLabel: {
-    fontSize: 12,
+    fontSize: 13,
+    fontWeight: '600',
+    color: Colors.text,
+    marginBottom: 4,
+  },
+
+  factorRatingRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flexWrap: 'wrap',
+    marginBottom: 5,
+  },
+
+  factorValue: {
+    fontSize: 20,
+    fontWeight: '700',
+    marginRight: 7,
+  },
+
+  influenceBadge: {
+    borderRadius: 12,
+    paddingHorizontal: 7,
+    paddingVertical: 4,
+  },
+
+  influenceText: {
+    fontSize: 9,
+    fontWeight: '700',
+  },
+
+  factorDescription: {
+    fontSize: 11,
+    color: Colors.textSecondary,
+    minHeight: 16,
+    marginBottom: 9,
+  },
+
+  contributionRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 5,
+  },
+
+  contributionLabel: {
+    fontSize: 9,
+    color: Colors.textSecondary,
+  },
+
+  contributionValue: {
+    fontSize: 9,
     fontWeight: '600',
     color: Colors.text,
   },
 
-  factorValue: {
-    fontSize: 18,
-    fontWeight: '700',
-    marginVertical: 2,
+  factorBarBackground: {
+    height: 6,
+    backgroundColor: '#ECE8E2',
+    borderRadius: 4,
+    overflow: 'hidden',
   },
 
-  factorDescription: {
-    fontSize: 10,
+  factorBarFill: {
+    height: '100%',
+    borderRadius: 4,
+  },
+
+  howScoreCard: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    backgroundColor: '#EDF5F2',
+    borderWidth: 1,
+    borderColor: '#D2E5DF',
+    borderRadius: 18,
+    padding: Spacing.md,
+    marginBottom: Spacing.md,
+  },
+
+  howScoreIcon: {
+    width: 42,
+    height: 42,
+    borderRadius: 14,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#DDECE5',
+    marginRight: Spacing.md,
+  },
+
+  howScoreText: {
+    flex: 1,
+  },
+
+  howScoreTitle: {
+    fontSize: 15,
+    fontWeight: '700',
+    color: Colors.primaryDark,
+    marginBottom: 5,
+  },
+
+  howScoreDescription: {
+    fontSize: 12,
     color: Colors.textSecondary,
+    lineHeight: 18,
+    marginBottom: 5,
+  },
+
+  howScoreNote: {
+    fontSize: 11,
+    fontStyle: 'italic',
+    color: '#61736C',
+    lineHeight: 17,
   },
 
   overviewRow: {
@@ -1132,7 +1371,7 @@ const styles = StyleSheet.create({
   challengeIcon: {
     width: 34,
     height: 34,
-    borderRadius: 17,
+    borderRadius: 12,
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: '#F7E4DE',
@@ -1142,7 +1381,7 @@ const styles = StyleSheet.create({
   strengthIcon: {
     width: 34,
     height: 34,
-    borderRadius: 17,
+    borderRadius: 12,
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: '#E4F0E6',
@@ -1197,7 +1436,7 @@ const styles = StyleSheet.create({
   lightbulbIcon: {
     width: 38,
     height: 38,
-    borderRadius: 19,
+    borderRadius: 13,
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: '#F5E9CE',
@@ -1234,7 +1473,7 @@ const styles = StyleSheet.create({
   suggestionIcon: {
     width: 31,
     height: 31,
-    borderRadius: 16,
+    borderRadius: 11,
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: '#F5E9CE',
