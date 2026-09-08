@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 
 import {
   ActivityIndicator,
+  ImageBackground,
   ScrollView,
   StyleSheet,
   Text,
@@ -51,6 +52,9 @@ import { getStressCategory } from '../services/stressCalculation';
 import Colors from '../theme/colors';
 import Shadows from '../theme/shadows';
 import Spacing from '../theme/spacing';
+
+const resultBackgroundImage =
+  require('../../assets/images/pexels-jplenio-1103970.jpg');
 
 const moodDetails = {
   'very-good': {
@@ -329,657 +333,675 @@ export default function ResultScreen({
     comparison.Icon;
 
   return (
-    <ScrollView
-      style={styles.screen}
-      contentContainerStyle={styles.container}
-      showsVerticalScrollIndicator={false}
+    <ImageBackground
+      source={resultBackgroundImage}
+      style={styles.backgroundImage}
+      resizeMode="cover"
     >
-      <View style={styles.contentWrapper}>
+      <View style={styles.backgroundOverlay}>
+        <ScrollView
+          style={styles.screen}
+          contentContainerStyle={styles.container}
+          showsVerticalScrollIndicator={false}
+        >
+          <View style={styles.contentWrapper}>
 
-        {/* Main summary */}
+            {/* Main summary */}
 
-        <View style={styles.summaryCard}>
-          <View
-            style={[
-              styles.summaryMainRow,
-              !isWide &&
-                styles.summaryMainRowMobile,
-            ]}
-          >
-            <View style={styles.scoreSection}>
+            <View style={styles.summaryCard}>
               <View
                 style={[
-                  styles.scoreCircle,
-                  {
-                    borderColor:
-                      category.colour,
-                  },
+                  styles.summaryMainRow,
+                  !isWide &&
+                    styles.summaryMainRowMobile,
                 ]}
               >
-                <Text
-                  style={[
-                    styles.score,
-                    {
-                      color:
-                        category.colour,
-                    },
-                  ]}
-                >
-                  {score}%
-                </Text>
-              </View>
-
-              <View style={styles.scoreTextContainer}>
-                <Text style={styles.smallUpperLabel}>
-                  TODAY'S ESTIMATED STRESS LEVEL
-                </Text>
-
-                <View
-                  style={[
-                    styles.categoryBadge,
-                    {
-                      backgroundColor:
-                        `${category.colour}16`,
-                    },
-                  ]}
-                >
-                  <Text
+                <View style={styles.scoreSection}>
+                  <View
                     style={[
-                      styles.categoryText,
+                      styles.scoreCircle,
                       {
-                        color:
+                        borderColor:
                           category.colour,
                       },
                     ]}
                   >
-                    {category.label} stress
-                  </Text>
-                </View>
-
-                <Text
-                  style={styles.categoryMessage}
-                >
-                  {category.message}
-                </Text>
-              </View>
-            </View>
-
-            {isWide ? (
-              <View style={styles.verticalDivider} />
-            ) : null}
-
-            {selectedMood &&
-            SelectedMoodIcon ? (
-              <View style={styles.topInfoSection}>
-                <View
-                  style={[
-                    styles.topInfoIcon,
-                    {
-                      backgroundColor:
-                        selectedMood.background,
-                    },
-                  ]}
-                >
-                  <SelectedMoodIcon
-                    size={27}
-                    color={
-                      selectedMood.colour
-                    }
-                    strokeWidth={1.8}
-                  />
-                </View>
-
-                <Text style={styles.topInfoLabel}>
-                  Mood
-                </Text>
-
-                <Text
-                  style={[
-                    styles.topInfoValue,
-                    {
-                      color:
-                        selectedMood.colour,
-                    },
-                  ]}
-                >
-                  {selectedMood.label}
-                </Text>
-              </View>
-            ) : null}
-
-            {isWide ? (
-              <View style={styles.verticalDivider} />
-            ) : null}
-
-            <View style={styles.trendSummarySection}>
-              <View
-                style={[
-                  styles.topInfoIcon,
-                  {
-                    backgroundColor:
-                      comparison.background,
-                  },
-                ]}
-              >
-                <ComparisonIcon
-                  size={26}
-                  color={
-                    comparison.colour
-                  }
-                  strokeWidth={1.9}
-                />
-              </View>
-
-              <Text style={styles.topInfoLabel}>
-                Compared with last time
-              </Text>
-
-              {isLoadingComparison ? (
-                <ActivityIndicator
-                  size="small"
-                  color={Colors.primary}
-                />
-              ) : (
-                <>
-                  <Text
-                    style={[
-                      styles.trendSummaryTitle,
-                      {
-                        color:
-                          comparison.colour,
-                      },
-                    ]}
-                  >
-                    {comparison.title}
-                  </Text>
-
-                  <Text
-                    style={
-                      styles.trendSummaryMessage
-                    }
-                  >
-                    {comparison.message}
-                  </Text>
-                </>
-              )}
-            </View>
-          </View>
-        </View>
-
-        {/* User note */}
-
-        {note ? (
-          <View style={styles.noteStrip}>
-            <NotebookText
-              size={20}
-              color="#8B6D35"
-              strokeWidth={1.9}
-            />
-
-            <View style={styles.noteTextContainer}>
-              <Text style={styles.noteHeading}>
-                Today’s reflection
-              </Text>
-
-              <Text
-                style={styles.noteText}
-                numberOfLines={2}
-              >
-                “{note}”
-              </Text>
-            </View>
-          </View>
-        ) : null}
-
-        {/* Explainability */}
-
-        <View style={styles.explanationHeader}>
-          <View>
-            <Text style={styles.sectionEyebrow}>
-              WHY THIS SCORE?
-            </Text>
-
-            <Text style={styles.sectionTitleLarge}>
-              What shaped today’s estimate?
-            </Text>
-
-            <Text style={styles.sectionDescription}>
-              Your result combines five self-reported
-              wellbeing indicators. Each factor has a
-              different weighting in the estimate.
-            </Text>
-          </View>
-        </View>
-
-        <View
-          style={[
-            styles.factorGrid,
-            isWide && styles.factorGridWide,
-          ]}
-        >
-          {factorBreakdown.map(
-            (factor) => {
-              const factorColour =
-                getFactorColour(factor);
-
-              const FactorIcon =
-                getFactorIcon(
-                  factor.key
-                );
-
-              const influence =
-                getInfluenceInformation(
-                  factor
-                );
-
-              return (
-                <View
-                  key={factor.key}
-                  style={[
-                    styles.factorCard,
-                    isWide &&
-                      styles.factorCardWide,
-                  ]}
-                >
-                  <View style={styles.factorTopRow}>
-                    <View
+                    <Text
                       style={[
-                        styles.factorIcon,
+                        styles.score,
                         {
-                          backgroundColor:
-                            `${factorColour}14`,
+                          color:
+                            category.colour,
                         },
                       ]}
                     >
-                      <FactorIcon
-                        size={21}
-                        color={
-                          factorColour
-                        }
-                        strokeWidth={1.9}
-                      />
-                    </View>
-
-                    <Text style={styles.factorWeight}>
-                      {factor.weight}% weight
+                      {score}%
                     </Text>
                   </View>
 
-                  <Text style={styles.factorLabel}>
-                    {factor.label}
-                  </Text>
-
-                  <View style={styles.factorRatingRow}>
-                    <Text
-                      style={[
-                        styles.factorValue,
-                        {
-                          color:
-                            factorColour,
-                        },
-                      ]}
-                    >
-                      {factor.value}/5
+                  <View style={styles.scoreTextContainer}>
+                    <Text style={styles.smallUpperLabel}>
+                      TODAY'S ESTIMATED STRESS LEVEL
                     </Text>
 
                     <View
                       style={[
-                        styles.influenceBadge,
+                        styles.categoryBadge,
                         {
                           backgroundColor:
-                            influence.background,
+                            `${category.colour}16`,
                         },
                       ]}
                     >
                       <Text
                         style={[
-                          styles.influenceText,
+                          styles.categoryText,
                           {
                             color:
-                              influence.colour,
+                              category.colour,
                           },
                         ]}
                       >
-                        {influence.label}
+                        {category.label} stress
                       </Text>
                     </View>
-                  </View>
 
-                  <Text
-                    style={
-                      styles.factorDescription
-                    }
-                  >
-                    {factor.description}
-                  </Text>
-
-                  <View style={styles.contributionRow}>
-                    <Text style={styles.contributionLabel}>
-                      Contribution
+                    <Text
+                      style={styles.categoryMessage}
+                    >
+                      {category.message}
                     </Text>
-
-                    <Text style={styles.contributionValue}>
-                      {factor.impact.toFixed(1)} / {factor.weight}
-                    </Text>
-                  </View>
-
-                  <View style={styles.factorBarBackground}>
-                    <View
-                      style={[
-                        styles.factorBarFill,
-                        {
-                          width: `${
-                            factor.weight > 0
-                              ? Math.min(
-                                  100,
-                                  (factor.impact /
-                                    factor.weight) *
-                                    100
-                                )
-                              : 0
-                          }%`,
-                          backgroundColor:
-                            factorColour,
-                        },
-                      ]}
-                    />
                   </View>
                 </View>
-              );
-            }
-          )}
-        </View>
 
-        {/* How score works */}
+                {isWide ? (
+                  <View style={styles.verticalDivider} />
+                ) : null}
 
-        <View style={styles.howScoreCard}>
-          <View style={styles.howScoreIcon}>
-            <Info
-              size={22}
-              color={Colors.primaryDark}
-              strokeWidth={1.9}
-            />
-          </View>
+                {selectedMood &&
+                SelectedMoodIcon ? (
+                  <View style={styles.topInfoSection}>
+                    <View
+                      style={[
+                        styles.topInfoIcon,
+                        {
+                          backgroundColor:
+                            selectedMood.background,
+                        },
+                      ]}
+                    >
+                      <SelectedMoodIcon
+                        size={27}
+                        color={
+                          selectedMood.colour
+                        }
+                        strokeWidth={1.8}
+                      />
+                    </View>
 
-          <View style={styles.howScoreText}>
-            <Text style={styles.howScoreTitle}>
-              How this estimate works
-            </Text>
+                    <Text style={styles.topInfoLabel}>
+                      Mood
+                    </Text>
 
-            <Text style={styles.howScoreDescription}>
-              Anxiety contributes up to 25% of the estimate.
-              Panic/overwhelm, sleep and daily
-              responsibilities each contribute up to 20%,
-              while energy contributes up to 15%. For sleep
-              and energy, lower ratings increase the estimated
-              stress contribution. For anxiety, panic and
-              responsibilities, higher ratings increase it.
-            </Text>
+                    <Text
+                      style={[
+                        styles.topInfoValue,
+                        {
+                          color:
+                            selectedMood.colour,
+                        },
+                      ]}
+                    >
+                      {selectedMood.label}
+                    </Text>
+                  </View>
+                ) : null}
 
-            <Text style={styles.howScoreNote}>
-              The percentage is designed for personal
-              reflection and trend monitoring, not as a
-              clinical measurement.
-            </Text>
-          </View>
-        </View>
+                {isWide ? (
+                  <View style={styles.verticalDivider} />
+                ) : null}
 
-        {/* Main challenge and strength */}
+                <View style={styles.trendSummarySection}>
+                  <View
+                    style={[
+                      styles.topInfoIcon,
+                      {
+                        backgroundColor:
+                          comparison.background,
+                      },
+                    ]}
+                  >
+                    <ComparisonIcon
+                      size={26}
+                      color={
+                        comparison.colour
+                      }
+                      strokeWidth={1.9}
+                    />
+                  </View>
 
-        <View
-          style={[
-            styles.overviewRow,
-            !isWide &&
-              styles.overviewRowMobile,
-          ]}
-        >
-          <View
-            style={[
-              styles.overviewCard,
-              styles.challengeCard,
-            ]}
-          >
-            <View style={styles.overviewIconRow}>
-              <View
-                style={
-                  styles.challengeIcon
-                }
-              >
-                <TriangleAlert
-                  size={21}
-                  color="#A05E4B"
-                />
+                  <Text style={styles.topInfoLabel}>
+                    Compared with last time
+                  </Text>
+
+                  {isLoadingComparison ? (
+                    <ActivityIndicator
+                      size="small"
+                      color={Colors.primary}
+                    />
+                  ) : (
+                    <>
+                      <Text
+                        style={[
+                          styles.trendSummaryTitle,
+                          {
+                            color:
+                              comparison.colour,
+                          },
+                        ]}
+                      >
+                        {comparison.title}
+                      </Text>
+
+                      <Text
+                        style={
+                          styles.trendSummaryMessage
+                        }
+                      >
+                        {comparison.message}
+                      </Text>
+                    </>
+                  )}
+                </View>
               </View>
-
-              <Text
-                style={
-                  styles.challengeLabel
-                }
-              >
-                Main challenge today
-              </Text>
             </View>
 
-            <Text
-              style={
-                styles.challengeValue
-              }
-            >
-              {mainChallenge
-                ? mainChallenge.label
-                : 'No strong challenge'}
-            </Text>
+            {/* User note */}
 
-            {mainChallenge ? (
-              <Text
-                style={
-                  styles.overviewDescription
-                }
-              >
-                {mainChallenge.description}
-              </Text>
-            ) : null}
-          </View>
-
-          <View
-            style={[
-              styles.overviewCard,
-              styles.strengthCard,
-            ]}
-          >
-            <View style={styles.overviewIconRow}>
-              <View style={styles.strengthIcon}>
-                <CheckCircle2
-                  size={21}
-                  color="#54785C"
+            {note ? (
+              <View style={styles.noteStrip}>
+                <NotebookText
+                  size={20}
+                  color="#8B6D35"
+                  strokeWidth={1.9}
                 />
+
+                <View style={styles.noteTextContainer}>
+                  <Text style={styles.noteHeading}>
+                    Today’s reflection
+                  </Text>
+
+                  <Text
+                    style={styles.noteText}
+                    numberOfLines={2}
+                  >
+                    “{note}”
+                  </Text>
+                </View>
               </View>
-
-              <Text
-                style={
-                  styles.strengthLabel
-                }
-              >
-                Supporting factor
-              </Text>
-            </View>
-
-            <Text
-              style={
-                styles.strengthValue
-              }
-            >
-              {mainStrength
-                ? mainStrength.label
-                : 'Keep reflecting'}
-            </Text>
-
-            {mainStrength ? (
-              <Text
-                style={
-                  styles.overviewDescription
-                }
-              >
-                {mainStrength.description}
-              </Text>
             ) : null}
-          </View>
-        </View>
 
-        {/* Suggestions */}
+            {/* Explainability */}
 
-        <View style={styles.suggestionsCard}>
-          <View style={styles.suggestionHeader}>
-            <View style={styles.lightbulbIcon}>
-              <Lightbulb
-                size={22}
-                color="#8B6D35"
-              />
+            <View style={styles.explanationHeader}>
+              <View>
+                <Text style={styles.sectionEyebrow}>
+                  WHY THIS SCORE?
+                </Text>
+
+                <Text style={styles.sectionTitleLarge}>
+                  What shaped today’s estimate?
+                </Text>
+
+                <Text style={styles.sectionDescription}>
+                  Your result combines five self-reported
+                  wellbeing indicators. Each factor has a
+                  different weighting in the estimate.
+                </Text>
+              </View>
             </View>
 
-            <View>
-              <Text
-                style={
-                  styles.suggestionTitle
-                }
-              >
-                Small things that may help
-              </Text>
+            <View
+              style={[
+                styles.factorGrid,
+                isWide && styles.factorGridWide,
+              ]}
+            >
+              {factorBreakdown.map(
+                (factor) => {
+                  const factorColour =
+                    getFactorColour(factor);
 
-              <Text
-                style={
-                  styles.suggestionSubtitle
-                }
-              >
-                Based on today’s answers
-              </Text>
-            </View>
-          </View>
+                  const FactorIcon =
+                    getFactorIcon(
+                      factor.key
+                    );
 
-          <View
-            style={[
-              styles.suggestionList,
-              isWide &&
-                styles.suggestionListWide,
-            ]}
-          >
-            {suggestions
-              .slice(0, 2)
-              .map(
-                (
-                  suggestion,
-                  index
-                ) => {
-                  const SuggestionIcon =
-                    getSuggestionIcon(
-                      suggestion
+                  const influence =
+                    getInfluenceInformation(
+                      factor
                     );
 
                   return (
                     <View
-                      key={`${suggestion}-${index}`}
-                      style={
-                        styles.suggestionItem
-                      }
+                      key={factor.key}
+                      style={[
+                        styles.factorCard,
+                        isWide &&
+                          styles.factorCardWide,
+                      ]}
                     >
-                      <View
-                        style={
-                          styles.suggestionIcon
-                        }
-                      >
-                        <SuggestionIcon
-                          size={18}
-                          color="#8B6D35"
-                        />
+                      <View style={styles.factorTopRow}>
+                        <View
+                          style={[
+                            styles.factorIcon,
+                            {
+                              backgroundColor:
+                                `${factorColour}14`,
+                            },
+                          ]}
+                        >
+                          <FactorIcon
+                            size={21}
+                            color={
+                              factorColour
+                            }
+                            strokeWidth={1.9}
+                          />
+                        </View>
+
+                        <Text style={styles.factorWeight}>
+                          {factor.weight}% weight
+                        </Text>
+                      </View>
+
+                      <Text style={styles.factorLabel}>
+                        {factor.label}
+                      </Text>
+
+                      <View style={styles.factorRatingRow}>
+                        <Text
+                          style={[
+                            styles.factorValue,
+                            {
+                              color:
+                                factorColour,
+                            },
+                          ]}
+                        >
+                          {factor.value}/5
+                        </Text>
+
+                        <View
+                          style={[
+                            styles.influenceBadge,
+                            {
+                              backgroundColor:
+                                influence.background,
+                            },
+                          ]}
+                        >
+                          <Text
+                            style={[
+                              styles.influenceText,
+                              {
+                                color:
+                                  influence.colour,
+                              },
+                            ]}
+                          >
+                            {influence.label}
+                          </Text>
+                        </View>
                       </View>
 
                       <Text
                         style={
-                          styles.suggestionText
+                          styles.factorDescription
                         }
                       >
-                        {suggestion}
+                        {factor.description}
                       </Text>
+
+                      <View style={styles.contributionRow}>
+                        <Text style={styles.contributionLabel}>
+                          Contribution
+                        </Text>
+
+                        <Text style={styles.contributionValue}>
+                          {factor.impact.toFixed(1)} / {factor.weight}
+                        </Text>
+                      </View>
+
+                      <View style={styles.factorBarBackground}>
+                        <View
+                          style={[
+                            styles.factorBarFill,
+                            {
+                              width: `${
+                                factor.weight > 0
+                                  ? Math.min(
+                                      100,
+                                      (factor.impact /
+                                        factor.weight) *
+                                        100
+                                    )
+                                  : 0
+                              }%`,
+                              backgroundColor:
+                                factorColour,
+                            },
+                          ]}
+                        />
+                      </View>
                     </View>
                   );
                 }
               )}
+            </View>
+
+            {/* How score works */}
+
+            <View style={styles.howScoreCard}>
+              <View style={styles.howScoreIcon}>
+                <Info
+                  size={22}
+                  color={Colors.primaryDark}
+                  strokeWidth={1.9}
+                />
+              </View>
+
+              <View style={styles.howScoreText}>
+                <Text style={styles.howScoreTitle}>
+                  How this estimate works
+                </Text>
+
+                <Text style={styles.howScoreDescription}>
+                  Anxiety contributes up to 25% of the estimate.
+                  Panic/overwhelm, sleep and daily
+                  responsibilities each contribute up to 20%,
+                  while energy contributes up to 15%. For sleep
+                  and energy, lower ratings increase the estimated
+                  stress contribution. For anxiety, panic and
+                  responsibilities, higher ratings increase it.
+                </Text>
+
+                <Text style={styles.howScoreNote}>
+                  The percentage is designed for personal
+                  reflection and trend monitoring, not as a
+                  clinical measurement.
+                </Text>
+              </View>
+            </View>
+
+            {/* Main challenge and strength */}
+
+            <View
+              style={[
+                styles.overviewRow,
+                !isWide &&
+                  styles.overviewRowMobile,
+              ]}
+            >
+              <View
+                style={[
+                  styles.overviewCard,
+                  styles.challengeCard,
+                ]}
+              >
+                <View style={styles.overviewIconRow}>
+                  <View
+                    style={
+                      styles.challengeIcon
+                    }
+                  >
+                    <TriangleAlert
+                      size={21}
+                      color="#A05E4B"
+                    />
+                  </View>
+
+                  <Text
+                    style={
+                      styles.challengeLabel
+                    }
+                  >
+                    Main challenge today
+                  </Text>
+                </View>
+
+                <Text
+                  style={
+                    styles.challengeValue
+                  }
+                >
+                  {mainChallenge
+                    ? mainChallenge.label
+                    : 'No strong challenge'}
+                </Text>
+
+                {mainChallenge ? (
+                  <Text
+                    style={
+                      styles.overviewDescription
+                    }
+                  >
+                    {mainChallenge.description}
+                  </Text>
+                ) : null}
+              </View>
+
+              <View
+                style={[
+                  styles.overviewCard,
+                  styles.strengthCard,
+                ]}
+              >
+                <View style={styles.overviewIconRow}>
+                  <View style={styles.strengthIcon}>
+                    <CheckCircle2
+                      size={21}
+                      color="#54785C"
+                    />
+                  </View>
+
+                  <Text
+                    style={
+                      styles.strengthLabel
+                    }
+                  >
+                    Supporting factor
+                  </Text>
+                </View>
+
+                <Text
+                  style={
+                    styles.strengthValue
+                  }
+                >
+                  {mainStrength
+                    ? mainStrength.label
+                    : 'Keep reflecting'}
+                </Text>
+
+                {mainStrength ? (
+                  <Text
+                    style={
+                      styles.overviewDescription
+                    }
+                  >
+                    {mainStrength.description}
+                  </Text>
+                ) : null}
+              </View>
+            </View>
+
+            {/* Suggestions */}
+
+            <View style={styles.suggestionsCard}>
+              <View style={styles.suggestionHeader}>
+                <View style={styles.lightbulbIcon}>
+                  <Lightbulb
+                    size={22}
+                    color="#8B6D35"
+                  />
+                </View>
+
+                <View>
+                  <Text
+                    style={
+                      styles.suggestionTitle
+                    }
+                  >
+                    Small things that may help
+                  </Text>
+
+                  <Text
+                    style={
+                      styles.suggestionSubtitle
+                    }
+                  >
+                    Based on today’s answers
+                  </Text>
+                </View>
+              </View>
+
+              <View
+                style={[
+                  styles.suggestionList,
+                  isWide &&
+                    styles.suggestionListWide,
+                ]}
+              >
+                {suggestions
+                  .slice(0, 2)
+                  .map(
+                    (
+                      suggestion,
+                      index
+                    ) => {
+                      const SuggestionIcon =
+                        getSuggestionIcon(
+                          suggestion
+                        );
+
+                      return (
+                        <View
+                          key={`${suggestion}-${index}`}
+                          style={
+                            styles.suggestionItem
+                          }
+                        >
+                          <View
+                            style={
+                              styles.suggestionIcon
+                            }
+                          >
+                            <SuggestionIcon
+                              size={18}
+                              color="#8B6D35"
+                            />
+                          </View>
+
+                          <Text
+                            style={
+                              styles.suggestionText
+                            }
+                          >
+                            {suggestion}
+                          </Text>
+                        </View>
+                      );
+                    }
+                  )}
+              </View>
+            </View>
+
+            {/* Disclaimer */}
+
+            <View style={styles.safetyCard}>
+              <ShieldCheck
+                size={21}
+                color={Colors.primaryDark}
+                strokeWidth={1.9}
+              />
+
+              <Text style={styles.safetyText}>
+                This estimate uses five self-reported wellbeing
+                indicators for personal reflection only. It is
+                not a clinical assessment, diagnosis or medical
+                advice.
+              </Text>
+            </View>
+
+            {/* Navigation */}
+
+            <View
+              style={[
+                styles.actionRow,
+                !isWide &&
+                  styles.actionRowMobile,
+              ]}
+            >
+              <View style={styles.actionButton}>
+                <AppButton
+                  title="Journey"
+                  icon={History}
+                  onPress={() =>
+                    navigation.navigate(
+                      'History'
+                    )
+                  }
+                />
+              </View>
+
+              <View style={styles.actionButton}>
+                <AppButton
+                  title="Trends"
+                  icon={ChartLine}
+                  variant="sage"
+                  onPress={() =>
+                    navigation.navigate(
+                      'Progress'
+                    )
+                  }
+                />
+              </View>
+
+              <View style={styles.actionButton}>
+                <AppButton
+                  title="Dashboard"
+                  icon={Home}
+                  variant="secondary"
+                  onPress={() =>
+                    navigation.navigate(
+                      'Home'
+                    )
+                  }
+                />
+              </View>
+            </View>
           </View>
-        </View>
-
-        {/* Disclaimer */}
-
-        <View style={styles.safetyCard}>
-          <ShieldCheck
-            size={21}
-            color={Colors.primaryDark}
-            strokeWidth={1.9}
-          />
-
-          <Text style={styles.safetyText}>
-            This estimate uses five self-reported wellbeing
-            indicators for personal reflection only. It is
-            not a clinical assessment, diagnosis or medical
-            advice.
-          </Text>
-        </View>
-
-        {/* Navigation */}
-
-        <View
-          style={[
-            styles.actionRow,
-            !isWide &&
-              styles.actionRowMobile,
-          ]}
-        >
-          <View style={styles.actionButton}>
-            <AppButton
-              title="Journey"
-              icon={History}
-              onPress={() =>
-                navigation.navigate(
-                  'History'
-                )
-              }
-            />
-          </View>
-
-          <View style={styles.actionButton}>
-            <AppButton
-              title="Trends"
-              icon={ChartLine}
-              variant="sage"
-              onPress={() =>
-                navigation.navigate(
-                  'Progress'
-                )
-              }
-            />
-          </View>
-
-          <View style={styles.actionButton}>
-            <AppButton
-              title="Dashboard"
-              icon={Home}
-              variant="secondary"
-              onPress={() =>
-                navigation.navigate(
-                  'Home'
-                )
-              }
-            />
-          </View>
-        </View>
+        </ScrollView>
       </View>
-    </ScrollView>
+    </ImageBackground>
   );
 }
 
 const styles = StyleSheet.create({
+  backgroundImage: {
+    flex: 1,
+    width: '100%',
+  },
+
+  backgroundOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(247,244,239,0.28)',
+  },
+
   screen: {
     flex: 1,
-    backgroundColor: '#F7F4EF',
+    backgroundColor: 'transparent',
   },
 
   container: {
@@ -995,9 +1017,9 @@ const styles = StyleSheet.create({
   },
 
   summaryCard: {
-    backgroundColor: '#FBFAF7',
+    backgroundColor: 'rgba(232,241,244,0.93)',
     borderWidth: 1,
-    borderColor: '#E5E0D8',
+    borderColor: 'rgba(196,218,225,0.95)',
     borderRadius: 24,
     padding: Spacing.lg,
     marginBottom: Spacing.md,
@@ -1027,6 +1049,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: Spacing.md,
+    backgroundColor: 'rgba(255,255,255,0.48)',
   },
 
   score: {
@@ -1067,7 +1090,7 @@ const styles = StyleSheet.create({
 
   verticalDivider: {
     width: 1,
-    backgroundColor: '#E5E0D8',
+    backgroundColor: '#C8DADF',
     marginHorizontal: Spacing.md,
   },
 
@@ -1120,12 +1143,13 @@ const styles = StyleSheet.create({
   noteStrip: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#FFF9EE',
+    backgroundColor: 'rgba(250,239,224,0.94)',
     borderWidth: 1,
-    borderColor: '#ECDDBE',
+    borderColor: '#E5CFAE',
     borderRadius: 16,
     padding: Spacing.md,
     marginBottom: Spacing.lg,
+    ...Shadows.card,
   },
 
   noteTextContainer: {
@@ -1148,7 +1172,15 @@ const styles = StyleSheet.create({
   },
 
   explanationHeader: {
+    alignSelf: 'flex-start',
+    backgroundColor: 'rgba(235,244,241,0.94)',
+    borderWidth: 1,
+    borderColor: 'rgba(205,226,219,0.95)',
+    borderRadius: 18,
+    paddingHorizontal: 18,
+    paddingVertical: 14,
     marginBottom: Spacing.md,
+    ...Shadows.card,
   },
 
   sectionEyebrow: {
@@ -1186,9 +1218,9 @@ const styles = StyleSheet.create({
 
   factorCard: {
     width: '50%',
-    backgroundColor: '#FBFAF7',
+    backgroundColor: 'rgba(239,245,242,0.94)',
     borderWidth: 4,
-    borderColor: '#F7F4EF',
+    borderColor: 'rgba(247,244,239,0.50)',
     borderRadius: 19,
     padding: 14,
     ...Shadows.card,
@@ -1277,7 +1309,7 @@ const styles = StyleSheet.create({
 
   factorBarBackground: {
     height: 6,
-    backgroundColor: '#ECE8E2',
+    backgroundColor: '#D9E2DF',
     borderRadius: 4,
     overflow: 'hidden',
   },
@@ -1290,12 +1322,13 @@ const styles = StyleSheet.create({
   howScoreCard: {
     flexDirection: 'row',
     alignItems: 'flex-start',
-    backgroundColor: '#EDF5F2',
+    backgroundColor: 'rgba(226,240,236,0.95)',
     borderWidth: 1,
-    borderColor: '#D2E5DF',
+    borderColor: '#BDD9D0',
     borderRadius: 18,
     padding: Spacing.md,
     marginBottom: Spacing.md,
+    ...Shadows.card,
   },
 
   howScoreIcon: {
@@ -1304,7 +1337,7 @@ const styles = StyleSheet.create({
     borderRadius: 14,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#DDECE5',
+    backgroundColor: '#D4E8E1',
     marginRight: Spacing.md,
   },
 
@@ -1350,16 +1383,17 @@ const styles = StyleSheet.create({
     borderRadius: 17,
     padding: Spacing.md,
     marginHorizontal: 5,
+    ...Shadows.card,
   },
 
   challengeCard: {
-    backgroundColor: '#FFF7F3',
-    borderColor: '#E8C5BA',
+    backgroundColor: 'rgba(250,232,225,0.95)',
+    borderColor: '#E2B9AB',
   },
 
   strengthCard: {
-    backgroundColor: '#F4FAF5',
-    borderColor: '#C9DFC9',
+    backgroundColor: 'rgba(229,241,231,0.95)',
+    borderColor: '#BED8C2',
   },
 
   overviewIconRow: {
@@ -1374,7 +1408,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#F7E4DE',
+    backgroundColor: '#F4D7CD',
     marginRight: 8,
   },
 
@@ -1384,7 +1418,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#E4F0E6',
+    backgroundColor: '#DCEBDD',
     marginRight: 8,
   },
 
@@ -1419,12 +1453,13 @@ const styles = StyleSheet.create({
   },
 
   suggestionsCard: {
-    backgroundColor: '#FFF9EE',
+    backgroundColor: 'rgba(249,236,213,0.95)',
     borderWidth: 1,
-    borderColor: '#ECDDBE',
+    borderColor: '#E4CAA0',
     borderRadius: 18,
     padding: Spacing.md,
     marginBottom: Spacing.md,
+    ...Shadows.card,
   },
 
   suggestionHeader: {
@@ -1439,7 +1474,7 @@ const styles = StyleSheet.create({
     borderRadius: 13,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#F5E9CE',
+    backgroundColor: '#F1DEB7',
     marginRight: Spacing.sm,
   },
 
@@ -1476,7 +1511,7 @@ const styles = StyleSheet.create({
     borderRadius: 11,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#F5E9CE',
+    backgroundColor: '#F1DEB7',
     marginRight: 8,
   },
 
@@ -1490,12 +1525,13 @@ const styles = StyleSheet.create({
   safetyCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#EDF5F2',
+    backgroundColor: 'rgba(225,239,235,0.95)',
     borderWidth: 1,
-    borderColor: '#D2E5DF',
+    borderColor: '#BFD8D0',
     borderRadius: 15,
     padding: 11,
     marginBottom: Spacing.md,
+    ...Shadows.card,
   },
 
   safetyText: {

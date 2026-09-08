@@ -4,6 +4,7 @@ import {
   ActivityIndicator,
   Alert,
   Image,
+  ImageBackground,
   Platform,
   Pressable,
   ScrollView,
@@ -17,14 +18,16 @@ import {
 import {
   ArrowLeft,
   ArrowRight,
+  ChartLine,
   Check,
   ClipboardCheck,
   FileText,
+  Frown,
   Home,
   Leaf,
-  Smile,
   Meh,
-  Frown,
+  ShieldCheck,
+  Smile,
 } from 'lucide-react-native';
 
 import AppButton from '../components/AppButton';
@@ -34,7 +37,11 @@ import {
   saveStressEntry,
 } from '../database/database';
 
-import { calculateStressScore } from '../services/stressCalculation';
+import {
+  calculateStressScore,
+  getStressCategory,
+} from '../services/stressCalculation';
+
 import questionnaireData from '../services/questionnaireData';
 
 import Colors from '../theme/colors';
@@ -52,6 +59,12 @@ const questionImages = [
 
 const diaryImage =
   require('../../assets/images/pexels-natalie-grishina-62197976-8086416.jpg');
+
+const completedBackgroundImage =
+  require('../../assets/images/pexels-nomundodejr-32041165.jpg');
+
+const checkInBackgroundImage =
+  require('../../assets/images/pexels-bosichong-28616279.jpg');
 
 const moodOptions = [
   {
@@ -106,6 +119,7 @@ export default function CheckInScreen({ navigation }) {
   const [dailyNote, setDailyNote] = useState('');
 
   const [isSaving, setIsSaving] = useState(false);
+
   const [isCheckingToday, setIsCheckingToday] =
     useState(true);
 
@@ -279,6 +293,10 @@ export default function CheckInScreen({ navigation }) {
       questionnaireData.length) *
     100;
 
+  /*
+    LOADING
+  */
+
   if (isCheckingToday) {
     return (
       <View style={styles.loadingContainer}>
@@ -302,564 +320,824 @@ export default function CheckInScreen({ navigation }) {
     );
   }
 
+  /*
+    ALREADY COMPLETED TODAY
+  */
+
   if (todayEntry) {
+    const savedStressCategory =
+      getStressCategory(Number(todayEntry.score));
+
+    // Match the saved mood to the same icon and colours
+    // used when the mood was originally selected.
+    const savedMoodOption =
+      moodOptions.find(
+        (option) => option.value === todayEntry.mood
+      ) || null;
+
+    const SavedMoodIcon =
+      savedMoodOption?.Icon || Meh;
+
     return (
-      <ScrollView
-        style={styles.screen}
-        contentContainerStyle={
-          styles.completedContainer
-        }
-        showsVerticalScrollIndicator={false}
+      <ImageBackground
+        source={completedBackgroundImage}
+        style={styles.completedBackground}
+        resizeMode="cover"
       >
-        <View style={styles.completedWrapper}>
-          <View style={styles.completedCard}>
-            <View style={styles.completedIcon}>
-              <Check
-                size={38}
-                color="#54785C"
-                strokeWidth={2.2}
-              />
-            </View>
-
-            <Text style={styles.completedTitle}>
-              Today’s reflection is complete
-            </Text>
-
-            <Text style={styles.completedText}>
-              You already have one main wellbeing
-              reflection saved for today.
-            </Text>
-
-            <View style={styles.savedResultCard}>
-              <Text style={styles.savedResultLabel}>
-                Today’s stress level
-              </Text>
-
-              <Text style={styles.savedResultScore}>
-                {todayEntry.score}%
-              </Text>
-
-              {todayEntry.mood ? (
-                <Text style={styles.savedContextText}>
-                  Mood:{' '}
-                  {todayEntry.mood.replaceAll(
-                    '-',
-                    ' '
-                  )}
-                </Text>
-              ) : null}
-
-              <Text style={styles.savedResultDate}>
-                Saved{' '}
-                {formatTodayEntryDate(
-                  todayEntry.date
-                )}
-              </Text>
-            </View>
-
-            <Text style={styles.completedExplanation}>
-              One main reflection per day keeps your
-              history and wellbeing trends clear and
-              consistent.
-            </Text>
-          </View>
-
-          <View style={styles.completedButtons}>
-            <AppButton
-              title="View Your Journey"
-              icon={ClipboardCheck}
-              onPress={() =>
-                navigation.navigate('History')
-              }
-            />
-
-            <AppButton
-              title="View Wellbeing Trends"
-              variant="sage"
-              onPress={() =>
-                navigation.navigate('Progress')
-              }
-            />
-
-            <AppButton
-              title="Return Home"
-              icon={Home}
-              variant="secondary"
-              onPress={() =>
-                navigation.navigate('Home')
-              }
-            />
-          </View>
-        </View>
-      </ScrollView>
-    );
-  }
-
-  if (checkInStage === 'context') {
-    return (
-      <ScrollView
-        style={styles.screen}
-        contentContainerStyle={styles.container}
-        keyboardShouldPersistTaps="handled"
-        showsVerticalScrollIndicator={false}
-      >
-        <View style={styles.contentWrapper}>
-          <View style={styles.pageIntro}>
-            <View style={styles.introIcon}>
-              <Leaf
-                size={26}
-                color={Colors.primaryDark}
-                strokeWidth={1.9}
-              />
-            </View>
-
-            <View>
-              <Text style={styles.pageTitle}>
-                How are you feeling today?
-              </Text>
-
-              <Text style={styles.pageSubtitle}>
-                Take a quiet moment to reflect before continuing.
-              </Text>
-            </View>
-          </View>
-
-          <View
-            style={[
-              styles.contextHero,
-              isWide && styles.contextHeroWide,
-            ]}
+        <View style={styles.completedOverlay}>
+          <ScrollView
+            contentContainerStyle={
+              styles.completedContainer
+            }
+            showsVerticalScrollIndicator={false}
           >
-            <View
-              style={[
-                styles.contextImageContainer,
-                isWide && styles.contextImageContainerWide,
-              ]}
-            >
-              <Image
-                source={diaryImage}
-                style={styles.contextImage}
-                resizeMode="cover"
-              />
+            <View style={styles.completedWrapper}>
+              <View style={styles.completedTopLabel}>
+                <Leaf
+                  size={17}
+                  color={Colors.primaryDark}
+                  strokeWidth={1.9}
+                />
 
-              <View style={styles.contextImageOverlay} />
-
-              <View style={styles.imageCaption}>
-                <Text style={styles.imageCaptionSmall}>
-                  DAILY REFLECTION
-                </Text>
-
-                <Text style={styles.imageCaptionMain}>
-                  Your thoughts matter.
-                </Text>
-
-                <Text style={styles.imageCaptionText}>
-                  Take a moment to notice how today has
-                  felt for you.
+                <Text
+                  style={
+                    styles.completedTopLabelText
+                  }
+                >
+                  DAILY WELLBEING
                 </Text>
               </View>
-            </View>
 
-            <View
-              style={[
-                styles.contextContent,
-                isWide && styles.contextContentWide,
-              ]}
-            >
-              <View style={styles.contextSection}>
-                <Text style={styles.contextEyebrow}>
-                  STEP 1
+              <View style={styles.completedCard}>
+                <View style={styles.completedIcon}>
+                  <Check
+                    size={38}
+                    color="#54785C"
+                    strokeWidth={2.2}
+                  />
+                </View>
+
+                <Text style={styles.completedTitle}>
+                  Today’s reflection is complete
                 </Text>
 
-                <Text style={styles.contextTitle}>
-                  Choose today’s mood
+                <Text style={styles.completedText}>
+                  You already have one main wellbeing
+                  reflection saved for today.
                 </Text>
 
-                <Text style={styles.contextHelp}>
-                  Your mood adds useful personal context
-                  but does not change the calculated stress
-                  level.
-                </Text>
+                <View style={styles.savedResultCard}>
+                  <Text style={styles.savedResultLabel}>
+                    TODAY’S ESTIMATED STRESS LEVEL
+                  </Text>
 
-                <Text style={styles.moodQuestion}>
-                  How are you feeling today?
-                </Text>
+                  <Text style={styles.savedResultScore}>
+                    {todayEntry.score}%
+                  </Text>
 
-                <Text style={styles.moodInstruction}>
-                  Choose the option that feels closest to your mood right now.
-                </Text>
+                  <View
+                    style={styles.savedCategoryBadge}
+                  >
+                    <Text
+                      style={[
+                        styles.savedCategoryText,
+                        {
+                          color:
+                            savedStressCategory.colour,
+                        },
+                      ]}
+                    >
+                      Stress category:{' '}
+                      {savedStressCategory.label}
+                    </Text>
+                  </View>
 
-                <View style={styles.moodGrid}>
-                  {moodOptions.map((moodOption) => {
-                    const MoodIcon = moodOption.Icon;
-                    const isSelected =
-                      selectedMood === moodOption.value;
-
-                    return (
-                      <Pressable
-                        key={moodOption.value}
-                        style={({ pressed }) => [
-                          styles.moodCard,
-                          isSelected &&
-                            styles.selectedMoodCard,
-                          isSelected && {
-                            borderColor:
-                              moodOption.colour,
-                            backgroundColor:
-                              moodOption.background,
-                          },
-                          pressed &&
-                            styles.pressedMoodCard,
-                        ]}
-                        onPress={() =>
-                          setSelectedMood(
-                            moodOption.value
-                          )
+                  {todayEntry.mood ? (
+                    <View
+                      style={[
+                        styles.savedMoodBadge,
+                        savedMoodOption && {
+                          backgroundColor:
+                            savedMoodOption.background,
+                          borderColor:
+                            savedMoodOption.colour,
+                        },
+                      ]}
+                    >
+                      <SavedMoodIcon
+                        size={17}
+                        color={
+                          savedMoodOption?.colour ||
+                          Colors.primaryDark
                         }
+                        strokeWidth={1.9}
+                      />
+
+                      <Text
+                        style={[
+                          styles.savedContextText,
+                          savedMoodOption && {
+                            color:
+                              savedMoodOption.colour,
+                          },
+                        ]}
                       >
-                        <View
-                          style={[
-                            styles.moodIconCircle,
-                            {
-                              backgroundColor:
-                                moodOption.background,
-                            },
-                            isSelected && {
-                              borderColor:
-                                moodOption.colour,
-                            },
-                          ]}
-                        >
-                          <MoodIcon
-                            size={30}
-                            color={moodOption.colour}
-                            strokeWidth={1.8}
-                          />
-                        </View>
+                        Mood:{' '}
+                        {todayEntry.mood
+                          .replaceAll('-', ' ')
+                          .replace(
+                            /\b\w/g,
+                            (letter) =>
+                              letter.toUpperCase()
+                          )}
+                      </Text>
+                    </View>
+                  ) : null}
 
-                        <Text
-                          style={[
-                            styles.moodLabel,
-                            {
-                              color:
-                                moodOption.colour,
-                            },
-                          ]}
-                        >
-                          {moodOption.label}
-                        </Text>
+                  <Text style={styles.savedResultDate}>
+                    Saved{' '}
+                    {formatTodayEntryDate(
+                      todayEntry.date
+                    )}
+                  </Text>
+                </View>
 
-                        <View
-                          style={[
-                            styles.moodSelectionDot,
-                            isSelected && {
-                              borderColor:
-                                moodOption.colour,
-                              backgroundColor:
-                                moodOption.colour,
-                            },
-                          ]}
-                        >
-                          {isSelected ? (
-                            <Check
-                              size={12}
-                              color={Colors.white}
-                              strokeWidth={2.5}
-                            />
-                          ) : null}
-                        </View>
-                      </Pressable>
-                    );
-                  })}
+                <View
+                  style={styles.completedMessageCard}
+                >
+                  <ShieldCheck
+                    size={21}
+                    color={Colors.primaryDark}
+                    strokeWidth={1.9}
+                  />
+
+                  <Text
+                    style={
+                      styles.completedExplanation
+                    }
+                  >
+                    One main reflection per day keeps
+                    your history and wellbeing trends
+                    clear and consistent.
+                  </Text>
                 </View>
               </View>
 
-              <View style={styles.noteSection}>
-                <View style={styles.noteHeader}>
-                  <View style={styles.noteIcon}>
-                    <FileText
-                      size={22}
-                      color="#8B6D35"
+              <View
+                style={styles.completedActionsHeader}
+              >
+                <Text
+                  style={styles.completedActionsTitle}
+                >
+                  Continue your wellbeing journey
+                </Text>
+
+                <Text
+                  style={
+                    styles.completedActionsSubtitle
+                  }
+                >
+                  Review your reflections or explore
+                  how your wellbeing is changing over
+                  time.
+                </Text>
+              </View>
+
+              <View
+                style={[
+                  styles.completedButtons,
+                  isWide &&
+                    styles.completedButtonsWide,
+                ]}
+              >
+                <View
+                  style={styles.completedButtonItem}
+                >
+                  <AppButton
+                    title="View Your Journey"
+                    icon={ClipboardCheck}
+                    onPress={() =>
+                      navigation.navigate('History')
+                    }
+                  />
+                </View>
+
+                <View
+                  style={styles.completedButtonItem}
+                >
+                  <AppButton
+                    title="View Wellbeing Trends"
+                    icon={ChartLine}
+                    variant="sage"
+                    onPress={() =>
+                      navigation.navigate('Progress')
+                    }
+                  />
+                </View>
+
+                <View
+                  style={styles.completedButtonItem}
+                >
+                  <AppButton
+                    title="Return Home"
+                    icon={Home}
+                    variant="secondary"
+                    onPress={() =>
+                      navigation.navigate('Home')
+                    }
+                  />
+                </View>
+              </View>
+            </View>
+          </ScrollView>
+        </View>
+      </ImageBackground>
+    );
+  }
+
+  /*
+    MOOD + DAILY NOTE
+  */
+
+  if (checkInStage === 'context') {
+    return (
+      <ImageBackground
+        source={checkInBackgroundImage}
+        style={styles.checkInBackground}
+        resizeMode="cover"
+      >
+        <View style={styles.checkInOverlay}>
+          <ScrollView
+            style={styles.transparentScreen}
+            contentContainerStyle={styles.container}
+            keyboardShouldPersistTaps="handled"
+            showsVerticalScrollIndicator={false}
+          >
+            <View style={styles.contentWrapper}>
+              <View style={styles.pageIntro}>
+                <View style={styles.introIcon}>
+                  <Leaf
+                    size={26}
+                    color={Colors.primaryDark}
+                    strokeWidth={1.9}
+                  />
+                </View>
+
+                <View style={styles.pageIntroText}>
+                  <Text style={styles.pageTitle}>
+                    How are you feeling today?
+                  </Text>
+
+                  <Text style={styles.pageSubtitle}>
+                    Take a quiet moment to reflect
+                    before continuing.
+                  </Text>
+                </View>
+              </View>
+
+              <View
+                style={[
+                  styles.contextHero,
+                  isWide && styles.contextHeroWide,
+                ]}
+              >
+                <View
+                  style={[
+                    styles.contextImageContainer,
+                    isWide &&
+                      styles.contextImageContainerWide,
+                  ]}
+                >
+                  <Image
+                    source={diaryImage}
+                    style={styles.contextImage}
+                    resizeMode="cover"
+                  />
+
+                  <View
+                    style={styles.contextImageOverlay}
+                  />
+
+                  <View style={styles.imageCaption}>
+                    <Text
+                      style={styles.imageCaptionSmall}
+                    >
+                      DAILY REFLECTION
+                    </Text>
+
+                    <Text
+                      style={styles.imageCaptionMain}
+                    >
+                      Your thoughts matter.
+                    </Text>
+
+                    <Text
+                      style={styles.imageCaptionText}
+                    >
+                      Take a moment to notice how
+                      today has felt for you.
+                    </Text>
+                  </View>
+                </View>
+
+                <View
+                  style={[
+                    styles.contextContent,
+                    isWide &&
+                      styles.contextContentWide,
+                  ]}
+                >
+                  <View style={styles.contextSection}>
+                    <Text
+                      style={styles.contextEyebrow}
+                    >
+                      STEP 1
+                    </Text>
+
+                    <Text style={styles.contextTitle}>
+                      Choose today’s mood
+                    </Text>
+
+                    <Text style={styles.contextHelp}>
+                      Your mood adds useful personal
+                      context but does not change the
+                      calculated stress level.
+                    </Text>
+
+                    <Text style={styles.moodQuestion}>
+                      How are you feeling today?
+                    </Text>
+
+                    <Text
+                      style={styles.moodInstruction}
+                    >
+                      Choose the option that feels
+                      closest to your mood right now.
+                    </Text>
+
+                    <View style={styles.moodGrid}>
+                      {moodOptions.map(
+                        (moodOption) => {
+                          const MoodIcon =
+                            moodOption.Icon;
+
+                          const isSelected =
+                            selectedMood ===
+                            moodOption.value;
+
+                          return (
+                            <Pressable
+                              key={moodOption.value}
+                              style={({ pressed }) => [
+                                styles.moodCard,
+                                isSelected &&
+                                  styles.selectedMoodCard,
+                                isSelected && {
+                                  borderColor:
+                                    moodOption.colour,
+                                  backgroundColor:
+                                    moodOption.background,
+                                },
+                                pressed &&
+                                  styles.pressedMoodCard,
+                              ]}
+                              onPress={() =>
+                                setSelectedMood(
+                                  moodOption.value
+                                )
+                              }
+                            >
+                              <View
+                                style={[
+                                  styles.moodIconCircle,
+                                  {
+                                    backgroundColor:
+                                      moodOption.background,
+                                  },
+                                  isSelected && {
+                                    borderColor:
+                                      moodOption.colour,
+                                  },
+                                ]}
+                              >
+                                <MoodIcon
+                                  size={30}
+                                  color={
+                                    moodOption.colour
+                                  }
+                                  strokeWidth={1.8}
+                                />
+                              </View>
+
+                              <Text
+                                style={[
+                                  styles.moodLabel,
+                                  {
+                                    color:
+                                      moodOption.colour,
+                                  },
+                                ]}
+                              >
+                                {moodOption.label}
+                              </Text>
+
+                              <View
+                                style={[
+                                  styles.moodSelectionDot,
+                                  isSelected && {
+                                    borderColor:
+                                      moodOption.colour,
+                                    backgroundColor:
+                                      moodOption.colour,
+                                  },
+                                ]}
+                              >
+                                {isSelected ? (
+                                  <Check
+                                    size={12}
+                                    color={Colors.white}
+                                    strokeWidth={2.5}
+                                  />
+                                ) : null}
+                              </View>
+                            </Pressable>
+                          );
+                        }
+                      )}
+                    </View>
+                  </View>
+
+                  <View style={styles.noteSection}>
+                    <View style={styles.noteHeader}>
+                      <View style={styles.noteIcon}>
+                        <FileText
+                          size={22}
+                          color="#8B6D35"
+                          strokeWidth={1.9}
+                        />
+                      </View>
+
+                      <View
+                        style={styles.noteHeadingText}
+                      >
+                        <Text style={styles.noteTitle}>
+                          Optional daily reflection
+                        </Text>
+
+                        <Text style={styles.noteHelp}>
+                          Add anything that may have
+                          influenced your mood or
+                          stress today.
+                        </Text>
+                      </View>
+                    </View>
+
+                    <TextInput
+                      style={styles.noteInput}
+                      value={dailyNote}
+                      onChangeText={setDailyNote}
+                      placeholder="For example: Busy day at work, poor sleep or an important event."
+                      placeholderTextColor="#A49B91"
+                      multiline
+                      maxLength={300}
+                      textAlignVertical="top"
+                      accessibilityLabel="Optional daily reflection note"
+                    />
+
+                    <Text
+                      style={styles.characterCount}
+                    >
+                      {dailyNote.length}/300 characters
+                    </Text>
+                  </View>
+
+                  <View style={styles.contextButtons}>
+                    <AppButton
+                      title="Continue to Questions"
+                      icon={ArrowRight}
+                      onPress={
+                        continueToQuestionnaire
+                      }
+                    />
+
+                    <AppButton
+                      title="Cancel and Return Home"
+                      icon={Home}
+                      variant="secondary"
+                      onPress={() =>
+                        navigation.navigate('Home')
+                      }
+                    />
+                  </View>
+                </View>
+              </View>
+            </View>
+          </ScrollView>
+        </View>
+      </ImageBackground>
+    );
+  }
+
+  /*
+    FIVE QUESTIONS
+  */
+
+  return (
+    <ImageBackground
+      source={checkInBackgroundImage}
+      style={styles.checkInBackground}
+      resizeMode="cover"
+    >
+      <View style={styles.questionBackgroundOverlay}>
+        <ScrollView
+          style={styles.transparentScreen}
+          contentContainerStyle={styles.container}
+          showsVerticalScrollIndicator={false}
+        >
+          <View style={styles.contentWrapper}>
+            <View style={styles.questionTopRow}>
+              <View
+                style={styles.questionTitleContainer}
+              >
+                <Text
+                  style={styles.questionPageLabel}
+                >
+                  DAILY REFLECTION
+                </Text>
+
+                <Text
+                  style={styles.questionPageTitle}
+                >
+                  Check in with yourself
+                </Text>
+              </View>
+
+              <View style={styles.numberBadge}>
+                <Text style={styles.questionNumber}>
+                  {currentQuestionIndex + 1}
+                  <Text
+                    style={styles.questionNumberTotal}
+                  >
+                    /{questionnaireData.length}
+                  </Text>
+                </Text>
+              </View>
+            </View>
+
+            <View style={styles.questionProgressCard}>
+              <View style={styles.progressHeader}>
+                <Text style={styles.progressText}>
+                  Question {currentQuestionIndex + 1} of{' '}
+                  {questionnaireData.length}
+                </Text>
+
+                <Text
+                  style={
+                    styles.progressPercentageText
+                  }
+                >
+                  {Math.round(progressPercentage)}%
+                </Text>
+              </View>
+
+              <View
+                style={styles.progressBackground}
+              >
+                <View
+                  style={[
+                    styles.progressFill,
+                    {
+                      width: `${progressPercentage}%`,
+                    },
+                  ]}
+                />
+              </View>
+            </View>
+
+            <View
+              style={[
+                styles.questionLayout,
+                isWide && styles.questionLayoutWide,
+              ]}
+            >
+              <View
+                style={[
+                  styles.questionVisual,
+                  isWide &&
+                    styles.questionVisualWide,
+                ]}
+              >
+                <Image
+                  source={currentQuestionImage}
+                  style={styles.questionImage}
+                  resizeMode="cover"
+                />
+
+                <View
+                  style={styles.questionImageOverlay}
+                />
+
+                <View
+                  style={
+                    styles.questionVisualMessage
+                  }
+                >
+                  <Text
+                    style={styles.visualMessageSmall}
+                  >
+                    A MOMENT FOR YOU
+                  </Text>
+
+                  <Text
+                    style={styles.visualMessageMain}
+                  >
+                    There is no right or wrong answer.
+                  </Text>
+
+                  <Text
+                    style={styles.visualMessageText}
+                  >
+                    Choose the response that feels
+                    closest to your experience today.
+                  </Text>
+                </View>
+              </View>
+
+              <View
+                style={[
+                  styles.questionCard,
+                  isWide && styles.questionCardWide,
+                ]}
+              >
+                <View
+                  style={styles.questionHeadingRow}
+                >
+                  <View style={styles.questionIcon}>
+                    <ClipboardCheck
+                      size={24}
+                      color={Colors.primaryDark}
                       strokeWidth={1.9}
                     />
                   </View>
 
-                  <View style={styles.noteHeadingText}>
-                    <Text style={styles.noteTitle}>
-                      Optional daily reflection
+                  <View
+                    style={
+                      styles.questionHeadingText
+                    }
+                  >
+                    <Text
+                      style={
+                        styles.questionSmallHeading
+                      }
+                    >
+                      Your daily reflection
                     </Text>
 
-                    <Text style={styles.noteHelp}>
-                      Add anything that may have influenced
-                      your mood or stress today.
+                    <Text
+                      style={
+                        styles.questionInstruction
+                      }
+                    >
+                      Select one answer below.
                     </Text>
                   </View>
                 </View>
 
-                <TextInput
-                  style={styles.noteInput}
-                  value={dailyNote}
-                  onChangeText={setDailyNote}
-                  placeholder="For example: Busy day at work, poor sleep or an important event."
-                  placeholderTextColor="#A49B91"
-                  multiline
-                  maxLength={300}
-                  textAlignVertical="top"
-                  accessibilityLabel="Optional daily reflection note"
-                />
-
-                <Text style={styles.characterCount}>
-                  {dailyNote.length}/300 characters
-                </Text>
-              </View>
-
-              <View style={styles.contextButtons}>
-                <AppButton
-                  title="Continue to Questions"
-                  icon={ArrowRight}
-                  onPress={continueToQuestionnaire}
-                />
-
-                <AppButton
-                  title="Cancel and Return Home"
-                  icon={Home}
-                  variant="secondary"
-                  onPress={() =>
-                    navigation.navigate('Home')
-                  }
-                />
-              </View>
-            </View>
-          </View>
-        </View>
-      </ScrollView>
-    );
-  }
-
-  return (
-    <ScrollView
-      style={styles.screen}
-      contentContainerStyle={styles.container}
-      showsVerticalScrollIndicator={false}
-    >
-      <View style={styles.contentWrapper}>
-        <View style={styles.questionTopRow}>
-          <View>
-            <Text style={styles.questionPageLabel}>
-              DAILY REFLECTION
-            </Text>
-
-            <Text style={styles.questionPageTitle}>
-              Check in with yourself
-            </Text>
-          </View>
-
-          <Text style={styles.questionNumber}>
-            {currentQuestionIndex + 1}
-            <Text style={styles.questionNumberTotal}>
-              /{questionnaireData.length}
-            </Text>
-          </Text>
-        </View>
-
-        <View style={styles.questionProgressCard}>
-          <View style={styles.progressHeader}>
-            <Text style={styles.progressText}>
-              Question {currentQuestionIndex + 1} of{' '}
-              {questionnaireData.length}
-            </Text>
-
-            <Text style={styles.progressPercentageText}>
-              {Math.round(progressPercentage)}%
-            </Text>
-          </View>
-
-          <View style={styles.progressBackground}>
-            <View
-              style={[
-                styles.progressFill,
-                {
-                  width: `${progressPercentage}%`,
-                },
-              ]}
-            />
-          </View>
-        </View>
-
-        <View
-          style={[
-            styles.questionLayout,
-            isWide && styles.questionLayoutWide,
-          ]}
-        >
-          <View
-            style={[
-              styles.questionVisual,
-              isWide && styles.questionVisualWide,
-            ]}
-          >
-            <Image
-              source={currentQuestionImage}
-              style={styles.questionImage}
-              resizeMode="cover"
-            />
-
-            <View style={styles.questionImageOverlay} />
-
-            <View style={styles.questionVisualMessage}>
-              <Text style={styles.visualMessageSmall}>
-                A MOMENT FOR YOU
-              </Text>
-
-              <Text style={styles.visualMessageMain}>
-                There is no right or wrong answer.
-              </Text>
-
-              <Text style={styles.visualMessageText}>
-                Choose the response that feels closest to
-                your experience today.
-              </Text>
-            </View>
-          </View>
-
-          <View
-            style={[
-              styles.questionCard,
-              isWide && styles.questionCardWide,
-            ]}
-          >
-            <View style={styles.questionHeadingRow}>
-              <View style={styles.questionIcon}>
-                <ClipboardCheck
-                  size={24}
-                  color={Colors.primaryDark}
-                  strokeWidth={1.9}
-                />
-              </View>
-
-              <View style={styles.questionHeadingText}>
-                <Text style={styles.questionSmallHeading}>
-                  Your daily reflection
+                <Text style={styles.question}>
+                  {currentQuestion.question}
                 </Text>
 
-                <Text style={styles.questionInstruction}>
-                  Select one answer below.
-                </Text>
-              </View>
-            </View>
+                <View style={styles.optionsContainer}>
+                  {currentQuestion.options.map(
+                    (option) => {
+                      const isSelected =
+                        selectedValue ===
+                        option.value;
 
-            <Text style={styles.question}>
-              {currentQuestion.question}
-            </Text>
-
-            <View style={styles.optionsContainer}>
-              {currentQuestion.options.map(
-                (option) => {
-                  const isSelected =
-                    selectedValue === option.value;
-
-                  return (
-                    <Pressable
-                      key={option.value}
-                      style={({ pressed }) => [
-                        styles.option,
-                        isSelected &&
-                          styles.selectedOption,
-                        pressed &&
-                          styles.pressedOption,
-                        isSaving &&
-                          styles.disabledOption,
-                      ]}
-                      onPress={() =>
-                        selectAnswer(option.value)
-                      }
-                      disabled={isSaving}
-                    >
-                      <View
-                        style={[
-                          styles.optionNumber,
-                          isSelected &&
-                            styles.selectedOptionNumber,
-                        ]}
-                      >
-                        <Text
-                          style={[
-                            styles.optionNumberText,
+                      return (
+                        <Pressable
+                          key={option.value}
+                          style={({ pressed }) => [
+                            styles.option,
                             isSelected &&
-                              styles.selectedOptionNumberText,
+                              styles.selectedOption,
+                            pressed &&
+                              styles.pressedOption,
+                            isSaving &&
+                              styles.disabledOption,
                           ]}
+                          onPress={() =>
+                            selectAnswer(option.value)
+                          }
+                          disabled={isSaving}
                         >
-                          {option.value}
-                        </Text>
-                      </View>
+                          <View
+                            style={[
+                              styles.optionNumber,
+                              isSelected &&
+                                styles.selectedOptionNumber,
+                            ]}
+                          >
+                            <Text
+                              style={[
+                                styles.optionNumberText,
+                                isSelected &&
+                                  styles.selectedOptionNumberText,
+                              ]}
+                            >
+                              {option.value}
+                            </Text>
+                          </View>
 
-                      <Text
-                        style={[
-                          styles.optionText,
-                          isSelected &&
-                            styles.selectedOptionText,
-                        ]}
-                      >
-                        {option.label}
-                      </Text>
+                          <Text
+                            style={[
+                              styles.optionText,
+                              isSelected &&
+                                styles.selectedOptionText,
+                            ]}
+                          >
+                            {option.label}
+                          </Text>
 
-                      <View
-                        style={[
-                          styles.optionCheck,
-                          isSelected &&
-                            styles.selectedOptionCheck,
-                        ]}
-                      >
-                        {isSelected ? (
-                          <Check
-                            size={15}
-                            color={Colors.white}
-                            strokeWidth={2.4}
-                          />
-                        ) : null}
-                      </View>
-                    </Pressable>
-                  );
-                }
-              )}
-            </View>
+                          <View
+                            style={[
+                              styles.optionCheck,
+                              isSelected &&
+                                styles.selectedOptionCheck,
+                            ]}
+                          >
+                            {isSelected ? (
+                              <Check
+                                size={15}
+                                color={Colors.white}
+                                strokeWidth={2.4}
+                              />
+                            ) : null}
+                          </View>
+                        </Pressable>
+                      );
+                    }
+                  )}
+                </View>
 
-            <View style={styles.buttonRow}>
-              <AppButton
-                title="Previous"
-                icon={ArrowLeft}
-                variant="secondary"
-                onPress={goToPreviousQuestion}
-                disabled={isSaving}
-                style={styles.halfButton}
-              />
+                <View style={styles.buttonRow}>
+                  <AppButton
+                    title="Previous"
+                    icon={ArrowLeft}
+                    variant="secondary"
+                    onPress={goToPreviousQuestion}
+                    disabled={isSaving}
+                    style={styles.halfButton}
+                  />
 
-              <AppButton
-                title={
-                  isSaving
-                    ? 'Saving...'
-                    : isLastQuestion
-                      ? 'Complete'
-                      : 'Next'
-                }
-                icon={
-                  isLastQuestion
-                    ? Check
-                    : ArrowRight
-                }
-                onPress={goToNextQuestion}
-                disabled={isSaving}
-                style={styles.halfButton}
-              />
+                  <AppButton
+                    title={
+                      isSaving
+                        ? 'Saving...'
+                        : isLastQuestion
+                          ? 'Complete'
+                          : 'Next'
+                    }
+                    icon={
+                      isLastQuestion
+                        ? Check
+                        : ArrowRight
+                    }
+                    onPress={goToNextQuestion}
+                    disabled={isSaving}
+                    style={styles.halfButton}
+                  />
+                </View>
+              </View>
             </View>
           </View>
-        </View>
+        </ScrollView>
       </View>
-    </ScrollView>
+    </ImageBackground>
   );
 }
 
 const styles = StyleSheet.create({
+  checkInBackground: {
+    flex: 1,
+    width: '100%',
+  },
+
+  checkInOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(247,244,239,0.38)',
+  },
+
+  questionBackgroundOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(247,244,239,0.42)',
+  },
+
+  transparentScreen: {
+    flex: 1,
+    backgroundColor: 'transparent',
+  },
+
   screen: {
     flex: 1,
     backgroundColor: '#F7F4EF',
@@ -901,108 +1179,237 @@ const styles = StyleSheet.create({
     marginTop: Spacing.md,
   },
 
+  completedBackground: {
+    flex: 1,
+    width: '100%',
+  },
+
+  completedOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(247,244,239,0.18)',
+  },
+
   completedContainer: {
     flexGrow: 1,
     justifyContent: 'center',
     padding: Spacing.lg,
-    paddingBottom: Spacing.xxl,
+    paddingVertical: 42,
   },
 
   completedWrapper: {
     width: '100%',
-    maxWidth: 650,
+    maxWidth: 760,
     alignSelf: 'center',
   },
 
-  completedCard: {
+  completedTopLabel: {
+    alignSelf: 'center',
+    flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#FBFAF7',
+    backgroundColor: 'rgba(232,242,238,0.94)',
     borderWidth: 1,
-    borderColor: '#E5E0D8',
-    borderRadius: 24,
-    padding: Spacing.xl,
+    borderColor: '#C6DDD5',
+    borderRadius: 20,
+    paddingHorizontal: 15,
+    paddingVertical: 9,
     marginBottom: Spacing.md,
     ...Shadows.card,
   },
 
+  completedTopLabelText: {
+    fontSize: 10,
+    fontWeight: '700',
+    letterSpacing: 1.1,
+    color: Colors.primaryDark,
+    marginLeft: 7,
+  },
+
+  completedCard: {
+    alignItems: 'center',
+    backgroundColor: 'rgba(238,246,242,0.92)',
+    borderWidth: 1,
+    borderColor: 'rgba(199,220,211,0.95)',
+    borderRadius: 30,
+    padding: 34,
+    marginBottom: Spacing.lg,
+    ...Shadows.card,
+  },
+
   completedIcon: {
-    width: 72,
-    height: 72,
-    borderRadius: 24,
-    backgroundColor: '#EDF6EF',
+    width: 76,
+    height: 76,
+    borderRadius: 25,
+    backgroundColor: '#DCEBDD',
+    borderWidth: 1,
+    borderColor: '#C4DDC8',
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: Spacing.md,
   },
 
   completedTitle: {
-    fontSize: Typography.heading,
+    fontSize: 27,
     fontWeight: '700',
     color: Colors.text,
     textAlign: 'center',
-    marginBottom: Spacing.sm,
+    marginBottom: 7,
   },
 
   completedText: {
-    fontSize: Typography.body,
+    fontSize: 15,
     color: Colors.textSecondary,
     textAlign: 'center',
-    lineHeight: 23,
+    lineHeight: 22,
+    maxWidth: 520,
     marginBottom: Spacing.lg,
   },
 
   savedResultCard: {
     width: '100%',
-    backgroundColor: '#EDF5F2',
+    maxWidth: 520,
+    backgroundColor: 'rgba(226,240,236,0.96)',
     borderWidth: 1,
-    borderColor: '#D2E5DF',
-    borderRadius: 20,
-    padding: Spacing.lg,
+    borderColor: '#BDD9D0',
+    borderRadius: 24,
+    padding: 24,
     alignItems: 'center',
     marginBottom: Spacing.lg,
   },
 
   savedResultLabel: {
-    fontSize: 14,
+    fontSize: 10,
+    fontWeight: '700',
+    letterSpacing: 1,
     color: Colors.primaryDark,
-    marginBottom: Spacing.xs,
+    marginBottom: 7,
   },
 
   savedResultScore: {
-    fontSize: 52,
+    fontSize: 58,
     fontWeight: '700',
     color: Colors.primaryDark,
-    marginBottom: Spacing.xs,
+    lineHeight: 68,
+    marginBottom: 6,
+  },
+
+  savedCategoryBadge: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: 'rgba(255,255,255,0.82)',
+    borderWidth: 1,
+    borderColor: '#C9DED7',
+    borderRadius: 18,
+    paddingHorizontal: 14,
+    paddingVertical: 7,
+    marginBottom: 9,
+  },
+
+  savedCategoryText: {
+    fontSize: 14,
+    fontWeight: '700',
+    textAlign: 'center',
+  },
+
+  savedMoodBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(255,255,255,0.72)',
+    borderWidth: 1,
+    borderColor: '#C9DED7',
+    borderRadius: 18,
+    paddingHorizontal: 12,
+    paddingVertical: 7,
+    marginBottom: 9,
   },
 
   savedContextText: {
     fontSize: 14,
-    color: Colors.text,
-    textTransform: 'capitalize',
-    marginBottom: Spacing.xs,
+    fontWeight: '600',
+    color: Colors.primaryDark,
+    marginLeft: 6,
   },
 
   savedResultDate: {
-    fontSize: 13,
+    fontSize: 12,
     color: Colors.textSecondary,
     textAlign: 'center',
   },
 
+  completedMessageCard: {
+    width: '100%',
+    maxWidth: 520,
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(249,236,213,0.95)',
+    borderWidth: 1,
+    borderColor: '#E4CAA0',
+    borderRadius: 17,
+    padding: Spacing.md,
+  },
+
   completedExplanation: {
-    fontSize: 14,
-    color: Colors.textSecondary,
-    lineHeight: 21,
+    flex: 1,
+    fontSize: 13,
+    color: '#6B6256',
+    lineHeight: 19,
+    marginLeft: Spacing.sm,
+  },
+
+  completedActionsHeader: {
+    alignItems: 'center',
+    backgroundColor: 'rgba(232,242,238,0.93)',
+    borderWidth: 1,
+    borderColor: '#C4DCD3',
+    borderRadius: 20,
+    padding: Spacing.md,
+    marginBottom: Spacing.md,
+    ...Shadows.card,
+  },
+
+  completedActionsTitle: {
+    fontSize: 17,
+    fontWeight: '700',
+    color: Colors.text,
     textAlign: 'center',
+    marginBottom: 3,
+  },
+
+  completedActionsSubtitle: {
+    fontSize: 12,
+    color: Colors.textSecondary,
+    lineHeight: 18,
+    textAlign: 'center',
+    maxWidth: 550,
   },
 
   completedButtons: {
     gap: Spacing.sm,
   },
 
+  completedButtonsWide: {
+    flexDirection: 'row',
+  },
+
+  completedButtonItem: {
+    flex: 1,
+  },
+
   pageIntro: {
     flexDirection: 'row',
     alignItems: 'center',
+    alignSelf: 'flex-start',
+    backgroundColor: 'rgba(232,242,238,0.94)',
+    borderWidth: 1,
+    borderColor: '#C4DDD4',
+    borderRadius: 20,
+    paddingHorizontal: 16,
+    paddingVertical: 13,
     marginBottom: Spacing.lg,
+    ...Shadows.card,
+  },
+
+  pageIntroText: {
+    flexShrink: 1,
   },
 
   introIcon: {
@@ -1011,7 +1418,7 @@ const styles = StyleSheet.create({
     borderRadius: 17,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#E8F0EA',
+    backgroundColor: '#DCEBE5',
     marginRight: Spacing.md,
   },
 
@@ -1028,9 +1435,9 @@ const styles = StyleSheet.create({
   },
 
   contextHero: {
-    backgroundColor: '#FBFAF7',
+    backgroundColor: 'rgba(244,247,243,0.92)',
     borderWidth: 1,
-    borderColor: '#E5E0D8',
+    borderColor: '#CEDDD3',
     borderRadius: 28,
     overflow: 'hidden',
     ...Shadows.card,
@@ -1062,7 +1469,7 @@ const styles = StyleSheet.create({
 
   contextImageOverlay: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(80, 65, 50, 0.06)',
+    backgroundColor: 'rgba(80,65,50,0.06)',
   },
 
   imageCaption: {
@@ -1070,7 +1477,9 @@ const styles = StyleSheet.create({
     left: 22,
     right: 22,
     bottom: 22,
-    backgroundColor: 'rgba(255,255,255,0.92)',
+    backgroundColor: 'rgba(250,240,220,0.93)',
+    borderWidth: 1,
+    borderColor: 'rgba(229,207,171,0.85)',
     borderRadius: 18,
     padding: Spacing.md,
   },
@@ -1098,6 +1507,7 @@ const styles = StyleSheet.create({
 
   contextContent: {
     padding: Spacing.lg,
+    backgroundColor: 'rgba(238,245,241,0.82)',
   },
 
   contextContentWide: {
@@ -1107,9 +1517,9 @@ const styles = StyleSheet.create({
   },
 
   contextSection: {
-    backgroundColor: '#F7FAF7',
+    backgroundColor: 'rgba(230,242,236,0.94)',
     borderWidth: 1,
-    borderColor: '#DDE8DF',
+    borderColor: '#C3DDD0',
     borderRadius: 22,
     padding: Spacing.lg,
     marginBottom: Spacing.md,
@@ -1161,9 +1571,9 @@ const styles = StyleSheet.create({
     minHeight: 125,
     padding: 10,
     borderWidth: 5,
-    borderColor: '#F7FAF7',
+    borderColor: 'rgba(230,242,236,0.75)',
     borderRadius: 20,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: 'rgba(255,255,255,0.68)',
     alignItems: 'center',
     justifyContent: 'center',
     position: 'relative',
@@ -1211,9 +1621,9 @@ const styles = StyleSheet.create({
   },
 
   noteSection: {
-    backgroundColor: '#FFF9EE',
+    backgroundColor: 'rgba(250,239,218,0.95)',
     borderWidth: 1,
-    borderColor: '#ECDDBE',
+    borderColor: '#E4CAA0',
     borderRadius: 22,
     padding: Spacing.lg,
     marginBottom: Spacing.md,
@@ -1231,7 +1641,7 @@ const styles = StyleSheet.create({
     borderRadius: 15,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#F5E9CE',
+    backgroundColor: '#F1DEB7',
     marginRight: Spacing.md,
   },
 
@@ -1254,9 +1664,9 @@ const styles = StyleSheet.create({
 
   noteInput: {
     minHeight: 115,
-    backgroundColor: '#FFFEFC',
+    backgroundColor: 'rgba(255,255,255,0.74)',
     borderWidth: 1.5,
-    borderColor: '#E6D5B5',
+    borderColor: '#E1C89C',
     borderRadius: 16,
     padding: Spacing.md,
     fontSize: 15,
@@ -1277,9 +1687,19 @@ const styles = StyleSheet.create({
 
   questionTopRow: {
     flexDirection: 'row',
-    alignItems: 'flex-end',
+    alignItems: 'center',
     justifyContent: 'space-between',
+    backgroundColor: 'rgba(232,242,238,0.94)',
+    borderWidth: 1,
+    borderColor: '#C4DDD4',
+    borderRadius: 20,
+    padding: 15,
     marginBottom: Spacing.md,
+    ...Shadows.card,
+  },
+
+  questionTitleContainer: {
+    flex: 1,
   },
 
   questionPageLabel: {
@@ -1296,25 +1716,36 @@ const styles = StyleSheet.create({
     color: Colors.text,
   },
 
+  numberBadge: {
+    minWidth: 72,
+    minHeight: 58,
+    borderRadius: 18,
+    backgroundColor: 'rgba(214,232,225,0.95)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginLeft: Spacing.md,
+  },
+
   questionNumber: {
-    fontSize: 30,
+    fontSize: 28,
     fontWeight: '700',
     color: Colors.primaryDark,
   },
 
   questionNumberTotal: {
-    fontSize: 16,
+    fontSize: 15,
     fontWeight: '500',
     color: Colors.textSecondary,
   },
 
   questionProgressCard: {
-    backgroundColor: '#EDF5F2',
+    backgroundColor: 'rgba(226,240,236,0.95)',
     borderWidth: 1,
-    borderColor: '#D8E7E1',
+    borderColor: '#BDD9D0',
     borderRadius: 18,
     padding: Spacing.md,
     marginBottom: Spacing.lg,
+    ...Shadows.card,
   },
 
   progressHeader: {
@@ -1337,7 +1768,7 @@ const styles = StyleSheet.create({
 
   progressBackground: {
     height: 8,
-    backgroundColor: '#D6E6E1',
+    backgroundColor: '#CFE2DC',
     borderRadius: 5,
     overflow: 'hidden',
   },
@@ -1349,9 +1780,9 @@ const styles = StyleSheet.create({
   },
 
   questionLayout: {
-    backgroundColor: '#FBFAF7',
+    backgroundColor: 'rgba(242,246,242,0.93)',
     borderWidth: 1,
-    borderColor: '#E5E0D8',
+    borderColor: '#CBDDD2',
     borderRadius: 28,
     overflow: 'hidden',
     ...Shadows.card,
@@ -1381,7 +1812,7 @@ const styles = StyleSheet.create({
 
   questionImageOverlay: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(40, 50, 45, 0.08)',
+    backgroundColor: 'rgba(40,50,45,0.08)',
   },
 
   questionVisualMessage: {
@@ -1389,7 +1820,9 @@ const styles = StyleSheet.create({
     left: 22,
     right: 22,
     bottom: 22,
-    backgroundColor: 'rgba(255,255,255,0.92)',
+    backgroundColor: 'rgba(232,242,238,0.94)',
+    borderWidth: 1,
+    borderColor: 'rgba(196,221,212,0.90)',
     borderRadius: 18,
     padding: Spacing.md,
   },
@@ -1417,6 +1850,7 @@ const styles = StyleSheet.create({
 
   questionCard: {
     padding: Spacing.lg,
+    backgroundColor: 'rgba(239,245,241,0.90)',
   },
 
   questionCardWide: {
@@ -1437,7 +1871,7 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#E8F0EA',
+    backgroundColor: '#DCEBE5',
     marginRight: Spacing.md,
   },
 
@@ -1473,16 +1907,16 @@ const styles = StyleSheet.create({
     minHeight: 60,
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#FCFAF7',
+    backgroundColor: 'rgba(250,239,222,0.82)',
     borderWidth: 1.5,
-    borderColor: '#E5DED5',
+    borderColor: '#E5CFAB',
     borderRadius: 17,
     paddingHorizontal: Spacing.md,
     marginBottom: Spacing.sm,
   },
 
   selectedOption: {
-    backgroundColor: '#EDF5F2',
+    backgroundColor: 'rgba(220,238,231,0.98)',
     borderColor: Colors.primary,
     borderWidth: 2,
     ...Shadows.card,
@@ -1503,7 +1937,7 @@ const styles = StyleSheet.create({
     borderRadius: 13,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#F1ECE5',
+    backgroundColor: '#F1DEBF',
     marginRight: Spacing.md,
   },
 
@@ -1514,7 +1948,7 @@ const styles = StyleSheet.create({
   optionNumberText: {
     fontSize: 15,
     fontWeight: '600',
-    color: Colors.textSecondary,
+    color: '#7B674A',
   },
 
   selectedOptionNumberText: {
@@ -1537,9 +1971,10 @@ const styles = StyleSheet.create({
     height: 24,
     borderRadius: 8,
     borderWidth: 1.5,
-    borderColor: Colors.border,
+    borderColor: '#D4BE98',
     alignItems: 'center',
     justifyContent: 'center',
+    backgroundColor: 'rgba(255,255,255,0.60)',
   },
 
   selectedOptionCheck: {

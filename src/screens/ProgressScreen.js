@@ -2,6 +2,7 @@ import { useCallback, useState } from 'react';
 
 import {
   ActivityIndicator,
+  ImageBackground,
   ScrollView,
   StyleSheet,
   Text,
@@ -46,6 +47,9 @@ import Shadows from '../theme/shadows';
 import Spacing from '../theme/spacing';
 import Typography from '../theme/typography';
 
+const trendsBackgroundImage =
+  require('../../assets/images/pexels-pixabay-220118.jpg');
+
 export default function ProgressScreen({ navigation }) {
   const [entries, setEntries] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -62,11 +66,6 @@ export default function ProgressScreen({ navigation }) {
 
       const storedEntries = await getStressEntries();
 
-      /*
-        Only reflections created using the shortened
-        five-question model are included in these
-        statistics and trends.
-      */
       const versionTwoEntries = storedEntries.filter(
         (entry) => entry.questionnaireVersion === 2
       );
@@ -271,550 +270,581 @@ export default function ProgressScreen({ navigation }) {
   }
 
   return (
-    <ScrollView
-      style={styles.screen}
-      contentContainerStyle={styles.container}
-      showsVerticalScrollIndicator={false}
+    <ImageBackground
+      source={trendsBackgroundImage}
+      style={styles.backgroundImage}
+      resizeMode="cover"
     >
-      <View style={styles.contentWrapper}>
-        {/* Page header */}
-
-        <View
-          style={[
-            styles.pageHeader,
-            isWide && styles.pageHeaderWide,
-          ]}
+      <View style={styles.backgroundOverlay}>
+        <ScrollView
+          style={styles.screen}
+          contentContainerStyle={styles.container}
+          showsVerticalScrollIndicator={false}
         >
-          <View style={styles.pageHeaderText}>
-            <Text style={styles.pageEyebrow}>
-              YOUR PROGRESS
-            </Text>
+          <View style={styles.contentWrapper}>
 
-            <Text style={styles.pageTitle}>
-              Your Wellbeing Trends
-            </Text>
+            {/* Page header */}
 
-            <Text style={styles.pageDescription}>
-              See how your estimated stress level changes
-              across your daily reflections.
-            </Text>
-          </View>
+            <View
+              style={[
+                styles.pageHeader,
+                isWide && styles.pageHeaderWide,
+              ]}
+            >
+              <View style={styles.pageHeaderText}>
+                <Text style={styles.pageEyebrow}>
+                  YOUR PROGRESS
+                </Text>
 
-          <View style={styles.headerIllustration}>
-            <View style={styles.singleHeaderIcon}>
-              <ChartLine
-                size={38}
-                color={Colors.primaryDark}
-                strokeWidth={1.8}
-              />
-            </View>
-          </View>
-        </View>
+                <Text style={styles.pageTitle}>
+                  Your Wellbeing Trends
+                </Text>
 
-        {/* Error state */}
+                <Text style={styles.pageDescription}>
+                  See how your estimated stress level changes
+                  across your daily reflections.
+                </Text>
+              </View>
 
-        {errorMessage ? (
-          <WarmCard
-            backgroundColor="#FBECE9"
-            borderColor="#E7B8AE"
-          >
-            <Text style={styles.errorTitle}>
-              We could not load your trends
-            </Text>
-
-            <Text style={styles.errorText}>
-              {errorMessage}
-            </Text>
-
-            <AppButton
-              title="Try Again"
-              onPress={loadProgressData}
-            />
-          </WarmCard>
-        ) : null}
-
-        {/* Empty state */}
-
-        {!errorMessage && entries.length === 0 ? (
-          <WarmCard style={styles.emptyCard}>
-            <View style={styles.emptyIcon}>
-              <Activity
-                size={40}
-                color={Colors.primary}
-                strokeWidth={1.8}
-              />
-            </View>
-
-            <Text style={styles.emptyTitle}>
-              Your updated journey starts here
-            </Text>
-
-            <Text style={styles.emptyText}>
-              Complete a new five-question daily
-              reflection to begin building your
-              wellbeing trend.
-            </Text>
-
-            <AppButton
-              title="Start Daily Reflection"
-              onPress={() =>
-                navigation.navigate('CheckIn')
-              }
-            />
-          </WarmCard>
-        ) : null}
-
-        {!errorMessage && entries.length > 0 ? (
-          <>
-            {/* Wellbeing overview */}
-
-            <View style={styles.overviewCard}>
-              <View style={styles.overviewHeader}>
-                <View>
-                  <Text style={styles.overviewEyebrow}>
-                    WELLBEING AT A GLANCE
-                  </Text>
-
-                  <Text style={styles.overviewTitle}>
-                    Your recent summary
-                  </Text>
-                </View>
-
-                <View style={styles.overviewHeaderIcon}>
+              <View style={styles.headerIllustration}>
+                <View style={styles.singleHeaderIcon}>
                   <ChartLine
-                    size={23}
+                    size={38}
                     color={Colors.primaryDark}
-                    strokeWidth={1.9}
+                    strokeWidth={1.8}
                   />
                 </View>
               </View>
+            </View>
 
-              <View
-                style={[
-                  styles.summaryRow,
-                  !isWide && styles.summaryRowMobile,
-                ]}
+            {/* Error */}
+
+            {errorMessage ? (
+              <WarmCard
+                backgroundColor="#FBECE9"
+                borderColor="#E7B8AE"
               >
-                {/* Latest score */}
+                <Text style={styles.errorTitle}>
+                  We could not load your trends
+                </Text>
 
-                <View
-                  style={[
-                    styles.latestSummary,
-                    isWide &&
-                      styles.latestSummaryWide,
-                  ]}
-                >
-                  <Text style={styles.summaryLabel}>
-                    Latest
-                  </Text>
+                <Text style={styles.errorText}>
+                  {errorMessage}
+                </Text>
 
-                  <View style={styles.latestScoreRow}>
-                    <Text
-                      style={[
-                        styles.compactLatestScore,
-                        {
-                          color:
-                            latestCategory.colour,
-                        },
-                      ]}
-                    >
-                      {statistics.latestScore}%
-                    </Text>
+                <AppButton
+                  title="Try Again"
+                  onPress={loadProgressData}
+                />
+              </WarmCard>
+            ) : null}
 
-                    <View
-                      style={[
-                        styles.compactCategoryBadge,
-                        {
-                          backgroundColor:
-                            `${latestCategory.colour}16`,
-                        },
-                      ]}
-                    >
-                      <Text
-                        style={[
-                          styles.compactCategoryText,
-                          {
-                            color:
-                              latestCategory.colour,
-                          },
-                        ]}
-                      >
-                        {latestCategory.label}
+            {/* Empty */}
+
+            {!errorMessage && entries.length === 0 ? (
+              <WarmCard style={styles.emptyCard}>
+                <View style={styles.emptyIcon}>
+                  <Activity
+                    size={40}
+                    color={Colors.primary}
+                    strokeWidth={1.8}
+                  />
+                </View>
+
+                <Text style={styles.emptyTitle}>
+                  Your updated journey starts here
+                </Text>
+
+                <Text style={styles.emptyText}>
+                  Complete a new five-question daily
+                  reflection to begin building your
+                  wellbeing trend.
+                </Text>
+
+                <AppButton
+                  title="Start Daily Reflection"
+                  onPress={() =>
+                    navigation.navigate('CheckIn')
+                  }
+                />
+              </WarmCard>
+            ) : null}
+
+            {!errorMessage && entries.length > 0 ? (
+              <>
+                {/* Summary */}
+
+                <View style={styles.overviewCard}>
+                  <View style={styles.overviewHeader}>
+                    <View>
+                      <Text style={styles.overviewEyebrow}>
+                        WELLBEING AT A GLANCE
+                      </Text>
+
+                      <Text style={styles.overviewTitle}>
+                        Your recent summary
                       </Text>
                     </View>
-                  </View>
-                </View>
 
-                {isWide ? (
-                  <View style={styles.verticalDivider} />
-                ) : null}
-
-                {/* Statistics */}
-
-                <View style={styles.compactStatistics}>
-                  <View style={styles.compactStat}>
-                    <View style={styles.averageIcon}>
-                      <Activity
-                        size={19}
+                    <View style={styles.overviewHeaderIcon}>
+                      <ChartLine
+                        size={23}
                         color={Colors.primaryDark}
+                        strokeWidth={1.9}
                       />
                     </View>
-
-                    <Text style={styles.summaryLabel}>
-                      Average
-                    </Text>
-
-                    <Text style={styles.summaryValue}>
-                      {statistics.averageScore}%
-                    </Text>
                   </View>
 
-                  <View style={styles.compactStat}>
-                    <View style={styles.highIcon}>
-                      <TrendingUp
-                        size={19}
-                        color="#A05E4B"
-                      />
-                    </View>
-
-                    <Text style={styles.summaryLabel}>
-                      Highest
-                    </Text>
-
-                    <Text style={styles.summaryValue}>
-                      {statistics.highestScore}%
-                    </Text>
-                  </View>
-
-                  <View style={styles.compactStat}>
-                    <View style={styles.lowIcon}>
-                      <TrendingDown
-                        size={19}
-                        color="#54785C"
-                      />
-                    </View>
-
-                    <Text style={styles.summaryLabel}>
-                      Lowest
-                    </Text>
-
-                    <Text style={styles.summaryValue}>
-                      {statistics.lowestScore}%
-                    </Text>
-                  </View>
-
-                  <View style={styles.compactStat}>
-                    <View style={styles.totalIcon}>
-                      <CalendarCheck
-                        size={19}
-                        color="#8B6D35"
-                      />
-                    </View>
-
-                    <Text style={styles.summaryLabel}>
-                      Reflections
-                    </Text>
-
-                    <Text style={styles.summaryValue}>
-                      {statistics.totalEntries}
-                    </Text>
-                  </View>
-                </View>
-              </View>
-
-              {/* Current trend */}
-
-              <View
-                style={[
-                  styles.compactTrend,
-                  {
-                    backgroundColor:
-                      trend.background,
-                    borderColor:
-                      trend.border,
-                  },
-                ]}
-              >
-                <View
-                  style={[
-                    styles.compactTrendIcon,
-                    {
-                      backgroundColor:
-                        `${trend.colour}18`,
-                    },
-                  ]}
-                >
-                  <TrendIcon
-                    size={23}
-                    color={trend.colour}
-                    strokeWidth={2}
-                  />
-                </View>
-
-                <View style={styles.compactTrendText}>
-                  <View style={styles.trendTitleRow}>
-                    <Text
-                      style={[
-                        styles.compactTrendTitle,
-                        {
-                          color: trend.colour,
-                        },
-                      ]}
-                    >
-                      {trend.title}
-                    </Text>
-
+                  <View
+                    style={[
+                      styles.summaryRow,
+                      !isWide && styles.summaryRowMobile,
+                    ]}
+                  >
                     <View
                       style={[
-                        styles.trendBadge,
+                        styles.latestSummary,
+                        isWide &&
+                          styles.latestSummaryWide,
+                      ]}
+                    >
+                      <Text style={styles.summaryLabel}>
+                        Latest
+                      </Text>
+
+                      <View style={styles.latestScoreRow}>
+                        <Text
+                          style={[
+                            styles.compactLatestScore,
+                            {
+                              color:
+                                latestCategory.colour,
+                            },
+                          ]}
+                        >
+                          {statistics.latestScore}%
+                        </Text>
+
+                        <View
+                          style={[
+                            styles.compactCategoryBadge,
+                            {
+                              backgroundColor:
+                                `${latestCategory.colour}16`,
+                            },
+                          ]}
+                        >
+                          <Text
+                            style={[
+                              styles.compactCategoryText,
+                              {
+                                color:
+                                  latestCategory.colour,
+                              },
+                            ]}
+                          >
+                            {latestCategory.label}
+                          </Text>
+                        </View>
+                      </View>
+                    </View>
+
+                    {isWide ? (
+                      <View style={styles.verticalDivider} />
+                    ) : null}
+
+                    <View style={styles.compactStatistics}>
+                      <View
+                        style={[
+                          styles.compactStat,
+                          styles.statAverage,
+                        ]}
+                      >
+                        <View style={styles.averageIcon}>
+                          <Activity
+                            size={19}
+                            color={Colors.primaryDark}
+                          />
+                        </View>
+
+                        <Text style={styles.summaryLabel}>
+                          Average
+                        </Text>
+
+                        <Text style={styles.summaryValue}>
+                          {statistics.averageScore}%
+                        </Text>
+                      </View>
+
+                      <View
+                        style={[
+                          styles.compactStat,
+                          styles.statHighest,
+                        ]}
+                      >
+                        <View style={styles.highIcon}>
+                          <TrendingUp
+                            size={19}
+                            color="#A05E4B"
+                          />
+                        </View>
+
+                        <Text style={styles.summaryLabel}>
+                          Highest
+                        </Text>
+
+                        <Text style={styles.summaryValue}>
+                          {statistics.highestScore}%
+                        </Text>
+                      </View>
+
+                      <View
+                        style={[
+                          styles.compactStat,
+                          styles.statLowest,
+                        ]}
+                      >
+                        <View style={styles.lowIcon}>
+                          <TrendingDown
+                            size={19}
+                            color="#54785C"
+                          />
+                        </View>
+
+                        <Text style={styles.summaryLabel}>
+                          Lowest
+                        </Text>
+
+                        <Text style={styles.summaryValue}>
+                          {statistics.lowestScore}%
+                        </Text>
+                      </View>
+
+                      <View
+                        style={[
+                          styles.compactStat,
+                          styles.statReflections,
+                        ]}
+                      >
+                        <View style={styles.totalIcon}>
+                          <CalendarCheck
+                            size={19}
+                            color="#8B6D35"
+                          />
+                        </View>
+
+                        <Text style={styles.summaryLabel}>
+                          Reflections
+                        </Text>
+
+                        <Text style={styles.summaryValue}>
+                          {statistics.totalEntries}
+                        </Text>
+                      </View>
+                    </View>
+                  </View>
+
+                  <View
+                    style={[
+                      styles.compactTrend,
+                      {
+                        backgroundColor:
+                          trend.background,
+                        borderColor:
+                          trend.border,
+                      },
+                    ]}
+                  >
+                    <View
+                      style={[
+                        styles.compactTrendIcon,
                         {
                           backgroundColor:
                             `${trend.colour}18`,
                         },
                       ]}
                     >
-                      <Text
-                        style={[
-                          styles.trendBadgeText,
-                          {
-                            color: trend.colour,
-                          },
-                        ]}
-                      >
-                        {trend.label}
+                      <TrendIcon
+                        size={23}
+                        color={trend.colour}
+                        strokeWidth={2}
+                      />
+                    </View>
+
+                    <View style={styles.compactTrendText}>
+                      <View style={styles.trendTitleRow}>
+                        <Text
+                          style={[
+                            styles.compactTrendTitle,
+                            {
+                              color: trend.colour,
+                            },
+                          ]}
+                        >
+                          {trend.title}
+                        </Text>
+
+                        <View
+                          style={[
+                            styles.trendBadge,
+                            {
+                              backgroundColor:
+                                `${trend.colour}18`,
+                            },
+                          ]}
+                        >
+                          <Text
+                            style={[
+                              styles.trendBadgeText,
+                              {
+                                color: trend.colour,
+                              },
+                            ]}
+                          >
+                            {trend.label}
+                          </Text>
+                        </View>
+                      </View>
+
+                      <Text style={styles.compactTrendMessage}>
+                        {trend.message}
                       </Text>
                     </View>
                   </View>
-
-                  <Text style={styles.compactTrendMessage}>
-                    {trend.message}
-                  </Text>
-                </View>
-              </View>
-            </View>
-
-            {/* Recent journey graph */}
-
-            <View style={styles.journeyCard}>
-              <View
-                style={[
-                  styles.journeyHeader,
-                  isWide && styles.journeyHeaderWide,
-                ]}
-              >
-                <View style={styles.journeyHeadingText}>
-                  <Text style={styles.journeyTitle}>
-                    Recent wellbeing journey
-                  </Text>
-
-                  <Text style={styles.journeySubtitle}>
-                    Your most recent seven reflections
-                  </Text>
                 </View>
 
-                <View style={styles.journeyIcon}>
-                  <ChartLine
-                    size={26}
+                {/* Graph */}
+
+                <View style={styles.journeyCard}>
+                  <View
+                    style={[
+                      styles.journeyHeader,
+                      isWide && styles.journeyHeaderWide,
+                    ]}
+                  >
+                    <View style={styles.journeyHeadingText}>
+                      <Text style={styles.journeyTitle}>
+                        Recent wellbeing journey
+                      </Text>
+
+                      <Text style={styles.journeySubtitle}>
+                        Your most recent seven reflections
+                      </Text>
+                    </View>
+
+                    <View style={styles.journeyIcon}>
+                      <ChartLine
+                        size={26}
+                        color={Colors.primaryDark}
+                        strokeWidth={1.9}
+                      />
+                    </View>
+                  </View>
+
+                  <View style={styles.chartContainer}>
+                    <Svg
+                      width={chartWidth}
+                      height={chartHeight}
+                    >
+                      {[0, 25, 50, 75, 100].map(
+                        (value) => {
+                          const y = getPointY(value);
+
+                          return (
+                            <G key={value}>
+                              <Line
+                                x1={leftPadding}
+                                y1={y}
+                                x2={
+                                  chartWidth -
+                                  rightPadding
+                                }
+                                y2={y}
+                                stroke="#D8D9DF"
+                                strokeWidth="1"
+                              />
+
+                              <SvgText
+                                x={leftPadding - 9}
+                                y={y + 4}
+                                fontSize="11"
+                                fill={
+                                  Colors.textSecondary
+                                }
+                                textAnchor="end"
+                              >
+                                {value}
+                              </SvgText>
+                            </G>
+                          );
+                        }
+                      )}
+
+                      {recentEntries.length > 1 ? (
+                        <Polyline
+                          points={graphPoints}
+                          fill="none"
+                          stroke={Colors.primary}
+                          strokeWidth="4"
+                          strokeLinejoin="round"
+                          strokeLinecap="round"
+                        />
+                      ) : null}
+
+                      {recentEntries.map(
+                        (entry, index) => {
+                          const x = getPointX(index);
+
+                          const y = getPointY(
+                            entry.score
+                          );
+
+                          const category =
+                            getStressCategory(
+                              entry.score
+                            );
+
+                          return (
+                            <G key={entry.id}>
+                              <Circle
+                                cx={x}
+                                cy={y}
+                                r="8"
+                                fill={category.colour}
+                                stroke="#FFFFFF"
+                                strokeWidth="3"
+                              />
+
+                              <SvgText
+                                x={x}
+                                y={y - 14}
+                                fontSize="11"
+                                fontWeight="bold"
+                                fill={category.colour}
+                                textAnchor="middle"
+                              >
+                                {entry.score}%
+                              </SvgText>
+
+                              <SvgText
+                                x={x}
+                                y={chartHeight - 18}
+                                fontSize="10"
+                                fill={
+                                  Colors.textSecondary
+                                }
+                                textAnchor="middle"
+                              >
+                                {formatShortDate(
+                                  entry.date
+                                )}
+                              </SvgText>
+                            </G>
+                          );
+                        }
+                      )}
+                    </Svg>
+                  </View>
+
+                  <View style={styles.encouragementRow}>
+                    <View style={styles.encouragementIcon}>
+                      <CheckCircle2
+                        size={23}
+                        color="#54785C"
+                        strokeWidth={1.9}
+                      />
+                    </View>
+
+                    <View style={styles.encouragementText}>
+                      <Text style={styles.encouragementTitle}>
+                        {encouragement.title}
+                      </Text>
+
+                      <Text style={styles.encouragementMessage}>
+                        {encouragement.message}
+                      </Text>
+                    </View>
+                  </View>
+                </View>
+
+                {/* Disclaimer */}
+
+                <View style={styles.reminderCard}>
+                  <Leaf
+                    size={21}
                     color={Colors.primaryDark}
                     strokeWidth={1.9}
                   />
-                </View>
-              </View>
 
-              <View style={styles.chartContainer}>
-                <Svg
-                  width={chartWidth}
-                  height={chartHeight}
+                  <Text style={styles.reminderText}>
+                    These trends support personal reflection
+                    and are not a clinical assessment or
+                    diagnosis.
+                  </Text>
+                </View>
+
+                {/* Buttons */}
+
+                <View
+                  style={[
+                    styles.buttonRow,
+                    !isWide && styles.buttonRowMobile,
+                  ]}
                 >
-                  {[0, 25, 50, 75, 100].map(
-                    (value) => {
-                      const y = getPointY(value);
-
-                      return (
-                        <G key={value}>
-                          <Line
-                            x1={leftPadding}
-                            y1={y}
-                            x2={
-                              chartWidth -
-                              rightPadding
-                            }
-                            y2={y}
-                            stroke="#E8E0D8"
-                            strokeWidth="1"
-                          />
-
-                          <SvgText
-                            x={leftPadding - 9}
-                            y={y + 4}
-                            fontSize="11"
-                            fill={
-                              Colors.textSecondary
-                            }
-                            textAnchor="end"
-                          >
-                            {value}
-                          </SvgText>
-                        </G>
-                      );
-                    }
-                  )}
-
-                  {recentEntries.length > 1 ? (
-                    <Polyline
-                      points={graphPoints}
-                      fill="none"
-                      stroke={Colors.primary}
-                      strokeWidth="4"
-                      strokeLinejoin="round"
-                      strokeLinecap="round"
+                  <View style={styles.buttonWrapper}>
+                    <AppButton
+                      title="View Your Journey"
+                      onPress={() =>
+                        navigation.navigate('History')
+                      }
                     />
-                  ) : null}
+                  </View>
 
-                  {recentEntries.map(
-                    (entry, index) => {
-                      const x = getPointX(index);
-
-                      const y = getPointY(
-                        entry.score
-                      );
-
-                      const category =
-                        getStressCategory(
-                          entry.score
-                        );
-
-                      return (
-                        <G key={entry.id}>
-                          <Circle
-                            cx={x}
-                            cy={y}
-                            r="8"
-                            fill={category.colour}
-                            stroke={Colors.surface}
-                            strokeWidth="3"
-                          />
-
-                          <SvgText
-                            x={x}
-                            y={y - 14}
-                            fontSize="11"
-                            fontWeight="bold"
-                            fill={category.colour}
-                            textAnchor="middle"
-                          >
-                            {entry.score}%
-                          </SvgText>
-
-                          <SvgText
-                            x={x}
-                            y={chartHeight - 18}
-                            fontSize="10"
-                            fill={
-                              Colors.textSecondary
-                            }
-                            textAnchor="middle"
-                          >
-                            {formatShortDate(
-                              entry.date
-                            )}
-                          </SvgText>
-                        </G>
-                      );
-                    }
-                  )}
-                </Svg>
-              </View>
-
-              {/* Encouragement */}
-
-              <View style={styles.encouragementRow}>
-                <View style={styles.encouragementIcon}>
-                  <CheckCircle2
-                    size={23}
-                    color="#54785C"
-                    strokeWidth={1.9}
-                  />
+                  <View style={styles.buttonWrapper}>
+                    <AppButton
+                      title="Return to Dashboard"
+                      icon={Home}
+                      variant="secondary"
+                      onPress={() =>
+                        navigation.navigate('Home')
+                      }
+                    />
+                  </View>
                 </View>
+              </>
+            ) : null}
 
-                <View style={styles.encouragementText}>
-                  <Text style={styles.encouragementTitle}>
-                    {encouragement.title}
-                  </Text>
-
-                  <Text style={styles.encouragementMessage}>
-                    {encouragement.message}
-                  </Text>
-                </View>
-              </View>
-            </View>
-
-            {/* Disclaimer */}
-
-            <View style={styles.reminderCard}>
-              <Leaf
-                size={21}
-                color={Colors.primaryDark}
-                strokeWidth={1.9}
+            {!errorMessage && entries.length === 0 ? (
+              <AppButton
+                title="Return to Dashboard"
+                icon={Home}
+                variant="secondary"
+                onPress={() =>
+                  navigation.navigate('Home')
+                }
               />
-
-              <Text style={styles.reminderText}>
-                These trends support personal reflection
-                and are not a clinical assessment or
-                diagnosis.
-              </Text>
-            </View>
-
-            {/* Navigation buttons */}
-
-            <View
-              style={[
-                styles.buttonRow,
-                !isWide && styles.buttonRowMobile,
-              ]}
-            >
-              <View style={styles.buttonWrapper}>
-                <AppButton
-                  title="View Your Journey"
-                  onPress={() =>
-                    navigation.navigate('History')
-                  }
-                />
-              </View>
-
-              <View style={styles.buttonWrapper}>
-                <AppButton
-                  title="Return to Dashboard"
-                  icon={Home}
-                  variant="secondary"
-                  onPress={() =>
-                    navigation.navigate('Home')
-                  }
-                />
-              </View>
-            </View>
-          </>
-        ) : null}
-
-        {!errorMessage && entries.length === 0 ? (
-          <AppButton
-            title="Return to Dashboard"
-            icon={Home}
-            variant="secondary"
-            onPress={() =>
-              navigation.navigate('Home')
-            }
-          />
-        ) : null}
+            ) : null}
+          </View>
+        </ScrollView>
       </View>
-    </ScrollView>
+    </ImageBackground>
   );
 }
 
 const styles = StyleSheet.create({
+  backgroundImage: {
+    flex: 1,
+    width: '100%',
+  },
+
+  backgroundOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(244,241,247,0.25)',
+  },
+
   screen: {
     flex: 1,
-    backgroundColor: Colors.background,
+    backgroundColor: 'transparent',
   },
 
   container: {
@@ -843,7 +873,7 @@ const styles = StyleSheet.create({
     borderRadius: 35,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#E5F0EC',
+    backgroundColor: '#E6F0ED',
     marginBottom: Spacing.lg,
     borderWidth: 1,
     borderColor: '#D2E5DF',
@@ -856,12 +886,13 @@ const styles = StyleSheet.create({
   },
 
   pageHeader: {
-    backgroundColor: '#EDF5F2',
+    backgroundColor: 'rgba(232,241,244,0.92)',
     borderWidth: 1,
-    borderColor: '#D2E5DF',
+    borderColor: '#C8DCE2',
     borderRadius: 24,
     padding: Spacing.lg,
     marginBottom: Spacing.lg,
+    ...Shadows.card,
   },
 
   pageHeaderWide: {
@@ -909,9 +940,9 @@ const styles = StyleSheet.create({
     borderRadius: 35,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#E5F0EC',
+    backgroundColor: 'rgba(255,255,255,0.74)',
     borderWidth: 1,
-    borderColor: '#D2E5DF',
+    borderColor: '#C8DCE2',
   },
 
   errorTitle: {
@@ -959,9 +990,9 @@ const styles = StyleSheet.create({
   },
 
   overviewCard: {
-    backgroundColor: Colors.surface,
+    backgroundColor: 'rgba(239,245,242,0.93)',
     borderWidth: 1,
-    borderColor: Colors.border,
+    borderColor: '#CADFD8',
     borderRadius: 24,
     padding: Spacing.lg,
     marginBottom: Spacing.lg,
@@ -995,7 +1026,7 @@ const styles = StyleSheet.create({
     borderRadius: 22,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#EDF5F2',
+    backgroundColor: '#DAEBE5',
   },
 
   summaryRow: {
@@ -1044,7 +1075,7 @@ const styles = StyleSheet.create({
 
   verticalDivider: {
     width: 1,
-    backgroundColor: Colors.border,
+    backgroundColor: '#CADFD8',
     marginHorizontal: Spacing.md,
   },
 
@@ -1053,6 +1084,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     flexWrap: 'wrap',
     justifyContent: 'space-between',
+    gap: 6,
   },
 
   compactStat: {
@@ -1061,7 +1093,24 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     paddingVertical: Spacing.sm,
-    paddingHorizontal: 5,
+    paddingHorizontal: 6,
+    borderRadius: 16,
+  },
+
+  statAverage: {
+    backgroundColor: 'rgba(224,239,237,0.82)',
+  },
+
+  statHighest: {
+    backgroundColor: 'rgba(250,231,225,0.82)',
+  },
+
+  statLowest: {
+    backgroundColor: 'rgba(229,241,231,0.82)',
+  },
+
+  statReflections: {
+    backgroundColor: 'rgba(248,239,220,0.82)',
   },
 
   averageIcon: {
@@ -1070,7 +1119,7 @@ const styles = StyleSheet.create({
     borderRadius: 19,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#E9F2EC',
+    backgroundColor: '#DCEDE8',
     marginBottom: 6,
   },
 
@@ -1080,7 +1129,7 @@ const styles = StyleSheet.create({
     borderRadius: 19,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#FCEFEA',
+    backgroundColor: '#F6DDD5',
     marginBottom: 6,
   },
 
@@ -1090,7 +1139,7 @@ const styles = StyleSheet.create({
     borderRadius: 19,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#EDF6EF',
+    backgroundColor: '#DCEBDC',
     marginBottom: 6,
   },
 
@@ -1100,7 +1149,7 @@ const styles = StyleSheet.create({
     borderRadius: 19,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#FBF5E8',
+    backgroundColor: '#F2E4C5',
     marginBottom: 6,
   },
 
@@ -1169,9 +1218,9 @@ const styles = StyleSheet.create({
   },
 
   journeyCard: {
-    backgroundColor: Colors.surface,
+    backgroundColor: 'rgba(239,237,247,0.93)',
     borderWidth: 1,
-    borderColor: Colors.border,
+    borderColor: '#D7D0E5',
     borderRadius: 24,
     padding: Spacing.lg,
     marginBottom: Spacing.lg,
@@ -1210,20 +1259,25 @@ const styles = StyleSheet.create({
     borderRadius: 23,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#EDF5F2',
+    backgroundColor: '#E7E0F0',
   },
 
   chartContainer: {
     alignItems: 'center',
     overflow: 'hidden',
+    backgroundColor: 'rgba(255,255,255,0.72)',
+    borderRadius: 18,
+    paddingVertical: 4,
+    borderWidth: 1,
+    borderColor: 'rgba(215,208,229,0.75)',
   },
 
   encouragementRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#F4FAF5',
+    backgroundColor: 'rgba(230,242,232,0.92)',
     borderWidth: 1,
-    borderColor: '#C9DFC9',
+    borderColor: '#BED8C2',
     borderRadius: 16,
     padding: Spacing.md,
     marginTop: Spacing.sm,
@@ -1235,7 +1289,7 @@ const styles = StyleSheet.create({
     borderRadius: 21,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#E4F0E6',
+    backgroundColor: '#DCEBDD',
     marginRight: Spacing.md,
   },
 
@@ -1259,12 +1313,13 @@ const styles = StyleSheet.create({
   reminderCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#EDF5F2',
+    backgroundColor: 'rgba(228,240,237,0.94)',
     borderWidth: 1,
-    borderColor: '#D2E5DF',
+    borderColor: '#BED8D1',
     borderRadius: 16,
     padding: Spacing.md,
     marginBottom: Spacing.lg,
+    ...Shadows.card,
   },
 
   reminderText: {

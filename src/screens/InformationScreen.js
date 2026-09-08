@@ -68,9 +68,8 @@ export default function InformationScreen({ navigation }) {
         </Text>
 
         <Text style={styles.secondaryText}>
-          The application records answers relating to stress,
-          anxiety, panic-related symptoms, sleep, workload, energy
-          and lifestyle.
+          The application records answers relating to anxiety,
+          panic-related symptoms, sleep, workload and energy.
         </Text>
       </WarmCard>
 
@@ -133,14 +132,14 @@ export default function InformationScreen({ navigation }) {
         </View>
 
         <Text style={styles.cardText}>
-          Stress, anxiety, panic-related symptoms and workload
-          increase the estimated stress level.
+          Anxiety, panic-related symptoms and workload increase the
+          estimated stress level.
         </Text>
 
         <Text style={styles.secondaryText}>
-          Positive responses relating to sleep, energy and lifestyle
-          reduce the estimate. Mood and daily notes provide additional
-          context but do not change the calculated percentage.
+          Positive responses relating to sleep and energy reduce the
+          estimate. Mood and daily notes provide additional context
+          but do not change the calculated percentage.
         </Text>
 
         <View style={styles.noticeBox}>
@@ -170,20 +169,20 @@ export default function InformationScreen({ navigation }) {
             </Text>
 
             <Text style={styles.cardSubtitle}>
-              Your current reflections remain local
+              Reflections are connected to your account
             </Text>
           </View>
         </View>
 
         <Text style={styles.cardText}>
-          On mobile devices, saved reflections are currently stored
-          locally using SQLite.
+          Access to saved reflections requires a signed-in user
+          account using Firebase Authentication.
         </Text>
 
         <Text style={styles.secondaryText}>
-          In the web version, reflections are stored using browser
-          local storage. They are not currently uploaded to a cloud
-          database or automatically shared between devices.
+          Reflections are stored in Cloud Firestore and are associated
+          with the authenticated user's account. This allows saved
+          reflections to be retrieved when the user signs in.
         </Text>
       </WarmCard>
 
@@ -209,10 +208,8 @@ export default function InformationScreen({ navigation }) {
         </View>
 
         <Text style={styles.cardText}>
-          Saved reflections remain on the device or browser until
-          they are removed by the user, the application is
-          uninstalled, device data is cleared or browser storage is
-          deleted.
+          Saved reflections remain in Cloud Firestore until they are
+          removed by the user through the application.
         </Text>
 
         <Text style={styles.secondaryText}>
