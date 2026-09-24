@@ -21,6 +21,7 @@ import {
   ClipboardList,
   Frown,
   Heart,
+  HeartHandshake,
   History,
   Info,
   LockKeyhole,
@@ -239,6 +240,28 @@ export default function HomeScreen({ navigation }) {
     );
   }
 
+  function openLatestResult() {
+    if (!latestEntry) {
+      return;
+    }
+
+    navigation.navigate('Result', {
+      score: latestEntry.score,
+
+      answers: {
+        anxiety: latestEntry.anxiety,
+        panic: latestEntry.panic,
+        sleep: latestEntry.sleep,
+        workload: latestEntry.workload,
+        energy: latestEntry.energy,
+      },
+
+      mood: latestEntry.mood,
+
+      note: latestEntry.note || '',
+    });
+  }
+
   function getTrendInformation() {
     if (!latestEntry || !previousEntry) {
       return {
@@ -320,82 +343,118 @@ export default function HomeScreen({ navigation }) {
           showsVerticalScrollIndicator={false}
         >
           <View style={styles.contentWrapper}>
-
-            {/* Welcome */}
-
             <View style={styles.welcomePanel}>
               <View style={styles.welcomeRow}>
-                <View style={styles.welcomeTextContainer}>
+                <View
+                  style={
+                    styles.welcomeTextContainer
+                  }
+                >
                   <Text style={styles.greeting}>
                     {getGreeting()}
                   </Text>
 
-                  <Text style={styles.welcomeMessage}>
-                    Take a moment for yourself today.
+                  <Text
+                    style={
+                      styles.welcomeMessage
+                    }
+                  >
+                    Take a moment for yourself
+                    today.
                   </Text>
                 </View>
               </View>
             </View>
 
-            {/* Hero */}
-
             <View
               style={[
                 styles.heroCard,
-                isWide && styles.heroCardWide,
+                isWide &&
+                  styles.heroCardWide,
               ]}
             >
               <View
                 style={[
                   styles.heroText,
-                  isWide && styles.heroTextWide,
+                  isWide &&
+                    styles.heroTextWide,
                 ]}
               >
                 <View style={styles.heroBadge}>
                   <Heart
                     size={15}
-                    color={Colors.primaryDark}
+                    color={
+                      Colors.primaryDark
+                    }
                     strokeWidth={1.8}
                   />
 
-                  <Text style={styles.heroLabel}>
+                  <Text
+                    style={styles.heroLabel}
+                  >
                     DAILY WELLBEING
                   </Text>
                 </View>
 
-                <Text style={styles.heroTitle}>
+                <Text
+                  style={styles.heroTitle}
+                >
                   Pause. Reflect. Understand.
                 </Text>
 
-                <Text style={styles.heroDescription}>
-                  A private space to check in with yourself,
-                  understand your daily stress and notice
-                  changes in your wellbeing over time.
+                <Text
+                  style={
+                    styles.heroDescription
+                  }
+                >
+                  A private space to check in
+                  with yourself, understand
+                  your daily stress and notice
+                  changes in your wellbeing
+                  over time.
                 </Text>
 
-                <View style={styles.calmPrompt}>
-                  <Text style={styles.calmPromptTitle}>
+                <View
+                  style={styles.calmPrompt}
+                >
+                  <Text
+                    style={
+                      styles.calmPromptTitle
+                    }
+                  >
                     A moment for you
                   </Text>
 
-                  <Text style={styles.calmPromptText}>
-                    Slow down for a moment and notice how
-                    you are feeling today.
+                  <Text
+                    style={
+                      styles.calmPromptText
+                    }
+                  >
+                    Slow down for a moment and
+                    notice how you are feeling
+                    today.
                   </Text>
                 </View>
 
                 <Pressable
                   style={({ pressed }) => [
                     styles.heroButton,
-                    pressed && styles.pressedButton,
+                    pressed &&
+                      styles.pressedButton,
                   ]}
                   onPress={() =>
-                    navigation.navigate('CheckIn')
+                    navigation.navigate(
+                      'CheckIn'
+                    )
                   }
                   accessibilityRole="button"
                   accessibilityLabel="Start today's reflection"
                 >
-                  <Text style={styles.heroButtonText}>
+                  <Text
+                    style={
+                      styles.heroButtonText
+                    }
+                  >
                     Start Today’s Reflection
                   </Text>
 
@@ -410,7 +469,8 @@ export default function HomeScreen({ navigation }) {
               <View
                 style={[
                   styles.heroImageContainer,
-                  isWide && styles.heroImageContainerWide,
+                  isWide &&
+                    styles.heroImageContainerWide,
                 ]}
               >
                 <Image
@@ -419,42 +479,76 @@ export default function HomeScreen({ navigation }) {
                   resizeMode="cover"
                 />
 
-                <View style={styles.heroImageOverlay} />
+                <View
+                  style={
+                    styles.heroImageOverlay
+                  }
+                />
 
-                <View style={styles.imageMessage}>
-                  <Text style={styles.imageMessageSmall}>
+                <View
+                  style={styles.imageMessage}
+                >
+                  <Text
+                    style={
+                      styles.imageMessageSmall
+                    }
+                  >
                     TODAY’S REMINDER
                   </Text>
 
-                  <Text style={styles.imageMessageMain}>
-                    Give yourself permission to pause.
+                  <Text
+                    style={
+                      styles.imageMessageMain
+                    }
+                  >
+                    Give yourself permission
+                    to pause.
                   </Text>
                 </View>
               </View>
             </View>
 
-            {/* Today's wellbeing */}
-
-            <View style={styles.sectionLabelPanel}>
-              <Text style={styles.sectionHeading}>
+            <View
+              style={
+                styles.sectionLabelPanel
+              }
+            >
+              <Text
+                style={styles.sectionHeading}
+              >
                 Today’s wellbeing
               </Text>
 
-              <Text style={styles.sectionSubtitle}>
+              <Text
+                style={
+                  styles.sectionSubtitle
+                }
+              >
                 Your latest personal check-in.
               </Text>
             </View>
 
-            <View style={styles.wellbeingCard}>
+            <View
+              style={styles.wellbeingCard}
+            >
               {isLoading ? (
-                <View style={styles.loadingContainer}>
+                <View
+                  style={
+                    styles.loadingContainer
+                  }
+                >
                   <ActivityIndicator
                     size="large"
                     color={Colors.primary}
                   />
 
-                  <Text style={styles.loadingText}>
-                    Preparing your latest summary...
+                  <Text
+                    style={
+                      styles.loadingText
+                    }
+                  >
+                    Preparing your latest
+                    summary...
                   </Text>
                 </View>
               ) : latestEntry ? (
@@ -462,14 +556,31 @@ export default function HomeScreen({ navigation }) {
                   <View
                     style={[
                       styles.resultRow,
-                      !isWide && styles.resultRowMobile,
+                      !isWide &&
+                        styles.resultRowMobile,
                     ]}
                   >
-                    <View style={styles.scoreSection}>
-                      <View style={styles.scoreLabelRow}>
-                        <View style={styles.scoreDot} />
+                    <View
+                      style={
+                        styles.scoreSection
+                      }
+                    >
+                      <View
+                        style={
+                          styles.scoreLabelRow
+                        }
+                      >
+                        <View
+                          style={
+                            styles.scoreDot
+                          }
+                        />
 
-                        <Text style={styles.smallLabel}>
+                        <Text
+                          style={
+                            styles.smallLabel
+                          }
+                        >
                           Latest stress estimate
                         </Text>
                       </View>
@@ -478,7 +589,8 @@ export default function HomeScreen({ navigation }) {
                         style={[
                           styles.score,
                           {
-                            color: category.colour,
+                            color:
+                              category.colour,
                           },
                         ]}
                       >
@@ -498,7 +610,8 @@ export default function HomeScreen({ navigation }) {
                           style={[
                             styles.categoryText,
                             {
-                              color: category.colour,
+                              color:
+                                category.colour,
                             },
                           ]}
                         >
@@ -506,19 +619,36 @@ export default function HomeScreen({ navigation }) {
                         </Text>
                       </View>
 
-                      <Text style={styles.scoreHelpText}>
-                        This estimate is based on your latest
-                        daily reflection.
+                      <Text
+                        style={
+                          styles.scoreHelpText
+                        }
+                      >
+                        This estimate is based
+                        on your latest daily
+                        reflection.
                       </Text>
                     </View>
 
                     {isWide ? (
-                      <View style={styles.resultDivider} />
+                      <View
+                        style={
+                          styles.resultDivider
+                        }
+                      />
                     ) : (
-                      <View style={styles.resultDividerMobile} />
+                      <View
+                        style={
+                          styles.resultDividerMobile
+                        }
+                      />
                     )}
 
-                    <View style={styles.moodSection}>
+                    <View
+                      style={
+                        styles.moodSection
+                      }
+                    >
                       {mood && MoodIcon ? (
                         <>
                           <View
@@ -532,12 +662,18 @@ export default function HomeScreen({ navigation }) {
                           >
                             <MoodIcon
                               size={38}
-                              color={mood.colour}
+                              color={
+                                mood.colour
+                              }
                               strokeWidth={1.8}
                             />
                           </View>
 
-                          <Text style={styles.smallLabel}>
+                          <Text
+                            style={
+                              styles.smallLabel
+                            }
+                          >
                             Today’s mood
                           </Text>
 
@@ -545,42 +681,96 @@ export default function HomeScreen({ navigation }) {
                             style={[
                               styles.dashboardMoodText,
                               {
-                                color: mood.colour,
+                                color:
+                                  mood.colour,
                               },
                             ]}
                           >
                             {mood.label}
                           </Text>
 
-                          <Text style={styles.moodHelpText}>
-                            Your mood adds personal context
-                            to today’s reflection.
+                          <Text
+                            style={
+                              styles.moodHelpText
+                            }
+                          >
+                            Your mood adds
+                            personal context to
+                            today’s reflection.
                           </Text>
                         </>
                       ) : (
-                        <Text style={styles.emptyMoodText}>
-                          Mood information will appear here.
+                        <Text
+                          style={
+                            styles.emptyMoodText
+                          }
+                        >
+                          Mood information will
+                          appear here.
                         </Text>
                       )}
                     </View>
                   </View>
 
-                  <View style={styles.latestDateRow}>
+                  <View
+                    style={
+                      styles.latestDateRow
+                    }
+                  >
                     <NotebookText
                       size={18}
                       color="#8B6D35"
                       strokeWidth={1.8}
                     />
 
-                    <Text style={styles.latestDateText}>
+                    <Text
+                      style={
+                        styles.latestDateText
+                      }
+                    >
                       Last check-in:{' '}
-                      {formatDate(latestEntry.date)}
+                      {formatDate(
+                        latestEntry.date
+                      )}
                     </Text>
                   </View>
 
+                  <Pressable
+                    style={({ pressed }) => [
+                      styles.viewResultButton,
+                      pressed &&
+                        styles.pressedButton,
+                    ]}
+                    onPress={openLatestResult}
+                    accessibilityRole="button"
+                    accessibilityLabel="View today's full result"
+                  >
+                    <Text
+                      style={
+                        styles.viewResultButtonText
+                      }
+                    >
+                      View Today’s Full Result
+                    </Text>
+
+                    <ArrowRight
+                      size={18}
+                      color={Colors.white}
+                      strokeWidth={2}
+                    />
+                  </Pressable>
+
                   {latestEntry.note ? (
-                    <View style={styles.reflectionCard}>
-                      <View style={styles.reflectionIcon}>
+                    <View
+                      style={
+                        styles.reflectionCard
+                      }
+                    >
+                      <View
+                        style={
+                          styles.reflectionIcon
+                        }
+                      >
                         <NotebookText
                           size={21}
                           color="#8B6D35"
@@ -588,13 +778,23 @@ export default function HomeScreen({ navigation }) {
                         />
                       </View>
 
-                      <View style={styles.reflectionTextContainer}>
-                        <Text style={styles.reflectionLabel}>
+                      <View
+                        style={
+                          styles.reflectionTextContainer
+                        }
+                      >
+                        <Text
+                          style={
+                            styles.reflectionLabel
+                          }
+                        >
                           Your reflection
                         </Text>
 
                         <Text
-                          style={styles.reflectionText}
+                          style={
+                            styles.reflectionText
+                          }
                           numberOfLines={3}
                         >
                           “{latestEntry.note}”
@@ -604,8 +804,14 @@ export default function HomeScreen({ navigation }) {
                   ) : null}
                 </>
               ) : (
-                <View style={styles.emptyState}>
-                  <View style={styles.emptyIconContainer}>
+                <View
+                  style={styles.emptyState}
+                >
+                  <View
+                    style={
+                      styles.emptyIconContainer
+                    }
+                  >
                     <ClipboardCheck
                       size={38}
                       color={Colors.primary}
@@ -613,26 +819,43 @@ export default function HomeScreen({ navigation }) {
                     />
                   </View>
 
-                  <Text style={styles.emptyTitle}>
-                    Your wellbeing journey starts here
+                  <Text
+                    style={
+                      styles.emptyTitle
+                    }
+                  >
+                    Your wellbeing journey
+                    starts here
                   </Text>
 
-                  <Text style={styles.emptyText}>
-                    Complete your five-question daily reflection
-                    to see your estimated stress level and mood.
+                  <Text
+                    style={styles.emptyText}
+                  >
+                    Complete your five-question
+                    daily reflection to see
+                    your estimated stress level
+                    and mood.
                   </Text>
 
                   <Pressable
                     style={({ pressed }) => [
                       styles.emptyButton,
-                      pressed && styles.pressedButton,
+                      pressed &&
+                        styles.pressedButton,
                     ]}
                     onPress={() =>
-                      navigation.navigate('CheckIn')
+                      navigation.navigate(
+                        'CheckIn'
+                      )
                     }
                   >
-                    <Text style={styles.emptyButtonText}>
-                      Begin your first reflection
+                    <Text
+                      style={
+                        styles.emptyButtonText
+                      }
+                    >
+                      Begin your first
+                      reflection
                     </Text>
 
                     <ArrowRight
@@ -644,10 +867,19 @@ export default function HomeScreen({ navigation }) {
               )}
             </View>
 
-            {!isLoading && latestEntry ? (
+            {!isLoading &&
+            latestEntry ? (
               <>
-                <View style={styles.sectionLabelPanel}>
-                  <Text style={styles.sectionHeading}>
+                <View
+                  style={
+                    styles.sectionLabelPanel
+                  }
+                >
+                  <Text
+                    style={
+                      styles.sectionHeading
+                    }
+                  >
                     Today’s insight
                   </Text>
                 </View>
@@ -656,8 +888,10 @@ export default function HomeScreen({ navigation }) {
                   style={[
                     styles.insightCard,
                     {
-                      backgroundColor: trend.background,
-                      borderColor: `${trend.colour}55`,
+                      backgroundColor:
+                        trend.background,
+                      borderColor:
+                        `${trend.colour}55`,
                     },
                   ]}
                 >
@@ -677,31 +911,53 @@ export default function HomeScreen({ navigation }) {
                     />
                   </View>
 
-                  <View style={styles.insightTextContainer}>
+                  <View
+                    style={
+                      styles.insightTextContainer
+                    }
+                  >
                     <Text
                       style={[
                         styles.insightTitle,
                         {
-                          color: trend.colour,
+                          color:
+                            trend.colour,
                         },
                       ]}
                     >
                       {trend.title}
                     </Text>
 
-                    <Text style={styles.insightMessage}>
+                    <Text
+                      style={
+                        styles.insightMessage
+                      }
+                    >
                       {trend.message}
                     </Text>
                   </View>
                 </View>
 
-                <View style={styles.sectionLabelPanel}>
-                  <Text style={styles.sectionHeading}>
+                <View
+                  style={
+                    styles.sectionLabelPanel
+                  }
+                >
+                  <Text
+                    style={
+                      styles.sectionHeading
+                    }
+                  >
                     Recent wellbeing pattern
                   </Text>
 
-                  <Text style={styles.sectionSubtitle}>
-                    Based on your recent daily reflections.
+                  <Text
+                    style={
+                      styles.sectionSubtitle
+                    }
+                  >
+                    Based on your recent daily
+                    reflections.
                   </Text>
                 </View>
 
@@ -727,12 +983,18 @@ export default function HomeScreen({ navigation }) {
                   >
                     <PatternIcon
                       size={26}
-                      color={patternAppearance.colour}
+                      color={
+                        patternAppearance.colour
+                      }
                       strokeWidth={1.9}
                     />
                   </View>
 
-                  <View style={styles.patternTextContainer}>
+                  <View
+                    style={
+                      styles.patternTextContainer
+                    }
+                  >
                     <Text
                       style={[
                         styles.patternLabel,
@@ -742,7 +1004,9 @@ export default function HomeScreen({ navigation }) {
                         },
                       ]}
                     >
-                      {patternAppearance.label}
+                      {
+                        patternAppearance.label
+                      }
                     </Text>
 
                     <Text
@@ -757,14 +1021,25 @@ export default function HomeScreen({ navigation }) {
                       {recentPattern.title}
                     </Text>
 
-                    <Text style={styles.patternMessage}>
+                    <Text
+                      style={
+                        styles.patternMessage
+                      }
+                    >
                       {recentPattern.message}
                     </Text>
 
-                    {recentPattern.type === 'warning' ? (
-                      <Text style={styles.patternSafetyNote}>
-                        This is a reflection-based pattern, not
-                        a medical warning or diagnosis.
+                    {recentPattern.type ===
+                    'warning' ? (
+                      <Text
+                        style={
+                          styles.patternSafetyNote
+                        }
+                      >
+                        This is a
+                        reflection-based
+                        pattern, not a medical
+                        warning or diagnosis.
                       </Text>
                     ) : null}
                   </View>
@@ -772,42 +1047,67 @@ export default function HomeScreen({ navigation }) {
               </>
             ) : null}
 
-            {/* Quick actions */}
-
-            <View style={styles.sectionLabelPanel}>
-              <Text style={styles.sectionHeading}>
+            <View
+              style={
+                styles.sectionLabelPanel
+              }
+            >
+              <Text
+                style={styles.sectionHeading}
+              >
                 Quick actions
               </Text>
 
-              <Text style={styles.sectionSubtitle}>
-                Continue your wellbeing journey.
+              <Text
+                style={
+                  styles.sectionSubtitle
+                }
+              >
+                Continue your wellbeing
+                journey.
               </Text>
             </View>
 
-            <View style={styles.actionsGrid}>
+            <View
+              style={styles.actionsGrid}
+            >
               <Pressable
                 style={({ pressed }) => [
                   styles.actionCard,
                   styles.actionCardTeal,
-                  isWide && styles.actionCardWide,
-                  pressed && styles.pressedCard,
+                  isWide &&
+                    styles.actionCardWide,
+                  pressed &&
+                    styles.pressedCard,
                 ]}
                 onPress={() =>
-                  navigation.navigate('CheckIn')
+                  navigation.navigate(
+                    'CheckIn'
+                  )
                 }
               >
-                <View style={styles.primaryActionIcon}>
+                <View
+                  style={
+                    styles.primaryActionIcon
+                  }
+                >
                   <ClipboardCheck
                     size={25}
                     color={Colors.white}
                   />
                 </View>
 
-                <Text style={styles.actionTitle}>
+                <Text
+                  style={styles.actionTitle}
+                >
                   Reflection
                 </Text>
 
-                <Text style={styles.actionDescription}>
+                <Text
+                  style={
+                    styles.actionDescription
+                  }
+                >
                   Start today’s check-in.
                 </Text>
 
@@ -822,25 +1122,41 @@ export default function HomeScreen({ navigation }) {
                 style={({ pressed }) => [
                   styles.actionCard,
                   styles.actionCardBlue,
-                  isWide && styles.actionCardWide,
-                  pressed && styles.pressedCard,
+                  isWide &&
+                    styles.actionCardWide,
+                  pressed &&
+                    styles.pressedCard,
                 ]}
                 onPress={() =>
-                  navigation.navigate('History')
+                  navigation.navigate(
+                    'History'
+                  )
                 }
               >
-                <View style={styles.secondaryActionIcon}>
+                <View
+                  style={
+                    styles.secondaryActionIcon
+                  }
+                >
                   <History
                     size={25}
-                    color={Colors.primaryDark}
+                    color={
+                      Colors.primaryDark
+                    }
                   />
                 </View>
 
-                <Text style={styles.actionTitle}>
+                <Text
+                  style={styles.actionTitle}
+                >
                   Journey
                 </Text>
 
-                <Text style={styles.actionDescription}>
+                <Text
+                  style={
+                    styles.actionDescription
+                  }
+                >
                   Review your reflections.
                 </Text>
 
@@ -855,25 +1171,39 @@ export default function HomeScreen({ navigation }) {
                 style={({ pressed }) => [
                   styles.actionCard,
                   styles.actionCardSage,
-                  isWide && styles.actionCardWide,
-                  pressed && styles.pressedCard,
+                  isWide &&
+                    styles.actionCardWide,
+                  pressed &&
+                    styles.pressedCard,
                 ]}
                 onPress={() =>
-                  navigation.navigate('Progress')
+                  navigation.navigate(
+                    'Progress'
+                  )
                 }
               >
-                <View style={styles.sageActionIcon}>
+                <View
+                  style={
+                    styles.sageActionIcon
+                  }
+                >
                   <ChartLine
                     size={25}
                     color="#54785C"
                   />
                 </View>
 
-                <Text style={styles.actionTitle}>
+                <Text
+                  style={styles.actionTitle}
+                >
                   Trends
                 </Text>
 
-                <Text style={styles.actionDescription}>
+                <Text
+                  style={
+                    styles.actionDescription
+                  }
+                >
                   Explore your progress.
                 </Text>
 
@@ -887,27 +1217,90 @@ export default function HomeScreen({ navigation }) {
               <Pressable
                 style={({ pressed }) => [
                   styles.actionCard,
-                  styles.actionCardWarm,
-                  isWide && styles.actionCardWide,
-                  pressed && styles.pressedCard,
+                  styles.actionCardProfile,
+                  isWide &&
+                    styles.actionCardWide,
+                  pressed &&
+                    styles.pressedCard,
                 ]}
                 onPress={() =>
-                  navigation.navigate('Information')
+                  navigation.navigate(
+                    'PositiveProfile'
+                  )
                 }
               >
-                <View style={styles.privacyActionIcon}>
+                <View
+                  style={
+                    styles.profileActionIcon
+                  }
+                >
+                  <HeartHandshake
+                    size={25}
+                    color="#8B6658"
+                  />
+                </View>
+
+                <Text
+                  style={styles.actionTitle}
+                >
+                  My Profile
+                </Text>
+
+                <Text
+                  style={
+                    styles.actionDescription
+                  }
+                >
+                  Personalise your wellbeing
+                  activities.
+                </Text>
+
+                <ArrowRight
+                  size={18}
+                  color={Colors.primaryDark}
+                  style={styles.actionArrow}
+                />
+              </Pressable>
+
+              <Pressable
+                style={({ pressed }) => [
+                  styles.actionCard,
+                  styles.actionCardWarm,
+                  isWide &&
+                    styles.actionCardWide,
+                  pressed &&
+                    styles.pressedCard,
+                ]}
+                onPress={() =>
+                  navigation.navigate(
+                    'Information'
+                  )
+                }
+              >
+                <View
+                  style={
+                    styles.privacyActionIcon
+                  }
+                >
                   <ShieldCheck
                     size={25}
                     color="#7A6340"
                   />
                 </View>
 
-                <Text style={styles.actionTitle}>
+                <Text
+                  style={styles.actionTitle}
+                >
                   Privacy
                 </Text>
 
-                <Text style={styles.actionDescription}>
-                  Learn how your data is protected.
+                <Text
+                  style={
+                    styles.actionDescription
+                  }
+                >
+                  Learn how your data is
+                  protected.
                 </Text>
 
                 <ArrowRight
@@ -918,10 +1311,14 @@ export default function HomeScreen({ navigation }) {
               </Pressable>
             </View>
 
-            {/* Privacy */}
-
-            <View style={styles.privacyCard}>
-              <View style={styles.privacyIconContainer}>
+            <View
+              style={styles.privacyCard}
+            >
+              <View
+                style={
+                  styles.privacyIconContainer
+                }
+              >
                 <LockKeyhole
                   size={24}
                   color={Colors.primaryDark}
@@ -929,23 +1326,42 @@ export default function HomeScreen({ navigation }) {
                 />
               </View>
 
-              <View style={styles.privacyTextContainer}>
-                <Text style={styles.privacyTitle}>
-                  Your reflections stay private
+              <View
+                style={
+                  styles.privacyTextContainer
+                }
+              >
+                <Text
+                  style={
+                    styles.privacyTitle
+                  }
+                >
+                  Your reflections stay
+                  private
                 </Text>
 
-                <Text style={styles.privacyText}>
-                  Your reflections are stored securely in your
-                  authenticated account and are not automatically
-                  shared with other users.
+                <Text
+                  style={
+                    styles.privacyText
+                  }
+                >
+                  Your reflections are stored
+                  securely in your
+                  authenticated account and
+                  are not automatically shared
+                  with other users.
                 </Text>
               </View>
             </View>
 
             <Pressable
-              style={styles.informationLink}
+              style={
+                styles.informationLink
+              }
               onPress={() =>
-                navigation.navigate('Information')
+                navigation.navigate(
+                  'Information'
+                )
               }
             >
               <Info
@@ -953,8 +1369,13 @@ export default function HomeScreen({ navigation }) {
                 color="#29473D"
               />
 
-              <Text style={styles.informationLinkText}>
-                Read the full information and privacy statement
+              <Text
+                style={
+                  styles.informationLinkText
+                }
+              >
+                Read the full information and
+                privacy statement
               </Text>
             </Pressable>
           </View>
@@ -972,7 +1393,8 @@ const styles = StyleSheet.create({
 
   backgroundOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(247,244,239,0.34)',
+    backgroundColor:
+      'rgba(247,244,239,0.34)',
   },
 
   screen: {
@@ -994,9 +1416,11 @@ const styles = StyleSheet.create({
 
   welcomePanel: {
     alignSelf: 'flex-start',
-    backgroundColor: 'rgba(236,244,239,0.90)',
+    backgroundColor:
+      'rgba(236,244,239,0.90)',
     borderWidth: 1,
-    borderColor: 'rgba(210,229,223,0.95)',
+    borderColor:
+      'rgba(210,229,223,0.95)',
     borderRadius: 20,
     paddingHorizontal: 20,
     paddingVertical: 14,
@@ -1027,9 +1451,11 @@ const styles = StyleSheet.create({
   },
 
   heroCard: {
-    backgroundColor: 'rgba(244,239,232,0.91)',
+    backgroundColor:
+      'rgba(244,239,232,0.91)',
     borderWidth: 1,
-    borderColor: 'rgba(230,222,211,0.95)',
+    borderColor:
+      'rgba(230,222,211,0.95)',
     borderRadius: 30,
     overflow: 'hidden',
     marginBottom: Spacing.xl,
@@ -1088,7 +1514,8 @@ const styles = StyleSheet.create({
   },
 
   calmPrompt: {
-    backgroundColor: 'rgba(233,242,236,0.85)',
+    backgroundColor:
+      'rgba(233,242,236,0.85)',
     borderWidth: 1,
     borderColor: '#D5E4DC',
     borderRadius: 17,
@@ -1151,7 +1578,8 @@ const styles = StyleSheet.create({
 
   heroImageOverlay: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(90,71,52,0.06)',
+    backgroundColor:
+      'rgba(90,71,52,0.06)',
   },
 
   imageMessage: {
@@ -1159,7 +1587,8 @@ const styles = StyleSheet.create({
     left: 22,
     right: 22,
     bottom: 22,
-    backgroundColor: 'rgba(248,244,233,0.90)',
+    backgroundColor:
+      'rgba(248,244,233,0.90)',
     borderRadius: 18,
     padding: Spacing.md,
   },
@@ -1180,13 +1609,15 @@ const styles = StyleSheet.create({
 
   sectionLabelPanel: {
     alignSelf: 'flex-start',
-    backgroundColor: 'rgba(236,244,239,0.90)',
+    backgroundColor:
+      'rgba(236,244,239,0.90)',
     borderRadius: 16,
     paddingHorizontal: 16,
     paddingVertical: 10,
     marginBottom: Spacing.md,
     borderWidth: 1,
-    borderColor: 'rgba(210,229,223,0.90)',
+    borderColor:
+      'rgba(210,229,223,0.90)',
   },
 
   sectionHeading: {
@@ -1202,9 +1633,11 @@ const styles = StyleSheet.create({
   },
 
   wellbeingCard: {
-    backgroundColor: 'rgba(232,241,244,0.90)',
+    backgroundColor:
+      'rgba(232,241,244,0.90)',
     borderWidth: 1,
-    borderColor: 'rgba(200,219,226,0.95)',
+    borderColor:
+      'rgba(200,219,226,0.95)',
     borderRadius: 26,
     padding: Spacing.lg,
     marginBottom: Spacing.xl,
@@ -1350,10 +1783,30 @@ const styles = StyleSheet.create({
     marginLeft: Spacing.sm,
   },
 
+  viewResultButton: {
+    alignSelf: 'center',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: Colors.primary,
+    borderRadius: 24,
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+    marginTop: Spacing.md,
+    gap: 8,
+  },
+
+  viewResultButtonText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: Colors.white,
+  },
+
   reflectionCard: {
     flexDirection: 'row',
     alignItems: 'flex-start',
-    backgroundColor: 'rgba(250,240,229,0.92)',
+    backgroundColor:
+      'rgba(250,240,229,0.92)',
     borderWidth: 1,
     borderColor: '#E8D1B6',
     borderRadius: 17,
@@ -1533,7 +1986,8 @@ const styles = StyleSheet.create({
     width: '50%',
     padding: 17,
     borderWidth: 6,
-    borderColor: 'rgba(247,244,239,0.45)',
+    borderColor:
+      'rgba(247,244,239,0.45)',
     borderRadius: 24,
     minHeight: 165,
     position: 'relative',
@@ -1541,19 +1995,28 @@ const styles = StyleSheet.create({
   },
 
   actionCardTeal: {
-    backgroundColor: 'rgba(228,241,238,0.92)',
+    backgroundColor:
+      'rgba(228,241,238,0.92)',
   },
 
   actionCardBlue: {
-    backgroundColor: 'rgba(230,239,246,0.92)',
+    backgroundColor:
+      'rgba(230,239,246,0.92)',
   },
 
   actionCardSage: {
-    backgroundColor: 'rgba(234,242,233,0.92)',
+    backgroundColor:
+      'rgba(234,242,233,0.92)',
+  },
+
+  actionCardProfile: {
+    backgroundColor:
+      'rgba(249,240,236,0.92)',
   },
 
   actionCardWarm: {
-    backgroundColor: 'rgba(248,239,225,0.92)',
+    backgroundColor:
+      'rgba(248,239,225,0.92)',
   },
 
   actionCardWide: {
@@ -1595,6 +2058,16 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.md,
   },
 
+  profileActionIcon: {
+    width: 48,
+    height: 48,
+    borderRadius: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#F0DDD5',
+    marginBottom: Spacing.md,
+  },
+
   privacyActionIcon: {
     width: 48,
     height: 48,
@@ -1628,7 +2101,8 @@ const styles = StyleSheet.create({
   privacyCard: {
     flexDirection: 'row',
     alignItems: 'flex-start',
-    backgroundColor: 'rgba(226,240,235,0.93)',
+    backgroundColor:
+      'rgba(226,240,235,0.93)',
     borderWidth: 1,
     borderColor: '#BED9D0',
     borderRadius: 20,
@@ -1668,7 +2142,8 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: 'rgba(244,239,232,0.90)',
+    backgroundColor:
+      'rgba(244,239,232,0.90)',
     borderRadius: 18,
     paddingHorizontal: 18,
     paddingVertical: 12,

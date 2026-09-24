@@ -32,6 +32,7 @@ import {
   NotebookText,
   ShieldCheck,
   Smile,
+  Sparkles,
   TriangleAlert,
   Waves,
 } from 'lucide-react-native';
@@ -106,7 +107,8 @@ function getFactorIcon(key) {
 }
 
 function getSuggestionIcon(suggestion) {
-  const lowerSuggestion = suggestion.toLowerCase();
+  const lowerSuggestion =
+    suggestion.toLowerCase();
 
   if (
     lowerSuggestion.includes('sleep') ||
@@ -309,7 +311,8 @@ export default function ResultScreen({
         Icon: ArrowUpRight,
         title:
           'Higher than your previous reflection',
-        message: `${difference}% higher than your previous estimate.`,
+        message:
+          `${difference}% higher than your previous estimate.`,
         colour: '#A05E4B',
         background: '#FCEFEA',
       };
@@ -341,13 +344,12 @@ export default function ResultScreen({
       <View style={styles.backgroundOverlay}>
         <ScrollView
           style={styles.screen}
-          contentContainerStyle={styles.container}
+          contentContainerStyle={
+            styles.container
+          }
           showsVerticalScrollIndicator={false}
         >
           <View style={styles.contentWrapper}>
-
-            {/* Main summary */}
-
             <View style={styles.summaryCard}>
               <View
                 style={[
@@ -356,7 +358,9 @@ export default function ResultScreen({
                     styles.summaryMainRowMobile,
                 ]}
               >
-                <View style={styles.scoreSection}>
+                <View
+                  style={styles.scoreSection}
+                >
                   <View
                     style={[
                       styles.scoreCircle,
@@ -379,9 +383,18 @@ export default function ResultScreen({
                     </Text>
                   </View>
 
-                  <View style={styles.scoreTextContainer}>
-                    <Text style={styles.smallUpperLabel}>
-                      TODAY'S ESTIMATED STRESS LEVEL
+                  <View
+                    style={
+                      styles.scoreTextContainer
+                    }
+                  >
+                    <Text
+                      style={
+                        styles.smallUpperLabel
+                      }
+                    >
+                      TODAY'S ESTIMATED STRESS
+                      LEVEL
                     </Text>
 
                     <View
@@ -407,7 +420,9 @@ export default function ResultScreen({
                     </View>
 
                     <Text
-                      style={styles.categoryMessage}
+                      style={
+                        styles.categoryMessage
+                      }
                     >
                       {category.message}
                     </Text>
@@ -415,12 +430,20 @@ export default function ResultScreen({
                 </View>
 
                 {isWide ? (
-                  <View style={styles.verticalDivider} />
+                  <View
+                    style={
+                      styles.verticalDivider
+                    }
+                  />
                 ) : null}
 
                 {selectedMood &&
                 SelectedMoodIcon ? (
-                  <View style={styles.topInfoSection}>
+                  <View
+                    style={
+                      styles.topInfoSection
+                    }
+                  >
                     <View
                       style={[
                         styles.topInfoIcon,
@@ -439,7 +462,11 @@ export default function ResultScreen({
                       />
                     </View>
 
-                    <Text style={styles.topInfoLabel}>
+                    <Text
+                      style={
+                        styles.topInfoLabel
+                      }
+                    >
                       Mood
                     </Text>
 
@@ -458,10 +485,18 @@ export default function ResultScreen({
                 ) : null}
 
                 {isWide ? (
-                  <View style={styles.verticalDivider} />
+                  <View
+                    style={
+                      styles.verticalDivider
+                    }
+                  />
                 ) : null}
 
-                <View style={styles.trendSummarySection}>
+                <View
+                  style={
+                    styles.trendSummarySection
+                  }
+                >
                   <View
                     style={[
                       styles.topInfoIcon,
@@ -480,7 +515,11 @@ export default function ResultScreen({
                     />
                   </View>
 
-                  <Text style={styles.topInfoLabel}>
+                  <Text
+                    style={
+                      styles.topInfoLabel
+                    }
+                  >
                     Compared with last time
                   </Text>
 
@@ -516,8 +555,6 @@ export default function ResultScreen({
               </View>
             </View>
 
-            {/* User note */}
-
             {note ? (
               <View style={styles.noteStrip}>
                 <NotebookText
@@ -526,8 +563,16 @@ export default function ResultScreen({
                   strokeWidth={1.9}
                 />
 
-                <View style={styles.noteTextContainer}>
-                  <Text style={styles.noteHeading}>
+                <View
+                  style={
+                    styles.noteTextContainer
+                  }
+                >
+                  <Text
+                    style={
+                      styles.noteHeading
+                    }
+                  >
                     Today’s reflection
                   </Text>
 
@@ -541,22 +586,38 @@ export default function ResultScreen({
               </View>
             ) : null}
 
-            {/* Explainability */}
-
-            <View style={styles.explanationHeader}>
+            <View
+              style={
+                styles.explanationHeader
+              }
+            >
               <View>
-                <Text style={styles.sectionEyebrow}>
+                <Text
+                  style={
+                    styles.sectionEyebrow
+                  }
+                >
                   WHY THIS SCORE?
                 </Text>
 
-                <Text style={styles.sectionTitleLarge}>
+                <Text
+                  style={
+                    styles.sectionTitleLarge
+                  }
+                >
                   What shaped today’s estimate?
                 </Text>
 
-                <Text style={styles.sectionDescription}>
-                  Your result combines five self-reported
-                  wellbeing indicators. Each factor has a
-                  different weighting in the estimate.
+                <Text
+                  style={
+                    styles.sectionDescription
+                  }
+                >
+                  Your result combines five
+                  self-reported wellbeing
+                  indicators. Each factor has a
+                  different weighting in the
+                  estimate.
                 </Text>
               </View>
             </View>
@@ -564,7 +625,8 @@ export default function ResultScreen({
             <View
               style={[
                 styles.factorGrid,
-                isWide && styles.factorGridWide,
+                isWide &&
+                  styles.factorGridWide,
               ]}
             >
               {factorBreakdown.map(
@@ -591,7 +653,11 @@ export default function ResultScreen({
                           styles.factorCardWide,
                       ]}
                     >
-                      <View style={styles.factorTopRow}>
+                      <View
+                        style={
+                          styles.factorTopRow
+                        }
+                      >
                         <View
                           style={[
                             styles.factorIcon,
@@ -610,16 +676,28 @@ export default function ResultScreen({
                           />
                         </View>
 
-                        <Text style={styles.factorWeight}>
+                        <Text
+                          style={
+                            styles.factorWeight
+                          }
+                        >
                           {factor.weight}% weight
                         </Text>
                       </View>
 
-                      <Text style={styles.factorLabel}>
+                      <Text
+                        style={
+                          styles.factorLabel
+                        }
+                      >
                         {factor.label}
                       </Text>
 
-                      <View style={styles.factorRatingRow}>
+                      <View
+                        style={
+                          styles.factorRatingRow
+                        }
+                      >
                         <Text
                           style={[
                             styles.factorValue,
@@ -663,17 +741,36 @@ export default function ResultScreen({
                         {factor.description}
                       </Text>
 
-                      <View style={styles.contributionRow}>
-                        <Text style={styles.contributionLabel}>
+                      <View
+                        style={
+                          styles.contributionRow
+                        }
+                      >
+                        <Text
+                          style={
+                            styles.contributionLabel
+                          }
+                        >
                           Contribution
                         </Text>
 
-                        <Text style={styles.contributionValue}>
-                          {factor.impact.toFixed(1)} / {factor.weight}
+                        <Text
+                          style={
+                            styles.contributionValue
+                          }
+                        >
+                          {factor.impact.toFixed(
+                            1
+                          )}{' '}
+                          / {factor.weight}
                         </Text>
                       </View>
 
-                      <View style={styles.factorBarBackground}>
+                      <View
+                        style={
+                          styles.factorBarBackground
+                        }
+                      >
                         <View
                           style={[
                             styles.factorBarFill,
@@ -700,10 +797,12 @@ export default function ResultScreen({
               )}
             </View>
 
-            {/* How score works */}
-
-            <View style={styles.howScoreCard}>
-              <View style={styles.howScoreIcon}>
+            <View
+              style={styles.howScoreCard}
+            >
+              <View
+                style={styles.howScoreIcon}
+              >
                 <Info
                   size={22}
                   color={Colors.primaryDark}
@@ -711,30 +810,44 @@ export default function ResultScreen({
                 />
               </View>
 
-              <View style={styles.howScoreText}>
-                <Text style={styles.howScoreTitle}>
+              <View
+                style={styles.howScoreText}
+              >
+                <Text
+                  style={styles.howScoreTitle}
+                >
                   How this estimate works
                 </Text>
 
-                <Text style={styles.howScoreDescription}>
-                  Anxiety contributes up to 25% of the estimate.
-                  Panic/overwhelm, sleep and daily
-                  responsibilities each contribute up to 20%,
-                  while energy contributes up to 15%. For sleep
-                  and energy, lower ratings increase the estimated
-                  stress contribution. For anxiety, panic and
-                  responsibilities, higher ratings increase it.
+                <Text
+                  style={
+                    styles.howScoreDescription
+                  }
+                >
+                  Anxiety contributes up to 25%
+                  of the estimate. Panic/overwhelm,
+                  sleep and daily responsibilities
+                  each contribute up to 20%, while
+                  energy contributes up to 15%.
+                  For sleep and energy, lower
+                  ratings increase the estimated
+                  stress contribution. For anxiety,
+                  panic and responsibilities,
+                  higher ratings increase it.
                 </Text>
 
-                <Text style={styles.howScoreNote}>
-                  The percentage is designed for personal
-                  reflection and trend monitoring, not as a
-                  clinical measurement.
+                <Text
+                  style={
+                    styles.howScoreNote
+                  }
+                >
+                  The percentage is designed for
+                  personal reflection and trend
+                  monitoring, not as a clinical
+                  measurement.
                 </Text>
               </View>
             </View>
-
-            {/* Main challenge and strength */}
 
             <View
               style={[
@@ -749,7 +862,11 @@ export default function ResultScreen({
                   styles.challengeCard,
                 ]}
               >
-                <View style={styles.overviewIconRow}>
+                <View
+                  style={
+                    styles.overviewIconRow
+                  }
+                >
                   <View
                     style={
                       styles.challengeIcon
@@ -786,7 +903,9 @@ export default function ResultScreen({
                       styles.overviewDescription
                     }
                   >
-                    {mainChallenge.description}
+                    {
+                      mainChallenge.description
+                    }
                   </Text>
                 ) : null}
               </View>
@@ -797,8 +916,16 @@ export default function ResultScreen({
                   styles.strengthCard,
                 ]}
               >
-                <View style={styles.overviewIconRow}>
-                  <View style={styles.strengthIcon}>
+                <View
+                  style={
+                    styles.overviewIconRow
+                  }
+                >
+                  <View
+                    style={
+                      styles.strengthIcon
+                    }
+                  >
                     <CheckCircle2
                       size={21}
                       color="#54785C"
@@ -830,17 +957,27 @@ export default function ResultScreen({
                       styles.overviewDescription
                     }
                   >
-                    {mainStrength.description}
+                    {
+                      mainStrength.description
+                    }
                   </Text>
                 ) : null}
               </View>
             </View>
 
-            {/* Suggestions */}
-
-            <View style={styles.suggestionsCard}>
-              <View style={styles.suggestionHeader}>
-                <View style={styles.lightbulbIcon}>
+            <View
+              style={styles.suggestionsCard}
+            >
+              <View
+                style={
+                  styles.suggestionHeader
+                }
+              >
+                <View
+                  style={
+                    styles.lightbulbIcon
+                  }
+                >
                   <Lightbulb
                     size={22}
                     color="#8B6D35"
@@ -917,24 +1054,86 @@ export default function ResultScreen({
               </View>
             </View>
 
-            {/* Disclaimer */}
-
-            <View style={styles.safetyCard}>
+            <View
+              style={styles.safetyCard}
+            >
               <ShieldCheck
                 size={21}
                 color={Colors.primaryDark}
                 strokeWidth={1.9}
               />
 
-              <Text style={styles.safetyText}>
-                This estimate uses five self-reported wellbeing
-                indicators for personal reflection only. It is
-                not a clinical assessment, diagnosis or medical
-                advice.
+              <Text
+                style={styles.safetyText}
+              >
+                This estimate uses five
+                self-reported wellbeing
+                indicators for personal
+                reflection only. It is not a
+                clinical assessment, diagnosis
+                or medical advice.
               </Text>
             </View>
 
-            {/* Navigation */}
+            <View
+              style={
+                styles.personalChallengeCard
+              }
+            >
+              <View
+                style={
+                  styles.personalChallengeIcon
+                }
+              >
+                <Sparkles
+                  size={25}
+                  color={Colors.primaryDark}
+                  strokeWidth={1.9}
+                />
+              </View>
+
+              <View
+                style={
+                  styles.personalChallengeText
+                }
+              >
+                <Text
+                  style={
+                    styles.personalChallengeTitle
+                  }
+                >
+                  Your personalised wellbeing
+                  challenge
+                </Text>
+
+                <Text
+                  style={
+                    styles.personalChallengeDescription
+                  }
+                >
+                  Try an activity selected using
+                  today’s stress result and your
+                  Positive Profile.
+                </Text>
+              </View>
+
+              <View
+                style={
+                  styles.personalChallengeButton
+                }
+              >
+                <AppButton
+                  title="Try My Challenge"
+                  icon={Sparkles}
+                  onPress={() =>
+                    navigation.navigate(
+                      'Challenge',
+                      { score }
+                    )
+                  }
+                />
+              </View>
+            </View>
 
             <View
               style={[
@@ -943,7 +1142,9 @@ export default function ResultScreen({
                   styles.actionRowMobile,
               ]}
             >
-              <View style={styles.actionButton}>
+              <View
+                style={styles.actionButton}
+              >
                 <AppButton
                   title="Journey"
                   icon={History}
@@ -955,7 +1156,9 @@ export default function ResultScreen({
                 />
               </View>
 
-              <View style={styles.actionButton}>
+              <View
+                style={styles.actionButton}
+              >
                 <AppButton
                   title="Trends"
                   icon={ChartLine}
@@ -968,7 +1171,9 @@ export default function ResultScreen({
                 />
               </View>
 
-              <View style={styles.actionButton}>
+              <View
+                style={styles.actionButton}
+              >
                 <AppButton
                   title="Dashboard"
                   icon={Home}
@@ -996,7 +1201,8 @@ const styles = StyleSheet.create({
 
   backgroundOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(247,244,239,0.28)',
+    backgroundColor:
+      'rgba(247,244,239,0.28)',
   },
 
   screen: {
@@ -1017,9 +1223,11 @@ const styles = StyleSheet.create({
   },
 
   summaryCard: {
-    backgroundColor: 'rgba(232,241,244,0.93)',
+    backgroundColor:
+      'rgba(232,241,244,0.93)',
     borderWidth: 1,
-    borderColor: 'rgba(196,218,225,0.95)',
+    borderColor:
+      'rgba(196,218,225,0.95)',
     borderRadius: 24,
     padding: Spacing.lg,
     marginBottom: Spacing.md,
@@ -1049,7 +1257,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: Spacing.md,
-    backgroundColor: 'rgba(255,255,255,0.48)',
+    backgroundColor:
+      'rgba(255,255,255,0.48)',
   },
 
   score: {
@@ -1143,7 +1352,8 @@ const styles = StyleSheet.create({
   noteStrip: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(250,239,224,0.94)',
+    backgroundColor:
+      'rgba(250,239,224,0.94)',
     borderWidth: 1,
     borderColor: '#E5CFAE',
     borderRadius: 16,
@@ -1173,9 +1383,11 @@ const styles = StyleSheet.create({
 
   explanationHeader: {
     alignSelf: 'flex-start',
-    backgroundColor: 'rgba(235,244,241,0.94)',
+    backgroundColor:
+      'rgba(235,244,241,0.94)',
     borderWidth: 1,
-    borderColor: 'rgba(205,226,219,0.95)',
+    borderColor:
+      'rgba(205,226,219,0.95)',
     borderRadius: 18,
     paddingHorizontal: 18,
     paddingVertical: 14,
@@ -1218,9 +1430,11 @@ const styles = StyleSheet.create({
 
   factorCard: {
     width: '50%',
-    backgroundColor: 'rgba(239,245,242,0.94)',
+    backgroundColor:
+      'rgba(239,245,242,0.94)',
     borderWidth: 4,
-    borderColor: 'rgba(247,244,239,0.50)',
+    borderColor:
+      'rgba(247,244,239,0.50)',
     borderRadius: 19,
     padding: 14,
     ...Shadows.card,
@@ -1322,7 +1536,8 @@ const styles = StyleSheet.create({
   howScoreCard: {
     flexDirection: 'row',
     alignItems: 'flex-start',
-    backgroundColor: 'rgba(226,240,236,0.95)',
+    backgroundColor:
+      'rgba(226,240,236,0.95)',
     borderWidth: 1,
     borderColor: '#BDD9D0',
     borderRadius: 18,
@@ -1387,12 +1602,14 @@ const styles = StyleSheet.create({
   },
 
   challengeCard: {
-    backgroundColor: 'rgba(250,232,225,0.95)',
+    backgroundColor:
+      'rgba(250,232,225,0.95)',
     borderColor: '#E2B9AB',
   },
 
   strengthCard: {
-    backgroundColor: 'rgba(229,241,231,0.95)',
+    backgroundColor:
+      'rgba(229,241,231,0.95)',
     borderColor: '#BED8C2',
   },
 
@@ -1453,7 +1670,8 @@ const styles = StyleSheet.create({
   },
 
   suggestionsCard: {
-    backgroundColor: 'rgba(249,236,213,0.95)',
+    backgroundColor:
+      'rgba(249,236,213,0.95)',
     borderWidth: 1,
     borderColor: '#E4CAA0',
     borderRadius: 18,
@@ -1525,7 +1743,8 @@ const styles = StyleSheet.create({
   safetyCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(225,239,235,0.95)',
+    backgroundColor:
+      'rgba(225,239,235,0.95)',
     borderWidth: 1,
     borderColor: '#BFD8D0',
     borderRadius: 15,
@@ -1540,6 +1759,51 @@ const styles = StyleSheet.create({
     color: Colors.textSecondary,
     lineHeight: 17,
     marginLeft: Spacing.sm,
+  },
+
+  personalChallengeCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor:
+      'rgba(235,244,241,0.96)',
+    borderWidth: 1,
+    borderColor: '#C9DFD8',
+    borderRadius: 18,
+    padding: Spacing.md,
+    marginBottom: Spacing.md,
+    ...Shadows.card,
+  },
+
+  personalChallengeIcon: {
+    width: 46,
+    height: 46,
+    borderRadius: 15,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#DCECE7',
+    marginRight: Spacing.md,
+  },
+
+  personalChallengeText: {
+    flex: 1,
+    paddingRight: Spacing.md,
+  },
+
+  personalChallengeTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: Colors.primaryDark,
+    marginBottom: 4,
+  },
+
+  personalChallengeDescription: {
+    fontSize: 12,
+    color: Colors.textSecondary,
+    lineHeight: 18,
+  },
+
+  personalChallengeButton: {
+    minWidth: 190,
   },
 
   actionRow: {

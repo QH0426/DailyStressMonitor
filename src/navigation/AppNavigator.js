@@ -8,7 +8,9 @@ import {
   View,
 } from 'react-native';
 
-import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import {
+  createNativeStackNavigator,
+} from '@react-navigation/native-stack';
 
 import {
   onAuthStateChanged,
@@ -19,45 +21,67 @@ import {
   LogOut,
 } from 'lucide-react-native';
 
+import ChallengeScreen from '../screens/ChallengeScreen';
 import CheckInScreen from '../screens/CheckInScreen';
 import HistoryScreen from '../screens/HistoryScreen';
 import HomeScreen from '../screens/HomeScreen';
 import InformationScreen from '../screens/InformationScreen';
 import LoginScreen from '../screens/LoginScreen';
+import PositiveProfileScreen from '../screens/PositiveProfileScreen';
 import ProgressScreen from '../screens/ProgressScreen';
 import RegisterScreen from '../screens/RegisterScreen';
 import ResultScreen from '../screens/ResultScreen';
+import WellbeingGameScreen from '../screens/WellbeingGameScreen';
 
-import { auth } from '../firebase/firebaseConfig';
+import {
+  auth,
+} from '../firebase/firebaseConfig';
 
 import Colors from '../theme/colors';
 import Spacing from '../theme/spacing';
 
-const Stack = createNativeStackNavigator();
+const Stack =
+  createNativeStackNavigator();
 
 export default function AppNavigator() {
-  const [currentUser, setCurrentUser] = useState(null);
-  const [isCheckingAuth, setIsCheckingAuth] = useState(true);
+  const [
+    currentUser,
+    setCurrentUser,
+  ] = useState(null);
 
-  const [isLoggingOut, setIsLoggingOut] = useState(false);
+  const [
+    isCheckingAuth,
+    setIsCheckingAuth,
+  ] = useState(true);
+
+  const [
+    isLoggingOut,
+    setIsLoggingOut,
+  ] = useState(false);
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(
-      auth,
-      (firebaseUser) => {
-        setCurrentUser(firebaseUser);
-        setIsCheckingAuth(false);
-      },
-      (error) => {
-        console.error(
-          'Unable to check authentication state:',
-          error
-        );
+    const unsubscribe =
+      onAuthStateChanged(
+        auth,
+        (firebaseUser) => {
+          setCurrentUser(
+            firebaseUser
+          );
 
-        setCurrentUser(null);
-        setIsCheckingAuth(false);
-      }
-    );
+          setIsCheckingAuth(
+            false
+          );
+        },
+        (error) => {
+          console.error(
+            'Unable to check authentication state:',
+            error
+          );
+
+          setCurrentUser(null);
+          setIsCheckingAuth(false);
+        }
+      );
 
     return unsubscribe;
   }, []);
@@ -71,12 +95,6 @@ export default function AppNavigator() {
       setIsLoggingOut(true);
 
       await signOut(auth);
-
-      /*
-        onAuthStateChanged automatically changes
-        currentUser to null and the navigator then
-        switches to the Login screen.
-      */
     } catch (error) {
       console.error(
         'Unable to sign out:',
@@ -92,7 +110,8 @@ export default function AppNavigator() {
       <Pressable
         style={({ pressed }) => [
           styles.logoutButton,
-          pressed && styles.logoutButtonPressed,
+          pressed &&
+            styles.logoutButtonPressed,
         ]}
         onPress={handleLogout}
         disabled={isLoggingOut}
@@ -112,7 +131,11 @@ export default function AppNavigator() {
               strokeWidth={2}
             />
 
-            <Text style={styles.logoutText}>
+            <Text
+              style={
+                styles.logoutText
+              }
+            >
               Logout
             </Text>
           </>
@@ -123,14 +146,21 @@ export default function AppNavigator() {
 
   if (isCheckingAuth) {
     return (
-      <View style={styles.loadingContainer}>
+      <View
+        style={
+          styles.loadingContainer
+        }
+      >
         <ActivityIndicator
           size="large"
           color={Colors.primary}
         />
 
-        <Text style={styles.loadingText}>
-          Preparing your private space...
+        <Text
+          style={styles.loadingText}
+        >
+          Preparing your private
+          space...
         </Text>
       </View>
     );
@@ -140,19 +170,23 @@ export default function AppNavigator() {
     <Stack.Navigator
       screenOptions={{
         headerStyle: {
-          backgroundColor: Colors.primaryDark,
+          backgroundColor:
+            Colors.primaryDark,
         },
 
-        headerTintColor: Colors.white,
+        headerTintColor:
+          Colors.white,
 
         headerTitleStyle: {
           fontWeight: '600',
         },
 
-        headerShadowVisible: false,
+        headerShadowVisible:
+          false,
 
         contentStyle: {
-          backgroundColor: Colors.background,
+          backgroundColor:
+            Colors.background,
         },
       }}
     >
@@ -162,7 +196,8 @@ export default function AppNavigator() {
             name="Home"
             component={HomeScreen}
             options={{
-              title: 'Daily Stress Monitor',
+              title:
+                'Daily Stress Monitor',
 
               headerRight: () =>
                 renderLogoutButton(),
@@ -171,9 +206,12 @@ export default function AppNavigator() {
 
           <Stack.Screen
             name="CheckIn"
-            component={CheckInScreen}
+            component={
+              CheckInScreen
+            }
             options={{
-              title: 'Daily Reflection',
+              title:
+                'Daily Reflection',
 
               headerRight: () =>
                 renderLogoutButton(),
@@ -184,7 +222,36 @@ export default function AppNavigator() {
             name="Result"
             component={ResultScreen}
             options={{
-              title: 'Wellbeing Summary',
+              title:
+                'Wellbeing Summary',
+
+              headerRight: () =>
+                renderLogoutButton(),
+            }}
+          />
+
+          <Stack.Screen
+            name="Challenge"
+            component={
+              ChallengeScreen
+            }
+            options={{
+              title:
+                'Personalised Challenge',
+
+              headerRight: () =>
+                renderLogoutButton(),
+            }}
+          />
+
+          <Stack.Screen
+            name="WellbeingGame"
+            component={
+              WellbeingGameScreen
+            }
+            options={{
+              title:
+                'Wellbeing Activity',
 
               headerRight: () =>
                 renderLogoutButton(),
@@ -193,9 +260,12 @@ export default function AppNavigator() {
 
           <Stack.Screen
             name="History"
-            component={HistoryScreen}
+            component={
+              HistoryScreen
+            }
             options={{
-              title: 'Your Journey',
+              title:
+                'Your Journey',
 
               headerRight: () =>
                 renderLogoutButton(),
@@ -204,9 +274,26 @@ export default function AppNavigator() {
 
           <Stack.Screen
             name="Progress"
-            component={ProgressScreen}
+            component={
+              ProgressScreen
+            }
             options={{
-              title: 'Wellbeing Trends',
+              title:
+                'Wellbeing Trends',
+
+              headerRight: () =>
+                renderLogoutButton(),
+            }}
+          />
+
+          <Stack.Screen
+            name="PositiveProfile"
+            component={
+              PositiveProfileScreen
+            }
+            options={{
+              title:
+                'My Positive Profile',
 
               headerRight: () =>
                 renderLogoutButton(),
@@ -215,9 +302,12 @@ export default function AppNavigator() {
 
           <Stack.Screen
             name="Information"
-            component={InformationScreen}
+            component={
+              InformationScreen
+            }
             options={{
-              title: 'Privacy & Information',
+              title:
+                'Privacy & Information',
 
               headerRight: () =>
                 renderLogoutButton(),
@@ -237,9 +327,12 @@ export default function AppNavigator() {
 
           <Stack.Screen
             name="Register"
-            component={RegisterScreen}
+            component={
+              RegisterScreen
+            }
             options={{
-              title: 'Create Account',
+              title:
+                'Create Account',
               headerShown: false,
             }}
           />
@@ -249,40 +342,45 @@ export default function AppNavigator() {
   );
 }
 
-const styles = StyleSheet.create({
-  loadingContainer: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: Colors.background,
-    padding: Spacing.lg,
-  },
+const styles =
+  StyleSheet.create({
+    loadingContainer: {
+      flex: 1,
+      alignItems: 'center',
+      justifyContent: 'center',
+      backgroundColor:
+        Colors.background,
+      padding: Spacing.lg,
+    },
 
-  loadingText: {
-    fontSize: 16,
-    color: Colors.textSecondary,
-    marginTop: Spacing.md,
-    textAlign: 'center',
-  },
+    loadingText: {
+      fontSize: 16,
+      color:
+        Colors.textSecondary,
+      marginTop: Spacing.md,
+      textAlign: 'center',
+    },
 
-  logoutButton: {
-    minHeight: 38,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingHorizontal: 12,
-    borderRadius: 19,
-    backgroundColor: 'rgba(255,255,255,0.12)',
-  },
+    logoutButton: {
+      minHeight: 38,
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent:
+        'center',
+      paddingHorizontal: 12,
+      borderRadius: 19,
+      backgroundColor:
+        'rgba(255,255,255,0.12)',
+    },
 
-  logoutButtonPressed: {
-    opacity: 0.72,
-  },
+    logoutButtonPressed: {
+      opacity: 0.72,
+    },
 
-  logoutText: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: Colors.white,
-    marginLeft: 6,
-  },
-});
+    logoutText: {
+      fontSize: 14,
+      fontWeight: '600',
+      color: Colors.white,
+      marginLeft: 6,
+    },
+  });

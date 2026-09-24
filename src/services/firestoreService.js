@@ -3,10 +3,12 @@ import {
   collection,
   deleteDoc,
   doc,
+  getDoc,
   getDocs,
   orderBy,
   query,
   serverTimestamp,
+  setDoc,
   writeBatch,
 } from 'firebase/firestore';
 
@@ -20,7 +22,7 @@ function getCurrentUserId() {
 
   if (!userId) {
     throw new Error(
-      'A signed-in user is required to access reflections.'
+      'A signed-in user is required.'
     );
   }
 
@@ -36,12 +38,26 @@ function getReflectionsCollection(userId) {
   );
 }
 
+function getChallengeFeedbackCollection(
+  userId
+) {
+  return collection(
+    db,
+    'users',
+    userId,
+    'challengeFeedback'
+  );
+}
+
 function isSameLocalDay(
   firstDateValue,
   secondDateValue
 ) {
-  const firstDate = new Date(firstDateValue);
-  const secondDate = new Date(secondDateValue);
+  const firstDate =
+    new Date(firstDateValue);
+
+  const secondDate =
+    new Date(secondDateValue);
 
   return (
     firstDate.getFullYear() ===
@@ -54,14 +70,6 @@ function isSameLocalDay(
 }
 
 export async function initialiseDatabase() {
-  /*
-    Firestore does not require tables or collections
-    to be created in advance.
-
-    The user's reflections collection is created
-    automatically when their first reflection is saved.
-  */
-
   return;
 }
 
@@ -72,40 +80,44 @@ export async function saveStressEntry(
   note = ''
 ) {
   const userId = getCurrentUserId();
-  const date = new Date().toISOString();
+
+  const date =
+    new Date().toISOString();
 
   const newReflection = {
     date,
 
     createdAt: serverTimestamp(),
 
-    /*
-      Version 2 represents the shortened five-question
-      daily reflection introduced after supervisor feedback.
-    */
     questionnaireVersion: 2,
 
     score: Number(score),
 
-    anxiety: Number(answers.anxiety),
+    anxiety:
+      Number(answers.anxiety),
 
-    panic: Number(answers.panic),
+    panic:
+      Number(answers.panic),
 
-    sleep: Number(answers.sleep),
+    sleep:
+      Number(answers.sleep),
 
-    workload: Number(answers.workload),
+    workload:
+      Number(answers.workload),
 
-    energy: Number(answers.energy),
+    energy:
+      Number(answers.energy),
 
     mood: mood || null,
 
     note: note.trim(),
   };
 
-  const documentReference = await addDoc(
-    getReflectionsCollection(userId),
-    newReflection
-  );
+  const documentReference =
+    await addDoc(
+      getReflectionsCollection(userId),
+      newReflection
+    );
 
   return documentReference.id;
 }
@@ -118,9 +130,10 @@ export async function getStressEntries() {
     orderBy('date', 'desc')
   );
 
-  const snapshot = await getDocs(
-    reflectionsQuery
-  );
+  const snapshot =
+    await getDocs(
+      reflectionsQuery
+    );
 
   return snapshot.docs.map(
     (reflectionDocument) => ({
@@ -132,13 +145,17 @@ export async function getStressEntries() {
 }
 
 export async function getTodayStressEntry() {
-  const entries = await getStressEntries();
+  const entries =
+    await getStressEntries();
 
   const now = new Date();
 
   return (
     entries.find((entry) =>
-      isSameLocalDay(entry.date, now)
+      isSameLocalDay(
+        entry.date,
+        now
+      )
     ) || null
   );
 }
@@ -169,15 +186,19 @@ export async function deleteStressEntry(
 export async function clearStressEntries() {
   const userId = getCurrentUserId();
 
-  const snapshot = await getDocs(
-    getReflectionsCollection(userId)
-  );
+  const snapshot =
+    await getDocs(
+      getReflectionsCollection(
+        userId
+      )
+    );
 
   if (snapshot.empty) {
     return;
   }
 
-  const batch = writeBatch(db);
+  const batch =
+    writeBatch(db);
 
   snapshot.docs.forEach(
     (reflectionDocument) => {
@@ -188,4 +209,157 @@ export async function clearStressEntries() {
   );
 
   await batch.commit();
+}
+
+export async function savePositiveProfile(
+  profile
+) {
+  const userId = getCurrentUserId();
+
+  const profileReference = doc(
+    db,
+    'users',
+    userId,
+    'wellbeingProfile',
+    'positiveProfile'
+  );
+
+  const profileData = {
+    importantPerson:
+      profile.importantPerson?.trim() ||
+      '',
+
+    happyMemory:
+      profile.happyMemory?.trim() ||
+      '',
+
+    calmingPlace:
+      profile.calmingPlace?.trim() ||
+      '',
+
+    favouriteActivity:
+      profile.favouriteActivity?.trim() ||
+      '',
+
+    favouriteMusic:
+      profile.favouriteMusic?.trim() ||
+      '',
+
+    achievement:
+      profile.achievement?.trim() ||
+      '',
+
+    lookingForwardTo:
+      profile.lookingForwardTo?.trim() ||
+      '',
+
+    updatedAt:
+      serverTimestamp(),
+  };
+
+  await setDoc(
+    profileReference,
+    profileData,
+    {
+      merge: true,
+    }
+  );
+}
+
+export async function getPositiveProfile() {
+  const userId = getCurrentUserId();
+
+  const profileReference = doc(
+    db,
+    'users',
+    userId,
+    'wellbeingProfile',
+    'positiveProfile'
+  );
+
+  const snapshot =
+    await getDoc(
+      profileReference
+    );
+
+  if (!snapshot.exists()) {
+    return null;
+  }
+
+  return {
+    id: snapshot.id,
+
+    ...snapshot.data(),
+  };
+}
+
+export async function saveChallengeFeedback({
+  score,
+  stressLevel,
+  challengeType,
+  challengeTitle,
+  profileSource,
+  feedback,
+}) {
+  const userId = getCurrentUserId();
+
+  const feedbackData = {
+    date:
+      new Date().toISOString(),
+
+    createdAt:
+      serverTimestamp(),
+
+    score:
+      Number(score),
+
+    stressLevel:
+      stressLevel || '',
+
+    challengeType:
+      challengeType || '',
+
+    challengeTitle:
+      challengeTitle || '',
+
+    profileSource:
+      profileSource || 'General',
+
+    feedback:
+      feedback || '',
+  };
+
+  const documentReference =
+    await addDoc(
+      getChallengeFeedbackCollection(
+        userId
+      ),
+      feedbackData
+    );
+
+  return documentReference.id;
+}
+
+export async function getChallengeFeedback() {
+  const userId = getCurrentUserId();
+
+  const feedbackQuery = query(
+    getChallengeFeedbackCollection(
+      userId
+    ),
+    orderBy('date', 'desc')
+  );
+
+  const snapshot =
+    await getDocs(
+      feedbackQuery
+    );
+
+  return snapshot.docs.map(
+    (feedbackDocument) => ({
+      id: feedbackDocument.id,
+
+      ...feedbackDocument.data(),
+    })
+  );
 }

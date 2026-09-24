@@ -39,6 +39,8 @@ import AppButton from '../components/AppButton';
 import WarmCard from '../components/WarmCard';
 
 import { getStressEntries } from '../database/database';
+import { getChallengeFeedback } from '../services/firestoreService';
+import { analyseHelpfulActivities } from '../services/helpfulActivities';
 import { getStatistics } from '../services/statistics';
 import { getStressCategory } from '../services/stressCalculation';
 
@@ -52,6 +54,7 @@ const trendsBackgroundImage =
 
 export default function ProgressScreen({ navigation }) {
   const [entries, setEntries] = useState([]);
+  const [feedbackEntries, setFeedbackEntries] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState('');
 
@@ -64,18 +67,25 @@ export default function ProgressScreen({ navigation }) {
       setIsLoading(true);
       setErrorMessage('');
 
-      const storedEntries = await getStressEntries();
+      const [storedEntries, storedFeedback] =
+        await Promise.all([
+          getStressEntries(),
+          getChallengeFeedback(),
+        ]);
 
       const versionTwoEntries = storedEntries.filter(
         (entry) => entry.questionnaireVersion === 2
       );
 
       setEntries(versionTwoEntries);
+      setFeedbackEntries(storedFeedback);
     } catch (error) {
       console.error(
         'Unable to load wellbeing trends:',
         error
       );
+
+      setFeedbackEntries([]);
 
       setErrorMessage(
         'Your wellbeing trends could not be loaded. Please try again.'
@@ -92,6 +102,9 @@ export default function ProgressScreen({ navigation }) {
   );
 
   const statistics = getStatistics(entries);
+
+  const helpfulActivities =
+    analyseHelpfulActivities(feedbackEntries);
 
   const latestCategory =
     entries.length > 0
@@ -282,7 +295,6 @@ export default function ProgressScreen({ navigation }) {
           showsVerticalScrollIndicator={false}
         >
           <View style={styles.contentWrapper}>
-
             {/* Page header */}
 
             <View
@@ -765,6 +777,113 @@ export default function ProgressScreen({ navigation }) {
                       </Text>
                     </View>
                   </View>
+                </View>
+
+                {/* What Helps Me */}
+
+                <View style={styles.helpfulCard}>
+                  <View style={styles.helpfulHeader}>
+                    <View style={styles.helpfulHeaderIcon}>
+                      <Sparkles
+                        size={24}
+                        color={Colors.primaryDark}
+                        strokeWidth={1.9}
+                      />
+                    </View>
+
+                    <View style={styles.helpfulHeaderText}>
+                      <Text style={styles.helpfulEyebrow}>
+                        WHAT HELPS ME
+                      </Text>
+
+                      <Text style={styles.helpfulTitle}>
+                        {helpfulActivities.hasEnoughData
+                          ? 'Your personal activity insights'
+                          : 'Building your personal activity insights'}
+                      </Text>
+                    </View>
+                  </View>
+
+                  {helpfulActivities.totalFeedback === 0 ? (
+                    <Text style={styles.helpfulIntro}>
+                      Complete a personalised wellbeing challenge
+                      and share how you feel afterwards. Your
+                      feedback will appear here over time.
+                    </Text>
+                  ) : !helpfulActivities.hasEnoughData ? (
+                    <Text style={styles.helpfulIntro}>
+                      You have shared feedback after{' '}
+                      {helpfulActivities.totalFeedback}{' '}
+                      {helpfulActivities.totalFeedback === 1
+                        ? 'personalised activity'
+                        : 'personalised activities'}. Continue
+                      using the challenges to help identify which
+                      activities you report as most supportive.
+                    </Text>
+                  ) : (
+                    <>
+                      <Text style={styles.helpfulIntro}>
+                        These results are based on how you reported
+                        feeling after your personalised activities.
+                      </Text>
+
+                      <View style={styles.helpfulList}>
+                        {helpfulActivities.activities.map(
+                          (activity) => (
+                            <View
+                              key={activity.profileSource}
+                              style={styles.helpfulActivityRow}
+                            >
+                              <View style={styles.helpfulActivityText}>
+                                <Text
+                                  style={styles.helpfulActivityName}
+                                >
+                                  {activity.profileSource}
+                                </Text>
+
+                                <Text
+                                  style={styles.helpfulActivityDetails}
+                                >
+                                  Helpful {activity.helpfulResponses} of{' '}
+                                  {activity.totalResponses}{' '}
+                                  {activity.totalResponses === 1
+                                    ? 'time'
+                                    : 'times'}
+                                </Text>
+                              </View>
+
+                              <View style={styles.helpfulPercentageBadge}>
+                                <Text
+                                  style={styles.helpfulPercentageText}
+                                >
+                                  {activity.helpfulPercentage}%
+                                </Text>
+                              </View>
+                            </View>
+                          )
+                        )}
+                      </View>
+
+                      {helpfulActivities.mostHelpful ? (
+                        <View style={styles.helpfulInsight}>
+                          <CheckCircle2
+                            size={21}
+                            color="#54785C"
+                            strokeWidth={1.9}
+                          />
+
+                          <Text style={styles.helpfulInsightText}>
+                            Early personal insight:{' '}
+                            {helpfulActivities.mostHelpful.profileSource}{' '}
+                            has received the strongest positive
+                            feedback so far. This is based on your
+                            self-reported responses and may change as
+                            you complete more activities.
+                          </Text>
+                        </View>
+                      ) : null}
+                    </>
+                  )}
                 </View>
 
                 {/* Disclaimer */}
@@ -1308,6 +1427,123 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: Colors.textSecondary,
     lineHeight: 19,
+  },
+
+  helpfulCard: {
+    backgroundColor: 'rgba(244,239,232,0.94)',
+    borderWidth: 1,
+    borderColor: '#E1D5C5',
+    borderRadius: 24,
+    padding: Spacing.lg,
+    marginBottom: Spacing.lg,
+    ...Shadows.card,
+  },
+
+  helpfulHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: Spacing.md,
+  },
+
+  helpfulHeaderIcon: {
+    width: 48,
+    height: 48,
+    borderRadius: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#E3EEE9',
+    marginRight: Spacing.md,
+  },
+
+  helpfulHeaderText: {
+    flex: 1,
+  },
+
+  helpfulEyebrow: {
+    fontSize: 10,
+    fontWeight: '700',
+    letterSpacing: 1,
+    color: Colors.primaryDark,
+    marginBottom: 4,
+  },
+
+  helpfulTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: Colors.text,
+  },
+
+  helpfulIntro: {
+    fontSize: 14,
+    color: Colors.textSecondary,
+    lineHeight: 21,
+  },
+
+  helpfulList: {
+    marginTop: Spacing.md,
+  },
+
+  helpfulActivityRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(255,255,255,0.68)',
+    borderWidth: 1,
+    borderColor: '#E4DDD2',
+    borderRadius: 16,
+    padding: Spacing.md,
+    marginBottom: Spacing.sm,
+  },
+
+  helpfulActivityText: {
+    flex: 1,
+    paddingRight: Spacing.md,
+  },
+
+  helpfulActivityName: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: Colors.text,
+    marginBottom: 3,
+  },
+
+  helpfulActivityDetails: {
+    fontSize: 12,
+    color: Colors.textSecondary,
+  },
+
+  helpfulPercentageBadge: {
+    minWidth: 58,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#E2EEE4',
+    borderRadius: 15,
+    paddingHorizontal: 10,
+    paddingVertical: 7,
+  },
+
+  helpfulPercentageText: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: '#54785C',
+  },
+
+  helpfulInsight: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    backgroundColor: '#EDF6EF',
+    borderWidth: 1,
+    borderColor: '#C9DFC9',
+    borderRadius: 16,
+    padding: Spacing.md,
+    marginTop: Spacing.sm,
+  },
+
+  helpfulInsightText: {
+    flex: 1,
+    fontSize: 12,
+    color: Colors.textSecondary,
+    lineHeight: 18,
+    marginLeft: Spacing.sm,
   },
 
   reminderCard: {
